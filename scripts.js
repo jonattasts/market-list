@@ -49,9 +49,14 @@ function showToast(message, type = "danger") {
     toast.classList.add("show");
   }, 10);
 
-  setTimeout(() => {
+  const autoHide = setTimeout(() => {
     toast.classList.remove("show");
   }, 3500);
+
+  toast.onclick = () => {
+    toast.classList.remove("show");
+    clearTimeout(autoHide);
+  };
 }
 
 function formatDate(dateStr) {
