@@ -130,9 +130,24 @@ function renderMarketLists() {
 
   filtered.forEach((list) => {
     const originalIndex = marketListData.indexOf(list);
-    const total = list.items.length;
+    const totalItemsCount = list.items.length;
     const purchased = list.items.filter((i) => i.checked).length;
-    const percent = total > 0 ? (purchased / total) * 100 : 0;
+    const percent =
+      totalItemsCount > 0 ? (purchased / totalItemsCount) * 100 : 0;
+
+    // Cálculo dos valores monetários para o card
+    let subtotalValue = 0;
+    let totalValue = 0;
+    list.items.forEach((item) => {
+      const valor = parseFloat(item.price.replace(/\./g, "").replace(",", "."));
+      if (!isNaN(valor)) {
+        subtotalValue += valor;
+        if (item.checked) totalValue += valor;
+      }
+    });
+
+    const format = (val) =>
+      val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
     const card = document.createElement("div");
     card.className = "list-master-card";
@@ -164,7 +179,7 @@ function renderMarketLists() {
     card.innerHTML = `
             <div class="list-master-header dashboard-header">
                 <span class="list-master-title">${list.listName}</span>
-                <span class="item-count">${total} itens</span>
+                <span class="item-count">${totalItemsCount} itens</span>
             </div>
             <div class="location-text" style="font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 2px;">
                 <ion-icon name="location-outline" style="color: var(--primary); font-size: 14px; vertical-align: middle;"></ion-icon> 
@@ -174,7 +189,19 @@ function renderMarketLists() {
               <ion-icon name="calendar-outline" style="color: var(--text-secondary); font-size: 14px; vertical-align: middle; margin-top: -4px;"></ion-icon> 
               ${formatDate(list.date)}
             </div>
-            <div class="status-text">${purchased} comprado(s)</div>
+            
+            <div class="card-financial-info" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 11px; color: var(--text-secondary);">Subtotal</span>
+                    <span style="font-size: 13px; font-weight: 600; color: var(--toast-bg);">${format(subtotalValue)}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; text-align: right;">
+                    <span style="font-size: 11px; color: var(--text-secondary);">Total Marcado</span>
+                    <span style="font-size: 15px; font-weight: 700; color: var(--danger);">${format(totalValue)}</span>
+                </div>
+            </div>
+
+            <div class="status-text" style="margin-top: 8px;">${purchased} comprado(s)</div>
             <div class="mini-progress-bg"><div class="mini-progress-bar" style="width: ${percent}%"></div></div>
         `;
     listsMasterContainer.appendChild(card);
