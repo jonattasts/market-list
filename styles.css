@@ -12,17 +12,21 @@
   --transition: all 0.3s ease;
 }
 
+* {
+  box-sizing: border-box; /* Garante que padding não estoure a largura */
+}
+
 body {
   font-family: "Inter", sans-serif;
   margin: 0;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Garante que o app comece no topo */
+  align-items: flex-start;
 }
 
 .app-container {
   width: 100%;
-  max-width: 450px; /* Largura padrão simulando dispositivo móvel */
+  max-width: 450px;
   min-height: 100vh;
   background-color: var(--bg-page);
   display: flex;
@@ -33,7 +37,7 @@ body {
 header {
   background-color: var(--primary);
   color: white;
-  padding: 50px 20px 30px;
+  padding: 50px 16px 40px; /* Aumentado padding inferior para o respiro da busca */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -41,18 +45,18 @@ header {
 }
 
 /* Garante que o título no header não estoure o espaço */
-header h1 {
+header h1,
+.header-title {
   margin: 0;
-  font-size: 20px; /* Ajuste leve para acomodar nomes maiores */
+  font-size: 18px; /* Ajuste para harmonia visual */
   font-weight: 600;
   flex: 1;
   text-align: center;
   padding: 0 10px;
 
-  /* Lógica para não estourar a div */
-  white-space: nowrap; /* CORREÇÃO: Evita quebra de linha que empurra ícones */
-  overflow: hidden;
-  text-overflow: ellipsis; /* CORREÇÃO: Adiciona "..." se o nome for muito longo */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* ==========================================================================
@@ -61,8 +65,8 @@ header h1 {
 ion-icon {
   cursor: pointer;
   transition: var(--transition);
-  flex-shrink: 0; /* CORREÇÃO: Impede que os ícones sumam se o título crescer */
-  width: 28px; /* CORREÇÃO: Tamanho fixo para os ícones laterais */
+  flex-shrink: 0;
+  color: white; /* Garante visibilidade no header */
 }
 
 ion-icon:active {
@@ -96,7 +100,7 @@ button:active {
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  margin-top: 40px; /* Ajustado de 80px para não empurrar demais */
+  margin-top: 40px;
 }
 
 .welcome-card {
@@ -105,7 +109,12 @@ button:active {
   border-radius: 24px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   text-align: center;
-  width: 85%;
+}
+
+.emoji-main {
+  font-size: 60px;
+  display: block;
+  margin-bottom: 10px;
 }
 
 .btn-start {
@@ -119,14 +128,8 @@ button:active {
   width: 100%;
 }
 
-.emoji-main {
-  font-size: 60px;
-  display: block;
-  margin-bottom: 10px;
-}
-
 /* ==========================================================================
-   4. TELA: MARKET-LIST-SCREEN (LISTA MASTER) - Adicionado para alinhar os cards
+   4. TELA: MARKET-LIST-SCREEN (LISTA MASTER)
    ========================================================================== */
 #market-lists-screen {
   width: 100%;
@@ -135,10 +138,45 @@ button:active {
 }
 
 .header-action {
+  width: 40px; /* Largura fixa para equilibrar o título centralizado */
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+/* Ajuste na seção de busca para flutuar sobre o azul */
+.search-section {
+  padding: 0 16px;
+  margin-top: -25px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 5;
+}
+
+.search-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.search-group ion-icon {
+  color: var(--text-secondary);
+  font-size: 20px;
+}
+
+.search-group input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  background: transparent;
 }
 
 .list-master-card {
@@ -151,6 +189,22 @@ button:active {
   gap: 12px;
   cursor: pointer;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  transition: var(--transition);
+}
+
+.list-master-card:hover {
+  border-color: var(--primary);
+}
+
+.list-master-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.item-count {
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .mini-progress-bg {
@@ -158,6 +212,7 @@ button:active {
   height: 6px;
   border-radius: 3px;
   overflow: hidden;
+  width: 100%;
 }
 
 .mini-progress-bar {
@@ -171,31 +226,30 @@ button:active {
    ========================================================================== */
 #market-list-screen-details {
   width: 100%;
-  display: none; /* Visibilidade controlada pela função showScreen no JS */
+  display: none;
   flex-direction: column;
 }
 
-/* Dashboard: Resumo e Barra de Progresso */
+#main-list-title {
+  margin-right: 30px;
+}
+
 .dashboard {
   background: var(--bg-card);
-  margin: -20px 16px 16px; /* Efeito de flutuar sobre o header */
+  margin: -25px 16px 16px;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 5;
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  .item-count {
-    color: var(--text-secondary);
-  }
 }
 
-/* Estilo para o novo label do dashboard */
 .items-label {
   font-size: 18px;
   font-weight: 700;
@@ -225,17 +279,9 @@ button:active {
   transition: width 0.5s ease-out;
 }
 
-/* Seção de Entrada de Itens e Busca */
 .input-section {
   padding: 0 16px;
   margin-bottom: 20px;
-}
-
-/* CORREÇÃO: Ajuste na margem da busca para flutuar como no dashboard */
-#market-lists-screen .input-section {
-  margin-top: -20px;
-  position: relative;
-  z-index: 3;
 }
 
 .input-group {
@@ -246,7 +292,7 @@ button:active {
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .input-group input {
@@ -258,7 +304,6 @@ button:active {
   background: transparent;
 }
 
-/* Container de Listagem de Itens (Dinâmico) */
 .list-container {
   padding: 0 16px 40px;
   display: flex;
@@ -276,7 +321,6 @@ button:active {
   border: 1px solid var(--border-color);
 }
 
-/* Componentes do Card de Item */
 .item-info {
   display: flex;
   align-items: center;
@@ -293,21 +337,25 @@ button:active {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: var(--transition);
 }
 
 .text-group {
   display: flex;
   flex-direction: column;
 }
+
 .item-name {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-main);
 }
+
 .item-desc {
   font-size: 13px;
   color: var(--text-secondary);
 }
+
 .item-price {
   font-weight: 600;
   font-size: 15px;
@@ -316,7 +364,8 @@ button:active {
 
 /* Estados Visuais (Checked) */
 .item-card.checked {
-  background: #f9f9f9;
+  background: #fcfcfc;
+  border-color: #eee;
 }
 
 .item-card.checked .custom-check {
@@ -324,11 +373,15 @@ button:active {
   border-color: var(--accent-green);
 }
 
+/* Checkmark elegante usando bordas */
 .item-card.checked .custom-check::after {
-  content: "L";
-  transform: rotate(45deg) scaleX(-1);
-  color: white;
-  margin-bottom: 4px;
+  content: "";
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
 }
 
 .item-card.checked .item-name {
