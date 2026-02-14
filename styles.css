@@ -220,6 +220,8 @@ button:active {
   gap: 12px;
   cursor: pointer;
   margin-bottom: 15px;
+  user-select: none; /* Evita seleção de texto durante o clique longo */
+  -webkit-user-select: none;
 }
 
 .list-master-title {
@@ -261,10 +263,9 @@ button:active {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  .item-count {
-    color: var(--text-secondary);
-  }
+}
+.dashboard-header .item-count {
+  color: var(--text-secondary);
 }
 .items-label {
   font-size: 18px;
@@ -280,9 +281,7 @@ button:active {
 }
 .date-text {
   margin-top: -5px;
-  
   font-size: 12px;
-
   color: var(--text-secondary);
 }
 .progress-container {

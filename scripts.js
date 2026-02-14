@@ -7,6 +7,7 @@ const searchInput = document.getElementById("search-input");
 const itemInput = document.getElementById("item-input");
 
 let currentListIndex = 0;
+let pressTimer; // Timer para o clique longo
 
 const defaultData = [
   {
@@ -52,8 +53,19 @@ function openListDetails(index) {
 }
 
 /* ==========================================================================
-   3. TELA: LISTAS DE COMPRAS
+   3. TELA: LISTAS DE COMPRAS E LÓGICA DE EXCLUSÃO
    ========================================================================== */
+function confirmDeleteList(index) {
+  const listName = marketListData[index].listName;
+  const confirmacao = confirm(`Deseja excluir a lista "${listName}"?`);
+
+  if (confirmacao) {
+    marketListData.splice(index, 1);
+    saveAndSync();
+    renderMarketLists();
+  }
+}
+
 function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
   const term = searchInput.value.toLowerCase();
@@ -90,7 +102,34 @@ function renderMarketLists() {
 
     const card = document.createElement("div");
     card.className = "list-master-card";
+
+    // Clique normal para abrir
     card.onclick = () => openListDetails(originalIndex);
+
+    // Lógica para Clique Direito (Mouse)
+    card.oncontextmenu = (e) => {
+      e.preventDefault();
+      confirmDeleteList(originalIndex);
+    };
+
+    // Lógica para Clique Longo (Touch e Mouse)
+    const startPress = () => {
+      pressTimer = setTimeout(() => {
+        confirmDeleteList(originalIndex);
+      }, 2000); // 2 segundos
+    };
+
+    const cancelPress = () => {
+      clearTimeout(pressTimer);
+    };
+
+    card.onmousedown = startPress;
+    card.onmouseup = cancelPress;
+    card.onmouseleave = cancelPress;
+
+    // Suporte para Mobile (Touch)
+    card.ontouchstart = startPress;
+    card.ontouchend = cancelPress;
 
     card.innerHTML = `
             <div class="list-master-header dashboard-header">
@@ -212,6 +251,7 @@ function saveAndSync() {
 }
 
 function formatDate(dateStr) {
+  if (!dateStr) return "";
   const [year, month, day] = dateStr.split("-");
   return `${day}/${month}/${year}`;
 }
