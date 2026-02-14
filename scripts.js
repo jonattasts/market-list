@@ -15,20 +15,27 @@ let pressTimer;
 let marketListData = JSON.parse(localStorage.getItem("marketList")) || [];
 
 /* ==========================================================================
-   2. UTILITÁRIOS: TOAST REFATORADO
+   2. UTILITÁRIOS: TOAST E NORMALIZAÇÃO
    ========================================================================== */
+
 /**
- * Exibe um toast customizado
- * @param {string} message - Texto do toast
- * @param {string} type - 'success' ou 'danger'
+ * Normaliza uma string removendo acentos e convertendo para minúsculas
+ */
+function normalizeString(str) {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
+ * Exibe um toast customizado com fechamento no clique
  */
 function showToast(message, type = "danger") {
   toastMessage.innerText = message;
-
-  // Limpa classes anteriores
   toast.classList.remove("success", "danger", "show");
 
-  // Define o ícone e a cor baseada no tipo
   if (type === "success") {
     toast.classList.add("success");
     toastIcon.setAttribute("name", "checkmark-circle-outline");
@@ -37,7 +44,7 @@ function showToast(message, type = "danger") {
     toastIcon.setAttribute("name", "alert-circle-outline");
   }
 
-  // Pequeno timeout para garantir que a remoção da classe 'show' seja processada antes de re-adicionar
+  // Timeout para garantir que a remoção da classe 'show' seja processada antes de re-adicionar
   setTimeout(() => {
     toast.classList.add("show");
   }, 10);
@@ -81,7 +88,7 @@ function openListDetails(index) {
 }
 
 /* ==========================================================================
-   4. TELA: LISTAS DE COMPRAS
+   4. TELA: LISTAS DE COMPRAS (BUSCA POR NOME, DATA OU LOCAL)
    ========================================================================== */
 function confirmDeleteList(index) {
   const listName = marketListData[index].listName;
@@ -95,7 +102,8 @@ function confirmDeleteList(index) {
 
 function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
-  const term = searchInput.value.toLowerCase();
+  // Normaliza o termo de busca
+  const term = normalizeString(searchInput.value);
 
   if (marketListData.length === 0) {
     searchInput.disabled = true;
@@ -104,9 +112,17 @@ function renderMarketLists() {
   }
 
   searchInput.disabled = false;
-  const filtered = marketListData.filter((list) =>
-    list.listName.toLowerCase().includes(term),
-  );
+
+  // LÓGICA DE PESQUISA: Ignora acentos no Nome e no Local
+  const filtered = marketListData.filter((list) => {
+    const nameMatch = normalizeString(list.listName).includes(term);
+    const locationMatch = list.location
+      ? normalizeString(list.location).includes(term)
+      : false;
+    const dateMatch = formatDate(list.date).includes(term);
+
+    return nameMatch || locationMatch || dateMatch;
+  });
 
   filtered.forEach((list) => {
     const originalIndex = marketListData.indexOf(list);
@@ -126,7 +142,7 @@ function renderMarketLists() {
     const startPress = () => {
       pressTimer = setTimeout(() => {
         confirmDeleteList(originalIndex);
-      }, 2000); // 2 segundos
+      }, 2000);
     };
 
     const cancelPress = () => {
@@ -146,7 +162,14 @@ function renderMarketLists() {
                 <span class="list-master-title">${list.listName}</span>
                 <span class="item-count">${total} itens</span>
             </div>
-            <div class="date-text">${formatDate(list.date)}</div>
+            <div class="location-text" style="font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 2px;">
+                <ion-icon name="location-outline" style="color: var(--primary); font-size: 14px; vertical-align: middle;"></ion-icon> 
+                ${list.location || "Local não informado"}
+            </div>
+            <div class="date-text" style="margin-top: 4px;">
+              <ion-icon name="calendar-outline" style="color: var(--text-secondary); font-size: 14px; vertical-align: middle; margin-top: -4px;"></ion-icon> 
+              ${formatDate(list.date)}
+            </div>
             <div class="status-text">${purchased} comprado(s)</div>
             <div class="mini-progress-bg"><div class="mini-progress-bar" style="width: ${percent}%"></div></div>
         `;
@@ -159,6 +182,7 @@ function renderMarketLists() {
    ========================================================================== */
 function openNewListForm() {
   document.getElementById("new-list-name").value = "";
+  document.getElementById("new-list-location").value = "";
 
   const now = new Date();
   const year = now.getFullYear();
@@ -172,6 +196,7 @@ function openNewListForm() {
 
 function handleSaveNewList() {
   const name = document.getElementById("new-list-name").value.trim();
+  const location = document.getElementById("new-list-location").value.trim();
   const date = document.getElementById("new-list-date").value;
 
   if (!name) {
@@ -183,7 +208,14 @@ function handleSaveNewList() {
     showToast("Por favor, insira uma data válida para a lista", "danger");
     return;
   }
-  marketListData.push({ listName: name, date: date, items: [] });
+
+  marketListData.push({
+    listName: name,
+    location: location,
+    date: date,
+    items: [],
+  });
+
   saveAndSync();
   showScreen("market-lists-screen");
   showToast("Lista criada com sucesso!", "success");
@@ -209,7 +241,6 @@ function renderListDetails() {
     const card = document.createElement("div");
     card.className = `item-card ${item.checked ? "checked" : ""}`;
 
-    // Lógica para Clique Longo no Item para Remover
     const startPressItem = () => {
       pressTimer = setTimeout(() => {
         confirmDeleteItem(idx);
@@ -226,7 +257,6 @@ function renderListDetails() {
     card.ontouchstart = startPressItem;
     card.ontouchend = cancelPressItem;
 
-    // Clique com botão direito (Desktop)
     card.oncontextmenu = (e) => {
       e.preventDefault();
       confirmDeleteItem(idx);
@@ -265,7 +295,7 @@ function toggleItemStatus(itemIdx) {
   renderListDetails();
 }
 
-/* VALIDAÇÃO COM REGEX E TOAST DE SUCESSO */
+/* VALIDAÇÃO COM REGEX */
 itemInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && itemInput.value.trim() !== "") {
     /* REGEX:

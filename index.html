@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Market List</title>
-    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
       rel="stylesheet"
@@ -67,7 +67,7 @@
             <input
               type="text"
               id="search-input"
-              placeholder="Buscar lista pelo nome..."
+              placeholder="Buscar por nome, data ou local..."
               oninput="renderMarketLists()"
             />
           </div>
@@ -94,7 +94,7 @@
         <div class="form-section">
           <div class="form-card dashboard">
             <div class="input-field">
-              <label>Nome da Lista</label>
+              <label>Nome da Lista<span style="color: #ff4757;">*</span></label>
               <input
                 type="text"
                 id="new-list-name"
@@ -102,7 +102,15 @@
               />
             </div>
             <div class="input-field" style="margin-top: 20px">
-              <label>Data da Compra</label>
+              <label>Local da Compra</label>
+              <input
+                type="text"
+                id="new-list-location"
+                placeholder="Ex: Assaí Atacadista"
+              />
+            </div>
+            <div class="input-field" style="margin-top: 20px">
+              <label>Data da Compra<span style="color: #ff4757;">*</span></label>
               <input type="date" id="new-list-date" />
             </div>
             <button
