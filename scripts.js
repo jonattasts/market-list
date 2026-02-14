@@ -6,12 +6,12 @@ const listsMasterContainer = document.getElementById("lists-master-container");
 const searchInput = document.getElementById("search-input");
 const itemInput = document.getElementById("item-input");
 
-let currentListIndex = 0; // Controla qual lista estamos editando
+let currentListIndex = 0;
 
-// Dados iniciais caso o storage esteja vazio
 const defaultData = [
   {
     listName: "Supermercado Central",
+    date: "2026-02-13",
     items: [
       {
         name: "Leite integral",
@@ -20,12 +20,6 @@ const defaultData = [
         checked: true,
       },
       { name: "Arroz", desc: "5 kg", price: "18,90", checked: false },
-    ],
-  },
-  {
-    listName: "Hortifruti Semanal",
-    items: [
-      { name: "Bananas", desc: "1 dúzia", price: "6,00", checked: false },
     ],
   },
 ];
@@ -41,6 +35,7 @@ function showScreen(screenId) {
     "home-screen",
     "market-lists-screen",
     "market-list-screen-details",
+    "new-list-screen",
   ];
   screens.forEach((id) => {
     document.getElementById(id).style.display =
@@ -63,25 +58,21 @@ function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
   const term = searchInput.value.toLowerCase();
 
-  // Verifica se o storage está totalmente vazio
   if (marketListData.length === 0) {
     searchInput.disabled = true;
     searchInput.placeholder = "Crie uma lista para buscar...";
-
     listsMasterContainer.innerHTML = `
       <div class="empty-state">
         <span class="empty-emoji">📝</span>
         <p>Ainda não há listas de compras registradas.</p>
       </div>
     `;
-    return; // Interrompe a execução aqui
+    return;
   }
 
-  // Se houver listas, habilita o input
   searchInput.disabled = false;
   searchInput.placeholder = "Buscar lista pelo nome...";
 
-  // Filtra as listas baseada na busca
   const filteredLists = marketListData.filter((list) =>
     list.listName.toLowerCase().includes(term),
   );
@@ -91,10 +82,8 @@ function renderMarketLists() {
     return;
   }
 
-  filteredLists.forEach((list, index) => {
-    // Encontrar o index real no array original (caso esteja filtrado)
+  filteredLists.forEach((list) => {
     const originalIndex = marketListData.indexOf(list);
-
     const totalItems = list.items.length;
     const purchased = list.items.filter((i) => i.checked).length;
     const percent = totalItems > 0 ? (purchased / totalItems) * 100 : 0;
@@ -108,7 +97,7 @@ function renderMarketLists() {
                 <span class="list-master-title">${list.listName}</span>
                 <span class="item-count">${totalItems} itens</span>
             </div>
-            <div class="status-text">${purchased} itens comprados</div>
+            <div class="status-text">${purchased} comprado(s)</div>
             <div class="mini-progress-bg">
                 <div class="mini-progress-bar" style="width: ${percent}%"></div>
             </div>
@@ -118,12 +107,51 @@ function renderMarketLists() {
 }
 
 /* ==========================================================================
-   4. TELA: DETALHES DA LISTA
+   4. CRIAÇÃO DE NOVA LISTA
+   ========================================================================== */
+function openNewListForm() {
+  document.getElementById("new-list-name").value = "";
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  document.getElementById("new-list-date").value = `${year}-${month}-${day}`;
+
+  showScreen("new-list-screen");
+}
+
+function handleSaveNewList() {
+  const name = document.getElementById("new-list-name").value.trim();
+  const date = document.getElementById("new-list-date").value;
+
+  if (!name) {
+    alert("Por favor, insira um nome para a lista.");
+    return;
+  }
+
+  if (!date) {
+    alert("Por favor, insira uma data válida para a lista.");
+    return;
+  }
+
+  marketListData.push({
+    listName: name,
+    date: date,
+    items: [],
+  });
+
+  saveAndSync();
+  showScreen("market-lists-screen");
+}
+
+/* ==========================================================================
+   5. TELA: DETALHES E PERSISTÊNCIA
    ========================================================================== */
 function renderListDetails() {
   listItemsContainer.innerHTML = "";
   const currentList = marketListData[currentListIndex];
-
   document.getElementById("main-list-title").innerText = currentList.listName;
 
   currentList.items.forEach((item, idx) => {
@@ -152,13 +180,10 @@ function updateDashboard() {
 
   document.getElementById("total-qty").innerText = `${total} itens`;
   document.getElementById("checked-count").innerText =
-    `${purchased} itens comprados`;
+    `${purchased} comprado(s)`;
   document.getElementById("progress-bar").style.width = percent + "%";
 }
 
-/* ==========================================================================
-   5. PERSISTÊNCIA E INTERAÇÕES
-   ========================================================================== */
 function toggleItemStatus(itemIdx) {
   marketListData[currentListIndex].items[itemIdx].checked =
     !marketListData[currentListIndex].items[itemIdx].checked;
@@ -181,21 +206,13 @@ itemInput.addEventListener("keypress", (e) => {
   }
 });
 
-function addNewList() {
-  const name = prompt("Digite o nome da nova lista:");
-  if (name) {
-    marketListData.push({ listName: name, items: [] });
-    saveAndSync();
-    renderMarketLists();
-  }
-}
-
 function saveAndSync() {
   localStorage.setItem("marketList", JSON.stringify(marketListData));
 }
 
-function focusInput() {
-  itemInput.focus();
+function formatDate(dateStr) {
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 // Inicialização

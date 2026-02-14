@@ -13,7 +13,7 @@
 }
 
 * {
-  box-sizing: border-box; /* Garante que padding não estoure a largura */
+  box-sizing: border-box;
 }
 
 body {
@@ -37,64 +37,61 @@ body {
 header {
   background-color: var(--primary);
   color: white;
-  padding: 50px 16px 40px; /* Aumentado padding inferior para o respiro da busca */
+  padding: 50px 16px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0; /* CORREÇÃO: Impede o header de esticar verticalmente */
+  flex-shrink: 0;
 }
 
-/* Garante que o título no header não estoure o espaço */
 header h1,
 .header-title {
   margin: 0;
-  font-size: 18px; /* Ajuste para harmonia visual */
+  font-size: 18px;
   font-weight: 600;
   flex: 1;
   text-align: center;
   padding: 0 10px;
-
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: anywhere;
 }
 
 /* ==========================================================================
-   2. COMPONENTES REUTILIZÁVEIS E ÍCONES
+   2. COMPONENTES REUTILIZÁVEIS
    ========================================================================== */
 ion-icon {
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
-  color: white; /* Garante visibilidade no header */
+  color: white;
 }
-
 ion-icon:active {
   transform: scale(1.2);
 }
-
 button {
   cursor: pointer;
   transition: var(--transition);
   border: none;
   font-family: inherit;
 }
-
 button:active {
   transform: scale(0.95);
 }
 
 /* ==========================================================================
-   3. TELA: HOME-SCREEN (CONTEXTO INICIAL)
+   3. TELA: HOME E FORMULÁRIOS
    ========================================================================== */
-#home-screen {
+#home-screen,
+#new-list-screen {
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.home-content {
+.home-content,
+.form-section {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -103,12 +100,14 @@ button:active {
   margin-top: 40px;
 }
 
-.welcome-card {
+.welcome-card,
+.form-card {
   background: var(--bg-card);
   padding: 40px 20px;
   border-radius: 24px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   text-align: center;
+  width: 100%;
 }
 
 .emoji-main {
@@ -128,6 +127,28 @@ button:active {
   width: 100%;
 }
 
+/* Estilos de Input do Formulário */
+.input-field {
+  text-align: left;
+  width: 100%;
+}
+.input-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.input-field input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  font-size: 15px;
+  outline: none;
+  background-color: var(--bg-page);
+}
+
 /* ==========================================================================
    4. TELA: MARKET-LIST-SCREEN
    ========================================================================== */
@@ -136,9 +157,8 @@ button:active {
   display: flex;
   flex-direction: column;
 }
-
 .header-action {
-  width: 40px; /* Largura fixa para equilibrar o título centralizado */
+  width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
@@ -146,7 +166,6 @@ button:active {
   cursor: pointer;
 }
 
-/* Ajuste na seção de busca para flutuar sobre o azul */
 .search-section {
   padding: 0 16px;
   margin-top: -25px;
@@ -154,7 +173,6 @@ button:active {
   position: relative;
   z-index: 5;
 }
-
 .search-group {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -165,12 +183,10 @@ button:active {
   gap: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
-
 .search-group ion-icon {
   color: var(--text-secondary);
   font-size: 20px;
 }
-
 .search-group input {
   border: none;
   outline: none;
@@ -178,41 +194,20 @@ button:active {
   font-size: 15px;
   background: transparent;
 }
-
-/* Estilo para o campo de busca desabilitado */
 .search-group input:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-/* Container da mensagem de lista vazia */
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   padding: 60px 20px;
   text-align: center;
   color: var(--text-secondary);
 }
-
 .empty-emoji {
   font-size: 50px;
-  margin-bottom: 15px;
   display: block;
-}
-
-.empty-state p {
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.5;
-}
-
-.no-results {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 20px;
-  font-style: italic;
+  margin-bottom: 15px;
 }
 
 .list-master-card {
@@ -224,12 +219,7 @@ button:active {
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-  transition: var(--transition);
-}
-
-.list-master-card:hover {
-  border-color: var(--primary);
+  margin-bottom: 15px;
 }
 
 .list-master-title {
@@ -237,12 +227,6 @@ button:active {
   font-weight: 700;
   color: var(--text-main);
 }
-
-.item-count {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
 .mini-progress-bg {
   background: var(--border-color);
   height: 6px;
@@ -250,7 +234,6 @@ button:active {
   overflow: hidden;
   width: 100%;
 }
-
 .mini-progress-bar {
   background: var(--accent-green);
   height: 100%;
@@ -258,18 +241,13 @@ button:active {
 }
 
 /* ==========================================================================
-   5. TELA: MARKET-LIST-SCREEN-DETAILS (DETALHES E INTERAÇÃO)
+   5. TELA: MARKET-LIST-SCREEN-DETAILS
    ========================================================================== */
 #market-list-screen-details {
   width: 100%;
   display: none;
   flex-direction: column;
 }
-
-#main-list-title {
-  margin-right: 30px;
-}
-
 .dashboard {
   background: var(--bg-card);
   margin: -25px 16px 16px;
@@ -279,34 +257,33 @@ button:active {
   position: relative;
   z-index: 5;
 }
-
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
 
+  .item-count {
+    color: var(--text-secondary);
+  }
+}
 .items-label {
   font-size: 18px;
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
 }
-
 .status-text {
   font-size: 13px;
   color: var(--accent-green);
   margin-top: 10px;
   font-weight: 600;
 }
-
 .progress-container {
   margin-top: 15px;
   background: var(--border-color);
   height: 10px;
   border-radius: 5px;
 }
-
 .progress-bar {
   background: var(--accent-green);
   height: 100%;
@@ -319,7 +296,6 @@ button:active {
   padding: 0 16px;
   margin-bottom: 20px;
 }
-
 .input-group {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -328,9 +304,7 @@ button:active {
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-
 .input-group input {
   border: none;
   outline: none;
@@ -346,7 +320,6 @@ button:active {
   flex-direction: column;
   gap: 12px;
 }
-
 .item-card {
   background: var(--bg-card);
   padding: 16px;
@@ -356,13 +329,11 @@ button:active {
   justify-content: space-between;
   border: 1px solid var(--border-color);
 }
-
 .item-info {
   display: flex;
   align-items: center;
   gap: 15px;
 }
-
 .custom-check {
   width: 26px;
   height: 26px;
@@ -380,36 +351,24 @@ button:active {
   display: flex;
   flex-direction: column;
 }
-
 .item-name {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-main);
 }
-
 .item-desc {
   font-size: 13px;
   color: var(--text-secondary);
 }
 
-.item-price {
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-main);
-}
-
-/* Estados Visuais (Checked) */
 .item-card.checked {
   background: #fcfcfc;
   border-color: #eee;
 }
-
 .item-card.checked .custom-check {
   background: var(--accent-green);
   border-color: var(--accent-green);
 }
-
-/* Checkmark elegante usando bordas */
 .item-card.checked .custom-check::after {
   content: "";
   width: 5px;
@@ -419,7 +378,6 @@ button:active {
   transform: rotate(45deg);
   margin-bottom: 2px;
 }
-
 .item-card.checked .item-name {
   text-decoration: line-through;
   color: var(--text-secondary);
