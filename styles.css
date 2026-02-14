@@ -363,6 +363,7 @@ button:active {
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: var(--transition);
 }
 .input-group input {
   border: none;

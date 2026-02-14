@@ -11,6 +11,7 @@ const toastIcon = document.getElementById("toast-icon");
 
 let currentListIndex = 0;
 let pressTimer;
+let editingItemIndex = null;
 
 let marketListData = JSON.parse(localStorage.getItem("marketList")) || [];
 
@@ -90,6 +91,14 @@ function openListDetails(index) {
   currentListIndex = index;
   showScreen("market-list-screen-details");
   renderListDetails();
+}
+
+/**
+ * Ao sair da tela de detalhes limpa o estado de edição
+ */
+function exitDetailsScreen() {
+  cancelEditMode();
+  showScreen("market-lists-screen");
 }
 
 /* ==========================================================================
@@ -260,7 +269,41 @@ function confirmDeleteItem(itemIdx) {
     saveAndSync();
     renderListDetails();
     showToast(`${itemName} removido!`, "success");
+    // Se estiver editando o item removido, cancela edição
+    if (editingItemIndex === itemIdx) cancelEditMode();
   }
+}
+
+/**
+ * Entra no modo de edição de item
+ */
+function enterEditMode(idx) {
+  const item = marketListData[currentListIndex].items[idx];
+  editingItemIndex = idx;
+
+  // Preenche o input com o formato padrão para edição fácil
+  itemInput.value = `${item.name}; ${item.desc}; ${item.price}`;
+
+  // Melhoria de UI: Focar e estilizar o campo
+  itemInput.focus();
+  document.getElementById("item-input-group").style.borderColor =
+    "var(--primary)";
+  document.getElementById("input-mode-icon").innerText = "✏️";
+  itemInput.placeholder = "Editando item...";
+
+  showToast("Modo de edição ativado", "success");
+}
+
+/**
+ * Cancela o modo de edição
+ */
+function cancelEditMode() {
+  editingItemIndex = null;
+  itemInput.value = "";
+  document.getElementById("item-input-group").style.borderColor =
+    "var(--border-color)";
+  document.getElementById("input-mode-icon").innerText = "🛒";
+  itemInput.placeholder = "Adicione novo item (Ex: Arroz; 5kg; 18,90)";
 }
 
 function renderListDetails() {
@@ -296,7 +339,7 @@ function renderListDetails() {
     card.innerHTML = `
             <div class="item-info">
                 <div class="custom-check" onclick="toggleItemStatus(${idx})"></div>
-                <div class="text-group">
+                <div class="text-group" onclick="enterEditMode(${idx})" style="cursor: pointer;">
                     <span class="item-name">${item.name}</span>
                     <span class="item-desc">${item.desc}</span>
                 </div>
@@ -394,18 +437,29 @@ itemInput.addEventListener("keypress", (e) => {
       ? "0,00"
       : numPrice.toFixed(2).replace(".", ",");
 
-    marketListData[currentListIndex].items.push({
-      name: name,
-      desc: desc,
-      price: formattedPrice,
-      checked: false,
-    });
+    if (editingItemIndex !== null) {
+      // Atualiza o item existente
+      const item = marketListData[currentListIndex].items[editingItemIndex];
+      item.name = name;
+      item.desc = desc;
+      item.price = formattedPrice;
+
+      showToast(`${name} atualizado!`, "success");
+      cancelEditMode();
+    } else {
+      // MODO CADASTRO: Adiciona novo item
+      marketListData[currentListIndex].items.push({
+        name: name,
+        desc: desc,
+        price: formattedPrice,
+        checked: false,
+      });
+      showToast(`${name} adicionado com sucesso!`, "success");
+    }
 
     itemInput.value = "";
     saveAndSync();
     renderListDetails();
-
-    showToast(`${name} adicionado com sucesso!`, "success");
   }
 });
 

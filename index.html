@@ -126,10 +126,7 @@
 
       <div id="market-list-screen-details" style="display: none">
         <header>
-          <div
-            class="header-action"
-            onclick="showScreen('market-lists-screen')"
-          >
+          <div class="header-action" onclick="exitDetailsScreen()">
             <ion-icon
               name="arrow-back-outline"
               style="font-size: 28px"
@@ -150,8 +147,8 @@
           </div>
         </div>
         <div class="input-section">
-          <div class="input-group">
-            <span class="icon">🛒</span>
+          <div class="input-group" id="item-input-group">
+            <span class="icon" id="input-mode-icon">🛒</span>
             <input
               type="text"
               id="item-input"
