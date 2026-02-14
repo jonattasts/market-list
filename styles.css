@@ -24,7 +24,7 @@ body {
 
 .toast {
   position: fixed;
-  bottom: -100px;
+  top: -100px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--toast-bg);
@@ -62,7 +62,7 @@ body {
 }
 
 .toast.show {
-  bottom: 30px;
+  top: 30px;
 }
 
 .app-container {
