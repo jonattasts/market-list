@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Market List Pro</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <div id="home-screen">
+        <header>
+          <h1>Minhas Listas</h1>
+        </header>
+
+        <div class="home-content">
+          <div class="welcome-card">
+            <span style="font-size: 60px; display: block; margin-bottom: 10px"
+              >🛒</span
+            >
+            <h2 style="color: var(--text-main); margin-bottom: 10px">
+              Boas compras!
+            </h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px">
+              Organize seus itens e controle seus gastos de forma simples.
+            </p>
+            <button
+              class="btn-start"
+              onclick="showScreen('market-list-screen-details')"
+            >
+              Ver suas listas de compras
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="market-list-screen-details" style="display: none">
+        <header>
+          <div
+            onclick="showScreen('home-screen')"
+            style="cursor: pointer; display: flex; align-items: center"
+          >
+            <ion-icon
+              name="arrow-back-outline"
+              style="font-size: 28px"
+            ></ion-icon>
+          </div>
+
+          <h1 id="main-list-title">Lista de Compras</h1>
+
+          <div
+            onclick="focusInput()"
+            style="display: flex; align-items: center; cursor: pointer"
+          >
+            <ion-icon name="add-outline" style="font-size: 32px"></ion-icon>
+          </div>
+        </header>
+
+        <div class="dashboard">
+          <div class="dashboard-header">
+            <h2 class="items-label">Itens adicionados:</h2>
+            <span class="item-count" id="total-qty">0 itens</span>
+          </div>
+
+          <div class="status-text">
+            <span id="checked-count">0 itens comprados</span>
+          </div>
+
+          <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <div class="input-group">
+            <span class="icon">🛒</span>
+            <input
+              type="text"
+              id="item-input"
+              placeholder="Ex: Arroz, 5kg, 18.90"
+            />
+          </div>
+        </div>
+
+        <div class="list-container" id="list-container"></div>
+      </div>
+    </div>
+
+    <script src="scripts.js"></script>
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
+    ></script>
+  </body>
+</html>

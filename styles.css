@@ -1,0 +1,283 @@
+/* ==========================================================================
+   1. CONFIGURAÇÕES GERAIS E VARIÁVEIS
+   ========================================================================== */
+:root {
+  --primary: #4c33e6;
+  --bg-page: #f1f4f8;
+  --bg-card: #ffffff;
+  --text-main: #14181b;
+  --text-secondary: #57636c;
+  --accent-green: #249689;
+  --border-color: #e0e3e7;
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #222; /* Fundo simulando ambiente externo ao app */
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 450px; /* Largura padrão simulando dispositivo móvel */
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+header {
+  background-color: var(--primary);
+  color: white;
+  padding: 50px 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   2. COMPONENTES REUTILIZÁVEIS E ÍCONES
+   ========================================================================== */
+ion-icon {
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+ion-icon:active {
+  transform: scale(1.2);
+}
+
+button {
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  font-family: inherit;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   3. TELA: HOME-SCREEN (CONTEXTO INICIAL)
+   ========================================================================== */
+#home-screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 20px;
+  margin-top: 80px;
+}
+
+.welcome-card {
+  background: var(--bg-card);
+  padding: 40px 20px;
+  border-radius: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  width: 85%;
+}
+
+.btn-start {
+  margin-top: 25px;
+  padding: 16px 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+}
+
+/* ==========================================================================
+   4. TELA: MARKET-LIST-SCREEN-DETAILS (DETALHES E INTERAÇÃO)
+   ========================================================================== */
+#market-list-screen-details {
+  width: 100%;
+  display: none; /* Visibilidade controlada pela função showScreen no JS */
+  flex-direction: column;
+}
+
+/* Dashboard: Resumo e Barra de Progresso */
+.dashboard {
+  background: var(--bg-card);
+  margin: -20px 16px 16px;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Garante que o título no header não estoure o espaço */
+header h1 {
+  margin: 0;
+  font-size: 20px; /* Ajuste leve para acomodar nomes maiores */
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  padding: 0 10px;
+
+  /* Lógica para não estourar a div */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limita a duas linhas antes de cortar, se preferir */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Estilo para o novo label do dashboard */
+.items-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.status-text {
+  font-size: 13px;
+  color: var(--accent-green);
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.progress-container {
+  margin-top: 15px;
+  background: var(--border-color);
+  height: 10px;
+  border-radius: 5px;
+}
+
+.progress-bar {
+  background: var(--accent-green);
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  transition: width 0.5s ease-out;
+}
+
+/* Seção de Entrada de Itens */
+.input-section {
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-group input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 15px;
+  color: var(--text-main);
+}
+
+/* Container de Listagem de Itens (Dinâmico) */
+.list-container {
+  padding: 0 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-card {
+  background: var(--bg-card);
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border-color);
+}
+
+/* Componentes do Card de Item */
+.item-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.custom-check {
+  width: 26px;
+  height: 26px;
+  border: 2px solid #d0d5dd;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-group {
+  display: flex;
+  flex-direction: column;
+}
+.item-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.item-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.item-price {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-main);
+}
+
+/* Estados Visuais (Checked) */
+.item-card.checked {
+  background: #f9f9f9;
+}
+
+.item-card.checked .custom-check {
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.item-card.checked .custom-check::after {
+  content: "L";
+  transform: rotate(45deg) scaleX(-1);
+  color: white;
+  margin-bottom: 4px;
+}
+
+.item-card.checked .item-name {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
