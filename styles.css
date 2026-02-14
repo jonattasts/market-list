@@ -129,7 +129,7 @@ button:active {
 }
 
 /* ==========================================================================
-   4. TELA: MARKET-LIST-SCREEN (LISTA MASTER)
+   4. TELA: MARKET-LIST-SCREEN
    ========================================================================== */
 #market-lists-screen {
   width: 100%;
@@ -177,6 +177,42 @@ button:active {
   flex: 1;
   font-size: 15px;
   background: transparent;
+}
+
+/* Estilo para o campo de busca desabilitado */
+.search-group input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Container da mensagem de lista vazia */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-emoji {
+  font-size: 50px;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.empty-state p {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.no-results {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px;
+  font-style: italic;
 }
 
 .list-master-card {

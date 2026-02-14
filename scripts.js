@@ -57,14 +57,43 @@ function openListDetails(index) {
 }
 
 /* ==========================================================================
-   3. TELA: LISTAS DE COMPRAS (MASTER)
+   3. TELA: LISTAS DE COMPRAS
    ========================================================================== */
 function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
   const term = searchInput.value.toLowerCase();
 
-  marketListData.forEach((list, index) => {
-    if (!list.listName.toLowerCase().includes(term)) return;
+  // Verifica se o storage está totalmente vazio
+  if (marketListData.length === 0) {
+    searchInput.disabled = true;
+    searchInput.placeholder = "Crie uma lista para buscar...";
+
+    listsMasterContainer.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-emoji">📝</span>
+        <p>Ainda não há listas de compras registradas.</p>
+      </div>
+    `;
+    return; // Interrompe a execução aqui
+  }
+
+  // Se houver listas, habilita o input
+  searchInput.disabled = false;
+  searchInput.placeholder = "Buscar lista pelo nome...";
+
+  // Filtra as listas baseada na busca
+  const filteredLists = marketListData.filter((list) =>
+    list.listName.toLowerCase().includes(term),
+  );
+
+  if (filteredLists.length === 0 && term !== "") {
+    listsMasterContainer.innerHTML = `<p class="no-results">Nenhuma lista encontrada com "${term}"</p>`;
+    return;
+  }
+
+  filteredLists.forEach((list, index) => {
+    // Encontrar o index real no array original (caso esteja filtrado)
+    const originalIndex = marketListData.indexOf(list);
 
     const totalItems = list.items.length;
     const purchased = list.items.filter((i) => i.checked).length;
@@ -72,7 +101,7 @@ function renderMarketLists() {
 
     const card = document.createElement("div");
     card.className = "list-master-card";
-    card.onclick = () => openListDetails(index);
+    card.onclick = () => openListDetails(originalIndex);
 
     card.innerHTML = `
             <div class="list-master-header dashboard-header">
