@@ -97,6 +97,7 @@ function renderMarketLists() {
                 <span class="list-master-title">${list.listName}</span>
                 <span class="item-count">${totalItems} itens</span>
             </div>
+            <div class="date-text">${formatDate(list.date)}</div>
             <div class="status-text">${purchased} comprado(s)</div>
             <div class="mini-progress-bg">
                 <div class="mini-progress-bar" style="width: ${percent}%"></div>
