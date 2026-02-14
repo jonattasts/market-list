@@ -12,24 +12,7 @@ const toastIcon = document.getElementById("toast-icon");
 let currentListIndex = 0;
 let pressTimer;
 
-const defaultData = [
-  {
-    listName: "Supermercado Central",
-    date: "2026-02-13",
-    items: [
-      {
-        name: "Leite integral",
-        desc: "2 litros",
-        price: "8,50",
-        checked: true,
-      },
-      { name: "Arroz", desc: "5 kg", price: "18,90", checked: false },
-    ],
-  },
-];
-
-let marketListData =
-  JSON.parse(localStorage.getItem("marketList")) || defaultData;
+let marketListData = JSON.parse(localStorage.getItem("marketList")) || [];
 
 /* ==========================================================================
    2. UTILITÁRIOS: TOAST REFATORADO
@@ -56,7 +39,7 @@ function showToast(message, type = "danger") {
 
   // Pequeno timeout para garantir que a remoção da classe 'show' seja processada antes de re-adicionar
   setTimeout(() => {
-  toast.classList.add("show");
+    toast.classList.add("show");
   }, 10);
 
   setTimeout(() => {
