@@ -12,6 +12,11 @@
   </head>
   <body>
     <div class="app-container">
+      <div id="toast" class="toast">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span id="toast-message"></span>
+      </div>
+
       <div id="home-screen">
         <header>
           <h1>Market List</h1>
@@ -55,7 +60,6 @@
             <ion-icon name="add-sharp" style="font-size: 32px"></ion-icon>
           </div>
         </header>
-
         <div class="search-section">
           <div class="search-group">
             <ion-icon name="search-outline"></ion-icon>
@@ -67,7 +71,6 @@
             />
           </div>
         </div>
-
         <div
           class="list-container master-list"
           id="lists-master-container"
@@ -85,9 +88,8 @@
               style="font-size: 28px"
             ></ion-icon>
           </div>
-          <h1 class="header-title" style="margin-right: 40px;">Nova Lista</h1>
+          <h1 class="header-title" style="margin-right: 40px">Nova Lista</h1>
         </header>
-
         <div class="form-section">
           <div class="form-card dashboard">
             <div class="input-field">
@@ -126,7 +128,6 @@
           </div>
           <h1 id="main-list-title" class="header-title">Detalhes</h1>
         </header>
-
         <div class="dashboard">
           <div class="dashboard-header">
             <h2 class="items-label">Itens adicionados:</h2>
@@ -139,7 +140,6 @@
             <div class="progress-bar" id="progress-bar"></div>
           </div>
         </div>
-
         <div class="input-section">
           <div class="input-group">
             <span class="icon">🛒</span>

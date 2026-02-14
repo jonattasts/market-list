@@ -5,9 +5,10 @@ const listItemsContainer = document.getElementById("list-items-container");
 const listsMasterContainer = document.getElementById("lists-master-container");
 const searchInput = document.getElementById("search-input");
 const itemInput = document.getElementById("item-input");
+const toast = document.getElementById("toast");
 
 let currentListIndex = 0;
-let pressTimer; // Timer para o clique longo
+let pressTimer;
 
 const defaultData = [
   {
@@ -29,7 +30,26 @@ let marketListData =
   JSON.parse(localStorage.getItem("marketList")) || defaultData;
 
 /* ==========================================================================
-   2. NAVEGAÇÃO ENTRE TELAS
+   2. UTILITÁRIOS: TOAST E FORMATAÇÃO
+   ========================================================================== */
+function showToast(message) {
+  toast.innerText = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3500);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function saveAndSync() {
+  localStorage.setItem("marketList", JSON.stringify(marketListData));
+}
+
+/* ==========================================================================
+   3. NAVEGAÇÃO
    ========================================================================== */
 function showScreen(screenId) {
   const screens = [
@@ -42,7 +62,6 @@ function showScreen(screenId) {
     document.getElementById(id).style.display =
       id === screenId ? "flex" : "none";
   });
-
   if (screenId === "market-lists-screen") renderMarketLists();
 }
 
@@ -53,13 +72,11 @@ function openListDetails(index) {
 }
 
 /* ==========================================================================
-   3. TELA: LISTAS DE COMPRAS E LÓGICA DE EXCLUSÃO
+   4. TELA: LISTAS DE COMPRAS
    ========================================================================== */
 function confirmDeleteList(index) {
   const listName = marketListData[index].listName;
-  const confirmacao = confirm(`Deseja excluir a lista "${listName}"?`);
-
-  if (confirmacao) {
+  if (confirm(`Deseja excluir a "${listName}"?`)) {
     marketListData.splice(index, 1);
     saveAndSync();
     renderMarketLists();
@@ -72,41 +89,24 @@ function renderMarketLists() {
 
   if (marketListData.length === 0) {
     searchInput.disabled = true;
-    searchInput.placeholder = "Crie uma lista para buscar...";
-    listsMasterContainer.innerHTML = `
-      <div class="empty-state">
-        <span class="empty-emoji">📝</span>
-        <p>Ainda não há listas de compras registradas.</p>
-      </div>
-    `;
+    listsMasterContainer.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
     return;
   }
 
   searchInput.disabled = false;
-  searchInput.placeholder = "Buscar lista pelo nome...";
-
-  const filteredLists = marketListData.filter((list) =>
+  const filtered = marketListData.filter((list) =>
     list.listName.toLowerCase().includes(term),
   );
 
-  if (filteredLists.length === 0 && term !== "") {
-    listsMasterContainer.innerHTML = `<p class="no-results">Nenhuma lista encontrada com "${term}"</p>`;
-    return;
-  }
-
-  filteredLists.forEach((list) => {
+  filtered.forEach((list) => {
     const originalIndex = marketListData.indexOf(list);
-    const totalItems = list.items.length;
+    const total = list.items.length;
     const purchased = list.items.filter((i) => i.checked).length;
-    const percent = totalItems > 0 ? (purchased / totalItems) * 100 : 0;
+    const percent = total > 0 ? (purchased / total) * 100 : 0;
 
     const card = document.createElement("div");
     card.className = "list-master-card";
-
-    // Clique normal para abrir
     card.onclick = () => openListDetails(originalIndex);
-
-    // Lógica para Clique Direito (Mouse)
     card.oncontextmenu = (e) => {
       e.preventDefault();
       confirmDeleteList(originalIndex);
@@ -134,20 +134,18 @@ function renderMarketLists() {
     card.innerHTML = `
             <div class="list-master-header dashboard-header">
                 <span class="list-master-title">${list.listName}</span>
-                <span class="item-count">${totalItems} itens</span>
+                <span class="item-count">${total} itens</span>
             </div>
             <div class="date-text">${formatDate(list.date)}</div>
             <div class="status-text">${purchased} comprado(s)</div>
-            <div class="mini-progress-bg">
-                <div class="mini-progress-bar" style="width: ${percent}%"></div>
-            </div>
+            <div class="mini-progress-bg"><div class="mini-progress-bar" style="width: ${percent}%"></div></div>
         `;
     listsMasterContainer.appendChild(card);
   });
 }
 
 /* ==========================================================================
-   4. CRIAÇÃO DE NOVA LISTA
+   5. CRIAÇÃO DE LISTA
    ========================================================================== */
 function openNewListForm() {
   document.getElementById("new-list-name").value = "";
@@ -186,9 +184,6 @@ function handleSaveNewList() {
   showScreen("market-lists-screen");
 }
 
-/* ==========================================================================
-   5. TELA: DETALHES E PERSISTÊNCIA
-   ========================================================================== */
 function renderListDetails() {
   listItemsContainer.innerHTML = "";
   const currentList = marketListData[currentListIndex];
@@ -217,7 +212,6 @@ function updateDashboard() {
   const total = list.items.length;
   const purchased = list.items.filter((i) => i.checked).length;
   const percent = total > 0 ? (purchased / total) * 100 : 0;
-
   document.getElementById("total-qty").innerText = `${total} itens`;
   document.getElementById("checked-count").innerText =
     `${purchased} comprado(s)`;
@@ -233,28 +227,54 @@ function toggleItemStatus(itemIdx) {
 
 itemInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && itemInput.value.trim() !== "") {
-    const [name, desc, price] = itemInput.value.split(";").map((p) => p.trim());
+    /* REGEX:
+       ^([^;]+)       -> 1º grupo: Nome (qualquer caractere exceto ;)
+       ;              -> Obrigatório o uso de ponto e vírgula
+       ([^;]+)        -> 2º grupo: Descrição (qualquer caractere exceto ;)
+       ;              -> Obrigatório o uso de ponto e vírgula
+       \s* -> Espaços opcionais antes do preço
+       (              -> 3º grupo (Preço):
+         \d{1,3}      -> Começa com 1 a 3 dígitos (ex: 1 ou 100)
+         (\.?\d{3})* -> Opcional: separador de milhar (ponto) e 3 dígitos
+         (,\d{1,2})?  -> Opcional: vírgula decimal e até 2 dígitos
+         |            -> OU
+         \d+          -> Apenas números simples (ex: 10)
+         (,\d{1,2})?  -> Opcional: vírgula decimal
+       )
+       \s*$           -> Fim da linha
+    */
+    const regex =
+      /^([^;]+);([^;]+);\s*(\d{1,3}(\.?\d{3})*(,\d{1,2})?|\d+(,\d{1,2})?)\s*$/;
+
+    if (!regex.test(itemInput.value)) {
+      showToast(
+        "Padrão incorreto! (Ex: Arroz; 5kg; 18,90)",
+      );
+      return;
+    }
+
+    const [name, desc, priceRaw] = itemInput.value
+      .split(";")
+      .map((p) => p.trim());
+
+    const cleanPrice = priceRaw.replace(/\./g, "").replace(",", ".");
+    const numPrice = parseFloat(cleanPrice);
+
+    const formattedPrice = isNaN(numPrice)
+      ? "0,00"
+      : numPrice.toFixed(2).replace(".", ",");
+
     marketListData[currentListIndex].items.push({
-      name: name || "Novo Item",
-      desc: desc || "1 un",
-      price: price || "0,00",
+      name: name,
+      desc: desc,
+      price: formattedPrice,
       checked: false,
     });
+
     itemInput.value = "";
     saveAndSync();
     renderListDetails();
   }
 });
 
-function saveAndSync() {
-  localStorage.setItem("marketList", JSON.stringify(marketListData));
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
-}
-
-// Inicialização
 renderMarketLists();
