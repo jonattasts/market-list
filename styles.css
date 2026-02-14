@@ -41,6 +41,7 @@ body {
   z-index: 9999;
   transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   border-left: 6px solid transparent;
+  cursor: pointer;
 }
 
 .toast.danger {
@@ -73,6 +74,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  position: relative;
 }
 
 header {
@@ -261,7 +263,7 @@ button:active {
   gap: 12px;
   cursor: pointer;
   margin-bottom: 15px;
-  user-select: none; /* Evita seleção de texto durante o clique longo */
+  user-select: none;
   -webkit-user-select: none;
   transition: transform 0.2s;
 }
@@ -296,7 +298,9 @@ button:active {
   width: 100%;
   display: none;
   flex-direction: column;
+  height: 100vh; /* Ocupa a tela cheia para o footer fixar */
 }
+
 .dashboard {
   background: var(--bg-card);
   margin: -25px 16px 16px;
@@ -305,6 +309,7 @@ button:active {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   position: relative;
   z-index: 5;
+  flex-shrink: 0;
 }
 .dashboard-header {
   display: flex;
@@ -348,6 +353,7 @@ button:active {
 .input-section {
   padding: 0 16px;
   margin-bottom: 20px;
+  flex-shrink: 0;
 }
 .input-group {
   background: var(--bg-card);
@@ -367,12 +373,16 @@ button:active {
   background: transparent;
 }
 
+/* Scrollable Container */
 .list-container {
-  padding: 0 16px 40px;
+  padding: 0 16px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  overflow-y: auto;
 }
+
 .item-card {
   background: var(--bg-card);
   padding: 16px;
@@ -391,6 +401,7 @@ button:active {
 }
 .item-price {
   color: var(--toast-bg);
+  font-weight: 600;
 }
 .custom-check {
   width: 26px;
@@ -443,4 +454,52 @@ button:active {
 
 .item-card.checked .item-price {
   color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   STIKY FOOTER - UX REFACTOR
+   ========================================================================== */
+.details-footer {
+  background: var(--bg-card);
+  padding: 20px 24px;
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.footer-value {
+  font-size: 15px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+#subtotal-all {
+  color: var(--toast-bg);
+}
+
+.total-row {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.footer-value.highlight {
+  font-size: 20px;
+  color: var(--danger);
+  font-weight: 700;
 }

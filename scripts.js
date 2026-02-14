@@ -107,7 +107,6 @@ function confirmDeleteList(index) {
 
 function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
-  // Normaliza o termo de busca
   const term = normalizeString(searchInput.value);
 
   if (marketListData.length === 0) {
@@ -284,13 +283,43 @@ function renderListDetails() {
 
 function updateDashboard() {
   const list = marketListData[currentListIndex];
-  const total = list.items.length;
-  const purchased = list.items.filter((i) => i.checked).length;
-  const percent = total > 0 ? (purchased / total) * 100 : 0;
-  document.getElementById("total-qty").innerText = `${total} itens`;
+  const totalItems = list.items.length;
+  const purchasedItems = list.items.filter((i) => i.checked).length;
+  const percent = totalItems > 0 ? (purchasedItems / totalItems) * 100 : 0;
+
+  // Atualização Elementos Superiores
+  document.getElementById("total-qty").innerText = `${totalItems} itens`;
   document.getElementById("checked-count").innerText =
-    `${purchased} comprado(s)`;
+    `${purchasedItems} comprado(s)`;
   document.getElementById("progress-bar").style.width = percent + "%";
+
+  // Lógica de Cálculo de Totais Monetários
+  let subtotalGeral = 0;
+  let totalMarcado = 0;
+
+  list.items.forEach((item) => {
+    // Converte "1.250,50" -> 1250.50
+    const valorNumerico = parseFloat(
+      item.price.replace(/\./g, "").replace(",", "."),
+    );
+
+    if (!isNaN(valorNumerico)) {
+      subtotalGeral += valorNumerico;
+      if (item.checked) {
+        totalMarcado += valorNumerico;
+      }
+    }
+  });
+
+  // Formatação para Moeda Brasileira
+  const formatCurrency = (val) =>
+    val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  // Atualização dos elementos fixos no Footer
+  document.getElementById("subtotal-all").innerText =
+    formatCurrency(subtotalGeral);
+  document.getElementById("total-checked").innerText =
+    formatCurrency(totalMarcado);
 }
 
 function toggleItemStatus(itemIdx) {
