@@ -14,10 +14,10 @@
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: #222; /* Fundo simulando ambiente externo ao app */
   margin: 0;
   display: flex;
   justify-content: center;
+  align-items: flex-start; /* Garante que o app comece no topo */
 }
 
 .app-container {
@@ -37,12 +37,22 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* CORREÇÃO: Impede o header de esticar verticalmente */
 }
 
+/* Garante que o título no header não estoure o espaço */
 header h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px; /* Ajuste leve para acomodar nomes maiores */
   font-weight: 600;
+  flex: 1;
+  text-align: center;
+  padding: 0 10px;
+
+  /* Lógica para não estourar a div */
+  white-space: nowrap; /* CORREÇÃO: Evita quebra de linha que empurra ícones */
+  overflow: hidden;
+  text-overflow: ellipsis; /* CORREÇÃO: Adiciona "..." se o nome for muito longo */
 }
 
 /* ==========================================================================
@@ -51,6 +61,8 @@ header h1 {
 ion-icon {
   cursor: pointer;
   transition: var(--transition);
+  flex-shrink: 0; /* CORREÇÃO: Impede que os ícones sumam se o título crescer */
+  width: 28px; /* CORREÇÃO: Tamanho fixo para os ícones laterais */
 }
 
 ion-icon:active {
@@ -83,9 +95,8 @@ button:active {
   display: flex;
   flex-direction: column;
   align-items: center;
-
   padding: 20px;
-  margin-top: 80px;
+  margin-top: 40px; /* Ajustado de 80px para não empurrar demais */
 }
 
 .welcome-card {
@@ -108,8 +119,55 @@ button:active {
   width: 100%;
 }
 
+.emoji-main {
+  font-size: 60px;
+  display: block;
+  margin-bottom: 10px;
+}
+
 /* ==========================================================================
-   4. TELA: MARKET-LIST-SCREEN-DETAILS (DETALHES E INTERAÇÃO)
+   4. TELA: MARKET-LIST-SCREEN (LISTA MASTER) - Adicionado para alinhar os cards
+   ========================================================================== */
+#market-lists-screen {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.list-master-card {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.mini-progress-bg {
+  background: var(--border-color);
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mini-progress-bar {
+  background: var(--accent-green);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+/* ==========================================================================
+   5. TELA: MARKET-LIST-SCREEN-DETAILS (DETALHES E INTERAÇÃO)
    ========================================================================== */
 #market-list-screen-details {
   width: 100%;
@@ -120,35 +178,21 @@ button:active {
 /* Dashboard: Resumo e Barra de Progresso */
 .dashboard {
   background: var(--bg-card);
-  margin: -20px 16px 16px;
+  margin: -20px 16px 16px; /* Efeito de flutuar sobre o header */
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  z-index: 2;
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
 
-/* Garante que o título no header não estoure o espaço */
-header h1 {
-  margin: 0;
-  font-size: 20px; /* Ajuste leve para acomodar nomes maiores */
-  font-weight: 600;
-  flex: 1;
-  text-align: center;
-  padding: 0 10px;
-
-  /* Lógica para não estourar a div */
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Limita a duas linhas antes de cortar, se preferir */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  .item-count {
+    color: var(--text-secondary);
+  }
 }
 
 /* Estilo para o novo label do dashboard */
@@ -181,10 +225,17 @@ header h1 {
   transition: width 0.5s ease-out;
 }
 
-/* Seção de Entrada de Itens */
+/* Seção de Entrada de Itens e Busca */
 .input-section {
   padding: 0 16px;
   margin-bottom: 20px;
+}
+
+/* CORREÇÃO: Ajuste na margem da busca para flutuar como no dashboard */
+#market-lists-screen .input-section {
+  margin-top: -20px;
+  position: relative;
+  z-index: 3;
 }
 
 .input-group {
@@ -195,6 +246,7 @@ header h1 {
   display: flex;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .input-group input {
@@ -203,6 +255,7 @@ header h1 {
   flex: 1;
   font-size: 15px;
   color: var(--text-main);
+  background: transparent;
 }
 
 /* Container de Listagem de Itens (Dinâmico) */
@@ -239,6 +292,7 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .text-group {
