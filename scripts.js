@@ -6,6 +6,8 @@ const listsMasterContainer = document.getElementById("lists-master-container");
 const searchInput = document.getElementById("search-input");
 const itemInput = document.getElementById("item-input");
 const toast = document.getElementById("toast");
+const toastMessage = document.getElementById("toast-message");
+const toastIcon = document.getElementById("toast-icon");
 
 let currentListIndex = 0;
 let pressTimer;
@@ -30,12 +32,36 @@ let marketListData =
   JSON.parse(localStorage.getItem("marketList")) || defaultData;
 
 /* ==========================================================================
-   2. UTILITÁRIOS: TOAST E FORMATAÇÃO
+   2. UTILITÁRIOS: TOAST REFATORADO
    ========================================================================== */
-function showToast(message) {
-  toast.innerText = message;
+/**
+ * Exibe um toast customizado
+ * @param {string} message - Texto do toast
+ * @param {string} type - 'success' ou 'danger'
+ */
+function showToast(message, type = "danger") {
+  toastMessage.innerText = message;
+
+  // Limpa classes anteriores
+  toast.classList.remove("success", "danger", "show");
+
+  // Define o ícone e a cor baseada no tipo
+  if (type === "success") {
+    toast.classList.add("success");
+    toastIcon.setAttribute("name", "checkmark-circle-outline");
+  } else {
+    toast.classList.add("danger");
+    toastIcon.setAttribute("name", "alert-circle-outline");
+  }
+
+  // Pequeno timeout para garantir que a remoção da classe 'show' seja processada antes de re-adicionar
+  setTimeout(() => {
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3500);
+  }, 10);
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3500);
 }
 
 function formatDate(dateStr) {
@@ -80,6 +106,7 @@ function confirmDeleteList(index) {
     marketListData.splice(index, 1);
     saveAndSync();
     renderMarketLists();
+    showToast("Lista removida com sucesso", "success");
   }
 }
 
@@ -165,23 +192,18 @@ function handleSaveNewList() {
   const date = document.getElementById("new-list-date").value;
 
   if (!name) {
-    alert("Por favor, insira um nome para a lista.");
+    showToast("Por favor, insira um nome para a lista", "danger");
     return;
   }
 
   if (!date) {
-    alert("Por favor, insira uma data válida para a lista.");
+    showToast("Por favor, insira uma data válida para a lista", "danger");
     return;
   }
-
-  marketListData.push({
-    listName: name,
-    date: date,
-    items: [],
-  });
-
+  marketListData.push({ listName: name, date: date, items: [] });
   saveAndSync();
   showScreen("market-lists-screen");
+  showToast("Lista criada com sucesso!", "success");
 }
 
 function renderListDetails() {
@@ -225,6 +247,7 @@ function toggleItemStatus(itemIdx) {
   renderListDetails();
 }
 
+/* VALIDAÇÃO COM REGEX E TOAST DE SUCESSO */
 itemInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && itemInput.value.trim() !== "") {
     /* REGEX:
@@ -247,9 +270,7 @@ itemInput.addEventListener("keypress", (e) => {
       /^([^;]+);([^;]+);\s*(\d{1,3}(\.?\d{3})*(,\d{1,2})?|\d+(,\d{1,2})?)\s*$/;
 
     if (!regex.test(itemInput.value)) {
-      showToast(
-        "Padrão incorreto! (Ex: Arroz; 5kg; 18,90)",
-      );
+      showToast("Padrão incorreto! (Ex: Arroz; 5kg; 18,90)", "danger");
       return;
     }
 
@@ -274,6 +295,8 @@ itemInput.addEventListener("keypress", (e) => {
     itemInput.value = "";
     saveAndSync();
     renderListDetails();
+
+    showToast(`${name} adicionado com sucesso!`, "success");
   }
 });
 

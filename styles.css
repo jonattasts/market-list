@@ -8,7 +8,8 @@
   --border-color: #e0e3e7;
   --transition: all 0.3s ease;
   --danger: #ff4757;
-  --toast-shadow: rgba(0, 0, 0, 0.15);
+  --success: #2ed573;
+  --toast-bg: #2f3542;
 }
 
 * {
@@ -23,10 +24,10 @@ body {
 
 .toast {
   position: fixed;
-  bottom: -100px; /* Escondido abaixo da tela */
+  bottom: -100px;
   left: 50%;
   transform: translateX(-50%);
-  background: #2f3542; /* Cinza escuro moderno */
+  background: var(--toast-bg);
   color: white;
   padding: 20px 20px;
   border-radius: 16px;
@@ -35,20 +36,33 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 330px;
-  box-shadow: 0 10px 25px var(--toast-shadow);
+  min-width: 350px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
   z-index: 9999;
-  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Efeito elástico */
-  border-left: 4px solid var(--danger);
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border-left: 6px solid transparent;
+}
+
+.toast.danger {
+  border-left-color: var(--danger);
+}
+.toast.danger ion-icon {
+  color: var(--danger);
+}
+
+.toast.success {
+  border-left-color: var(--success);
+}
+.toast.success ion-icon {
+  color: var(--success);
 }
 
 .toast ion-icon {
-  color: var(--danger);
-  font-size: 22px;
+  font-size: 24px;
 }
 
 .toast.show {
-  bottom: 30px; /* Aparece na base */
+  bottom: 30px;
 }
 
 .app-container {
