@@ -206,6 +206,17 @@ function handleSaveNewList() {
   showToast("Lista criada com sucesso!", "success");
 }
 
+/* REMOÇÃO DE ITEM INDIVIDUAL */
+function confirmDeleteItem(itemIdx) {
+  const itemName = marketListData[currentListIndex].items[itemIdx].name;
+  if (confirm(`Deseja remover "${itemName}" da lista?`)) {
+    marketListData[currentListIndex].items.splice(itemIdx, 1);
+    saveAndSync();
+    renderListDetails();
+    showToast(`${itemName} removido!`, "success");
+  }
+}
+
 function renderListDetails() {
   listItemsContainer.innerHTML = "";
   const currentList = marketListData[currentListIndex];
@@ -214,6 +225,30 @@ function renderListDetails() {
   currentList.items.forEach((item, idx) => {
     const card = document.createElement("div");
     card.className = `item-card ${item.checked ? "checked" : ""}`;
+
+    // Lógica para Clique Longo no Item para Remover
+    const startPressItem = () => {
+      pressTimer = setTimeout(() => {
+        confirmDeleteItem(idx);
+      }, 2000);
+    };
+
+    const cancelPressItem = () => {
+      clearTimeout(pressTimer);
+    };
+
+    card.onmousedown = startPressItem;
+    card.onmouseup = cancelPressItem;
+    card.onmouseleave = cancelPressItem;
+    card.ontouchstart = startPressItem;
+    card.ontouchend = cancelPressItem;
+
+    // Clique com botão direito (Desktop)
+    card.oncontextmenu = (e) => {
+      e.preventDefault();
+      confirmDeleteItem(idx);
+    };
+
     card.innerHTML = `
             <div class="item-info">
                 <div class="custom-check" onclick="toggleItemStatus(${idx})"></div>
