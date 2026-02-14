@@ -80,16 +80,15 @@
 
       <div id="new-list-screen" style="display: none">
         <header>
-          <div
-            class="header-action"
-            onclick="showScreen('market-lists-screen')"
-          >
+          <div class="header-action" onclick="handleBackFromForm()">
             <ion-icon
               name="arrow-back-outline"
               style="font-size: 28px"
             ></ion-icon>
           </div>
-          <h1 class="header-title" style="margin-right: 40px">Nova Lista</h1>
+          <h1 id="form-title" class="header-title" style="margin-right: 40px">
+            Nova Lista
+          </h1>
         </header>
         <div class="form-section">
           <div class="form-card dashboard">
@@ -114,6 +113,7 @@
               <input type="date" id="new-list-date" />
             </div>
             <button
+              id="btn-save-list"
               class="btn-start"
               style="margin-top: 30px"
               onclick="handleSaveNewList()"
@@ -132,7 +132,29 @@
               style="font-size: 28px"
             ></ion-icon>
           </div>
-          <h1 id="main-list-title" class="header-title">Detalhes</h1>
+          <div
+            style="
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+          >
+            <h1
+              id="main-list-title"
+              class="header-title"
+              style="flex: none; padding: 0"
+            >
+              Detalhes
+            </h1>
+            <ion-icon
+              name="create-outline"
+              onclick="openEditListForm()"
+              style="font-size: 20px; opacity: 0.8"
+            ></ion-icon>
+          </div>
+          <div class="header-action"></div>
         </header>
         <div class="dashboard">
           <div class="dashboard-header">

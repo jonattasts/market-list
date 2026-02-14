@@ -12,6 +12,7 @@ const toastIcon = document.getElementById("toast-icon");
 let currentListIndex = 0;
 let pressTimer;
 let editingItemIndex = null;
+let isEditingListMode = false;
 
 let marketListData = JSON.parse(localStorage.getItem("marketList")) || [];
 
@@ -30,9 +31,6 @@ function normalizeString(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-/**
- * Exibe um toast customizado com fechamento no clique
- */
 function showToast(message, type = "danger") {
   toastMessage.innerText = message;
   toast.classList.remove("success", "danger", "show");
@@ -93,12 +91,17 @@ function openListDetails(index) {
   renderListDetails();
 }
 
-/**
- * Ao sair da tela de detalhes limpa o estado de edição
- */
 function exitDetailsScreen() {
   cancelEditMode();
   showScreen("market-lists-screen");
+}
+
+function handleBackFromForm() {
+  if (isEditingListMode) {
+    showScreen("market-list-screen-details");
+  } else {
+    showScreen("market-lists-screen");
+  }
 }
 
 /* ==========================================================================
@@ -218,9 +221,13 @@ function renderMarketLists() {
 }
 
 /* ==========================================================================
-   5. CRIAÇÃO DE LISTA
+   5. CRIAÇÃO E EDIÇÃO DE LISTA
    ========================================================================== */
 function openNewListForm() {
+  isEditingListMode = false;
+  document.getElementById("form-title").innerText = "Nova Lista";
+  document.getElementById("btn-save-list").innerText = "Salvar Lista";
+
   document.getElementById("new-list-name").value = "";
   document.getElementById("new-list-location").value = "";
 
@@ -230,6 +237,20 @@ function openNewListForm() {
   const day = String(now.getDate()).padStart(2, "0");
 
   document.getElementById("new-list-date").value = `${year}-${month}-${day}`;
+
+  showScreen("new-list-screen");
+}
+
+function openEditListForm() {
+  isEditingListMode = true;
+  const list = marketListData[currentListIndex];
+
+  document.getElementById("form-title").innerText = "Editar Lista";
+  document.getElementById("btn-save-list").innerText = "Atualizar Lista";
+
+  document.getElementById("new-list-name").value = list.listName;
+  document.getElementById("new-list-location").value = list.location || "";
+  document.getElementById("new-list-date").value = list.date;
 
   showScreen("new-list-screen");
 }
@@ -249,19 +270,29 @@ function handleSaveNewList() {
     return;
   }
 
-  marketListData.push({
-    listName: name,
-    location: location,
-    date: date,
-    items: [],
-  });
+  if (isEditingListMode) {
+    marketListData[currentListIndex].listName = name;
+    marketListData[currentListIndex].location = location;
+    marketListData[currentListIndex].date = date;
 
-  saveAndSync();
-  showScreen("market-lists-screen");
-  showToast("Lista criada com sucesso!", "success");
+    saveAndSync();
+    showScreen("market-list-screen-details");
+    renderListDetails();
+    showToast("Lista atualizada com sucesso!", "success");
+  } else {
+    marketListData.push({
+      listName: name,
+      location: location,
+      date: date,
+      items: [],
+    });
+
+    saveAndSync();
+    showScreen("market-lists-screen");
+    showToast("Lista criada com sucesso!", "success");
+  }
 }
 
-/* REMOÇÃO DE ITEM INDIVIDUAL */
 function confirmDeleteItem(itemIdx) {
   const itemName = marketListData[currentListIndex].items[itemIdx].name;
   if (confirm(`Deseja remover "${itemName}" da lista?`)) {
@@ -274,29 +305,19 @@ function confirmDeleteItem(itemIdx) {
   }
 }
 
-/**
- * Entra no modo de edição de item
- */
 function enterEditMode(idx) {
   const item = marketListData[currentListIndex].items[idx];
   editingItemIndex = idx;
 
-  // Preenche o input com o formato padrão para edição fácil
+  // Preenche o input com o formato padrão para edição
   itemInput.value = `${item.name}; ${item.desc}; ${item.price}`;
 
-  // Melhoria de UI: Focar e estilizar o campo
   itemInput.focus();
   document.getElementById("item-input-group").style.borderColor =
     "var(--primary)";
   document.getElementById("input-mode-icon").innerText = "✏️";
-  itemInput.placeholder = "Editando item...";
-
-  showToast("Modo de edição ativado", "success");
 }
 
-/**
- * Cancela o modo de edição
- */
 function cancelEditMode() {
   editingItemIndex = null;
   itemInput.value = "";
@@ -357,7 +378,7 @@ function updateDashboard() {
   const purchasedItems = list.items.filter((i) => i.checked).length;
   const percent = totalItems > 0 ? (purchasedItems / totalItems) * 100 : 0;
 
-  // Atualização Elementos Superiores
+  // Atualização Elementos do Header
   document.getElementById("total-qty").innerText = `${totalItems} itens`;
   document.getElementById("checked-count").innerText =
     `${purchasedItems} comprado(s)`;
