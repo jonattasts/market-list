@@ -19,6 +19,7 @@ let editingItemIndex = null;
 let editingCategoryIndex = null;
 let isEditingListMode = false;
 let isCopyingListMode = false;
+let previousScreen = "home-screen";
 
 // Estado do Swipe
 let touchStartX = 0;
@@ -128,7 +129,7 @@ function exitDetailsScreen() {
 }
 
 function handleBackFromForm() {
-  showScreen("market-lists-screen");
+  showScreen(previousScreen);
 }
 
 /* ==========================================================================
@@ -149,6 +150,7 @@ function copyList(event, index) {
   isEditingListMode = false;
   isCopyingListMode = true;
   currentListIndex = index;
+  previousScreen = "market-lists-screen";
 
   const originalList = marketListData[index];
   document.getElementById("form-title").innerText = "Copiar Lista";
@@ -162,6 +164,7 @@ function copyList(event, index) {
 
 function handleEditListFromSwipe(index) {
   currentListIndex = index;
+  previousScreen = "market-lists-screen";
   openEditListForm();
 }
 
@@ -276,6 +279,11 @@ function renderMarketLists() {
    5. CRIAÇÃO E EDIÇÃO DE LISTA
    ========================================================================== */
 function openNewListForm() {
+  const homeVisible = !document
+    .getElementById("home-screen")
+    .classList.contains("screen-hidden");
+  previousScreen = homeVisible ? "home-screen" : "market-lists-screen";
+
   isEditingListMode = false;
   isCopyingListMode = false;
   document.getElementById("form-title").innerText = "Nova Lista";
