@@ -270,23 +270,21 @@ button:active {
   margin-bottom: 15px;
 }
 
+/* Alterado para suportar Swipe na Master List */
 .list-master-card {
   background: var(--bg-card);
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
-  margin-bottom: 15px;
   user-select: none;
-  transition: transform 0.2s;
-}
-
-.list-master-card:active,
-.item-card:active {
-  transform: scale(0.98);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }
 
 .list-master-title {
@@ -414,7 +412,6 @@ button:active {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  background: var(--bg-card);
   isolation: isolate;
 }
 
@@ -442,9 +439,9 @@ button:active {
 /* BOTÕES DE AÇÃO NO FUNDO */
 .swipe-actions {
   position: absolute;
-  right: 1px;
-  top: 1px;
-  height: 97%;
+  right: 0px;
+  top: 0px;
+  height: 100%;
   display: flex;
   z-index: 1;
   border-radius: 10px 12px 12px 10px;

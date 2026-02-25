@@ -4,7 +4,7 @@
 const listItemsContainer = document.getElementById("list-items-container");
 const listsMasterContainer = document.getElementById("lists-master-container");
 const searchInput = document.getElementById("search-input");
-// Referências para o novo formulário de item
+
 const itemNameInput = document.getElementById("item-name-input");
 const itemDescInput = document.getElementById("item-desc-input");
 const itemPriceInput = document.getElementById("item-price-input");
@@ -155,6 +155,11 @@ function copyList(event, index) {
   showScreen("new-list-screen");
 }
 
+function handleEditListFromSwipe(index) {
+  currentListIndex = index;
+  openEditListForm();
+}
+
 function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
   const term = normalizeString(searchInput.value);
@@ -201,13 +206,30 @@ function renderMarketLists() {
     const format = (val) =>
       val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+    // Implementação do Swipe na Lista Geral
+    const swipeContainer = document.createElement("div");
+    swipeContainer.className = "swipe-container";
+    swipeContainer.style.marginBottom = "15px";
+
+    const actionButtons = document.createElement("div");
+    actionButtons.className = "swipe-actions";
+    actionButtons.innerHTML = `
+            <button onclick="handleEditListFromSwipe(${originalIndex})" style="background: var(--primary); width: 75px;">
+                <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
+            </button>
+            <button onclick="confirmDeleteList(${originalIndex})" style="background: var(--danger); width: 75px;">
+                <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
+            </button>
+        `;
+
     const card = document.createElement("div");
     card.className = "list-master-card";
     card.onclick = () => openListDetails(originalIndex);
-    card.oncontextmenu = (e) => {
-      e.preventDefault();
-      confirmDeleteList(originalIndex);
-    };
+
+    // Adicionando eventos de Swipe
+    card.ontouchstart = handleTouchStart;
+    card.ontouchmove = handleTouchMove;
+    card.ontouchend = handleTouchEnd;
 
     card.innerHTML = `
         <div class="list-master-header dashboard-header">
@@ -238,7 +260,10 @@ function renderMarketLists() {
         <div class="status-text" style="margin-top: 8px;">${purchased} comprado(s)</div>
         <div class="mini-progress-bg"><div class="mini-progress-bar" style="width: ${percent}%"></div></div>
     `;
-    listsMasterContainer.appendChild(card);
+
+    swipeContainer.appendChild(actionButtons);
+    swipeContainer.appendChild(card);
+    listsMasterContainer.appendChild(swipeContainer);
   });
 }
 
@@ -265,7 +290,7 @@ function openEditListForm() {
   isCopyingListMode = false;
   const list = marketListData[currentListIndex];
   document.getElementById("form-title").innerText = "Editar Lista";
-  document.getElementById("btn-save-list").innerText = "Atualizar Lista";
+  document.getElementById("btn-save-list").innerText = "Atualizar";
   document.getElementById("new-list-name").value = list.listName;
   document.getElementById("new-list-location").value = list.location || "";
   document.getElementById("new-list-date").value = list.date;
@@ -287,8 +312,15 @@ function handleSaveNewList() {
     marketListData[currentListIndex].location = location;
     marketListData[currentListIndex].date = date;
     saveAndSync();
-    showScreen("market-list-screen-details");
-    renderListDetails();
+
+    const detailsVisible =
+      document.getElementById("market-list-screen-details").style.display ===
+      "flex";
+    if (detailsVisible) {
+      renderListDetails();
+    } else {
+      showScreen("market-lists-screen");
+    }
     showToast("Lista atualizada!", "success");
   } else if (isCopyingListMode) {
     const original = marketListData[currentListIndex];
@@ -400,7 +432,6 @@ function confirmDeleteItem(catIdx, itemIdx) {
   }
 }
 
-// NOVO: Abre formulário de Item
 function openNewItemForm() {
   editingItemIndex = null;
   editingCategoryIndex = null;
@@ -432,7 +463,6 @@ function openNewItemForm() {
   showScreen("new-item-screen");
 }
 
-// NOVO: Entra em modo edição de item usando a nova tela
 function enterEditMode(catIdx, itemIdx) {
   const item =
     marketListData[currentListIndex].categories[catIdx].items[itemIdx];
@@ -457,7 +487,7 @@ function enterEditMode(catIdx, itemIdx) {
   showScreen("new-item-screen");
 }
 
-// NOVO: Salva o item (Novo ou Editado)
+// Salva o item (Novo ou Editado)
 function handleSaveItem() {
   const name = itemNameInput.value.trim();
   const desc = itemDescInput.value.trim();
