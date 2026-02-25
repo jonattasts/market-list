@@ -407,6 +407,10 @@ button:active {
   gap: 12px;
 }
 
+.category-items-list .swipe-container .swipe-actions {
+  height: 97%;
+}
+
 /* CONTAINER DO SWIPE */
 .swipe-container {
   position: relative;
@@ -439,9 +443,9 @@ button:active {
 /* BOTÕES DE AÇÃO NO FUNDO */
 .swipe-actions {
   position: absolute;
-  right: 0px;
-  top: 0px;
-  height: 100%;
+  right: 1px;
+  top: 1px;
+  height: 98.5%;
   display: flex;
   z-index: 1;
   border-radius: 10px 12px 12px 10px;
