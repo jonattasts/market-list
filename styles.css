@@ -15,13 +15,18 @@
 * {
   box-sizing: border-box;
 }
+
 body {
   font-family: "Inter", sans-serif;
   margin: 0;
   display: flex;
   justify-content: center;
+  background-color: #e0e3e7; /* Cor de fundo externa para destaque do container */
 }
 
+/* ==========================================================================
+   1. TOAST NOTIFICATIONS
+   ========================================================================== */
 .toast {
   position: fixed;
   top: -100px;
@@ -66,14 +71,17 @@ body {
   top: 30px;
 }
 
+/* ==========================================================================
+   2. APP CONTAINER & ESTRUTURA
+   ========================================================================== */
 .app-container {
   width: 100%;
   max-width: 450px;
-  min-height: 100vh;
+  height: 100vh; /* Altura fixa para permitir scroll interno */
   background-color: var(--bg-page);
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden; /* Evita scroll na raiz do app */
   position: relative;
 }
 
@@ -102,7 +110,7 @@ header h1,
 }
 
 /* ==========================================================================
-   2. COMPONENTES REUTILIZÁVEIS
+   3. COMPONENTES REUTILIZÁVEIS
    ========================================================================== */
 ion-icon {
   cursor: pointer;
@@ -124,14 +132,17 @@ button:active {
 }
 
 /* ==========================================================================
-   3. TELA: HOME E FORMULÁRIOS
+   4. TELA: HOME E FORMULÁRIOS
    ========================================================================== */
 #home-screen,
-#new-list-screen {
+#new-list-screen,
+#new-category-screen,
+#new-item-screen {
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .home-content,
@@ -141,7 +152,7 @@ button:active {
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .welcome-card,
@@ -152,12 +163,13 @@ button:active {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   text-align: center;
   width: 100%;
+  max-width: 400px;
 }
 
 .emoji-main {
   font-size: 60px;
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .btn-start {
@@ -175,6 +187,7 @@ button:active {
 .input-field {
   text-align: left;
   width: 100%;
+  margin-bottom: 20px;
 }
 .input-field label {
   display: block;
@@ -183,7 +196,8 @@ button:active {
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
-.input-field input {
+.input-field input,
+.input-field select {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
@@ -191,15 +205,17 @@ button:active {
   font-size: 15px;
   outline: none;
   background-color: var(--bg-page);
+  font-family: inherit;
 }
 
 /* ==========================================================================
-   4. TELA: MARKET-LIST-SCREEN
+   5. TELA: MARKET-LIST-SCREEN
    ========================================================================== */
 #market-lists-screen {
   width: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .header-action {
   width: 40px;
@@ -265,7 +281,6 @@ button:active {
   cursor: pointer;
   margin-bottom: 15px;
   user-select: none;
-  -webkit-user-select: none;
   transition: transform 0.2s;
 }
 
@@ -276,7 +291,6 @@ button:active {
 
 .list-master-title {
   max-width: 220px;
-
   font-size: 17px;
   font-weight: 700;
   color: var(--text-main);
@@ -295,13 +309,34 @@ button:active {
 }
 
 /* ==========================================================================
-   5. TELA: MARKET-LIST-SCREEN-DETAILS
+   6. TELA: DETALHES E CATEGORIAS
    ========================================================================== */
 #market-list-screen-details {
   width: 100%;
   display: none;
   flex-direction: column;
-  height: 100vh; /* Ocupa a tela cheia para fixar o footer */
+  height: 100%;
+}
+
+.category-section {
+  margin-bottom: 25px;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.category-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .dashboard {
@@ -353,38 +388,34 @@ button:active {
   transition: width 0.5s ease-out;
 }
 
-.input-section {
-  padding: 0 16px;
-  margin-bottom: 20px;
-  flex-shrink: 0;
-}
-.input-group {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 14px;
+/* Seção de botões de ação na tela de detalhes */
+.category-actions {
+  padding: 0 16px 15px;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: var(--transition);
-}
-.input-group input {
-  border: none;
-  outline: none;
-  flex: 1;
-  font-size: 15px;
-  color: var(--text-main);
-  background: transparent;
+  gap: 10px;
 }
 
-/* Scrollable Container */
 .list-container {
   padding: 0 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   flex: 1;
   overflow-y: auto;
+}
+
+.category-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* CONTAINER DO SWIPE */
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-card);
+  isolation: isolate;
 }
 
 .item-card {
@@ -397,7 +428,42 @@ button:active {
   border: 1px solid var(--border-color);
   user-select: none;
   -webkit-user-select: none;
+  cursor: grab;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+
+.item-card:active {
+  cursor: grabbing;
+}
+
+/* BOTÕES DE AÇÃO NO FUNDO */
+.swipe-actions {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  height: 97%;
+  display: flex;
+  z-index: 1;
+  border-radius: 10px 12px 12px 10px;
+  overflow: hidden;
+}
+
+.swipe-actions button {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: white;
+  padding: 0 15px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .item-info {
   display: flex;
   align-items: center;
@@ -434,14 +500,29 @@ button:active {
   color: var(--text-secondary);
 }
 
+/* ITEM MARCADO */
 .item-card.checked {
-  background: #fcfcfc;
-  border-color: #eee;
+  background: #f8f9fa;
+  border-color: #e9ecef;
 }
+
+.item-card.checked .item-name {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.item-card.checked .item-desc,
+.item-card.checked .item-price {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 .item-card.checked .custom-check {
   background: var(--accent-green);
   border-color: var(--accent-green);
 }
+
 .item-card.checked .custom-check::after {
   content: "";
   width: 5px;
@@ -451,17 +532,9 @@ button:active {
   transform: rotate(45deg);
   margin-bottom: 2px;
 }
-.item-card.checked .item-name {
-  text-decoration: line-through;
-  color: var(--text-secondary);
-}
-
-.item-card.checked .item-price {
-  color: var(--text-secondary);
-}
 
 /* ==========================================================================
-   STIKY FOOTER
+   7. STICKY FOOTER
    ========================================================================== */
 .details-footer {
   background: var(--bg-card);
