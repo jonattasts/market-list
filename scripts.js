@@ -13,6 +13,7 @@ let currentListIndex = 0;
 let pressTimer;
 let editingItemIndex = null;
 let isEditingListMode = false;
+let isCopyingListMode = false;
 
 let marketListData = JSON.parse(localStorage.getItem("marketList")) || [];
 
@@ -117,6 +118,26 @@ function confirmDeleteList(index) {
   }
 }
 
+function copyList(event, index) {
+  event.stopPropagation(); // Não abre detalhes da lista ao clicar no ícone
+  isEditingListMode = false;
+  isCopyingListMode = true;
+  currentListIndex = index;
+
+  const originalList = marketListData[index];
+
+  document.getElementById("form-title").innerText = "Copiar Lista";
+  document.getElementById("btn-save-list").innerText = "Confirmar Cópia";
+
+  document.getElementById("new-list-name").value = originalList.listName;
+  document.getElementById("new-list-location").value =
+    originalList.location || "";
+  // Deixa a data vazia para obrigar o usuário a escolher uma nova
+  document.getElementById("new-list-date").value = "";
+
+  showScreen("new-list-screen");
+}
+
 function renderMarketLists() {
   listsMasterContainer.innerHTML = "";
   const term = normalizeString(searchInput.value);
@@ -191,7 +212,10 @@ function renderMarketLists() {
     card.innerHTML = `
             <div class="list-master-header dashboard-header">
                 <span class="list-master-title">${list.listName}</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <ion-icon name="copy-outline" onclick="copyList(event, ${originalIndex})" style="color: var(--primary); font-size: 20px;"></ion-icon>
                 <span class="item-count">${totalItemsCount} itens</span>
+                </div>
             </div>
             <div class="location-text" style="font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 2px;">
                 <ion-icon name="location-outline" style="color: var(--primary); font-size: 14px; vertical-align: middle;"></ion-icon> 
@@ -225,6 +249,7 @@ function renderMarketLists() {
    ========================================================================== */
 function openNewListForm() {
   isEditingListMode = false;
+  isCopyingListMode = false;
   document.getElementById("form-title").innerText = "Nova Lista";
   document.getElementById("btn-save-list").innerText = "Salvar Lista";
 
@@ -243,6 +268,7 @@ function openNewListForm() {
 
 function openEditListForm() {
   isEditingListMode = true;
+  isCopyingListMode = false;
   const list = marketListData[currentListIndex];
 
   document.getElementById("form-title").innerText = "Editar Lista";
@@ -279,6 +305,32 @@ function handleSaveNewList() {
     showScreen("market-list-screen-details");
     renderListDetails();
     showToast("Lista atualizada com sucesso!", "success");
+  } else if (isCopyingListMode) {
+    const original = marketListData[currentListIndex];
+
+    if (date === original.date) {
+      showToast(
+        "Por favor insira uma data diferente da lista copiada",
+        "danger",
+      );
+      return;
+    }
+
+    const clonedItems = original.items.map((item) => {
+      return { ...item, checked: false };
+    });
+
+    marketListData.push({
+      listName: name,
+      location: location,
+      date: date,
+      items: clonedItems,
+    });
+
+    saveAndSync();
+    isCopyingListMode = false;
+    showScreen("market-lists-screen");
+    showToast("Lista copiada com sucesso!", "success");
   } else {
     marketListData.push({
       listName: name,
@@ -300,7 +352,6 @@ function confirmDeleteItem(itemIdx) {
     saveAndSync();
     renderListDetails();
     showToast(`${itemName} removido!`, "success");
-    // Se estiver editando o item removido, cancela edição
     if (editingItemIndex === itemIdx) cancelEditMode();
   }
 }
@@ -308,11 +359,9 @@ function confirmDeleteItem(itemIdx) {
 function enterEditMode(idx) {
   const item = marketListData[currentListIndex].items[idx];
   editingItemIndex = idx;
-
-  // Preenche o input com o formato padrão para edição
   itemInput.value = `${item.name}; ${item.desc}; ${item.price}`;
-
   itemInput.focus();
+
   document.getElementById("item-input-group").style.borderColor =
     "var(--primary)";
   document.getElementById("input-mode-icon").innerText = "✏️";
@@ -459,16 +508,13 @@ itemInput.addEventListener("keypress", (e) => {
       : numPrice.toFixed(2).replace(".", ",");
 
     if (editingItemIndex !== null) {
-      // Atualiza o item existente
       const item = marketListData[currentListIndex].items[editingItemIndex];
       item.name = name;
       item.desc = desc;
       item.price = formattedPrice;
-
       showToast(`${name} atualizado!`, "success");
       cancelEditMode();
     } else {
-      // MODO CADASTRO: Adiciona novo item
       marketListData[currentListIndex].items.push({
         name: name,
         desc: desc,

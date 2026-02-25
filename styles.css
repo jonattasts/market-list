@@ -298,7 +298,7 @@ button:active {
   width: 100%;
   display: none;
   flex-direction: column;
-  height: 100vh; /* Ocupa a tela cheia para o footer fixar */
+  height: 100vh; /* Ocupa a tela cheia para fixar o footer */
 }
 
 .dashboard {
@@ -458,7 +458,7 @@ button:active {
 }
 
 /* ==========================================================================
-   STIKY FOOTER - UX REFACTOR
+   STIKY FOOTER
    ========================================================================== */
 .details-footer {
   background: var(--bg-card);
