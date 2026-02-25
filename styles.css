@@ -90,7 +90,7 @@ header {
   color: white;
   padding: 50px 16px 40px;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   flex-shrink: 0;
 }
@@ -107,6 +107,10 @@ header h1,
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: anywhere;
+}
+
+#home-screen header {
+  justify-content: center;
 }
 
 /* ==========================================================================
