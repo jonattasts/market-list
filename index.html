@@ -299,6 +299,56 @@
           <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
           </div>
+
+          <div
+            class="dashboard-finance"
+            style="
+              margin-top: 15px;
+              border-top: 1px dashed var(--border-color);
+              padding-top: 15px;
+              display: flex;
+              justify-content: space-between;
+            "
+          >
+            <div style="display: flex; flex-direction: column">
+              <span
+                style="
+                  font-size: 11px;
+                  color: var(--text-secondary);
+                  font-weight: 600;
+                  text-transform: uppercase;
+                "
+                >Previsão</span
+              >
+              <span
+                id="subtotal-all"
+                style="
+                  font-size: 15px;
+                  font-weight: 600;
+                  color: var(--toast-bg);
+                "
+                >R$ 0,00</span
+              >
+            </div>
+            <div
+              style="display: flex; flex-direction: column; text-align: right"
+            >
+              <span
+                style="
+                  font-size: 11px;
+                  color: var(--text-secondary);
+                  font-weight: 600;
+                  text-transform: uppercase;
+                "
+                >Total Marcado</span
+              >
+              <span
+                id="total-checked"
+                style="font-size: 18px; font-weight: 800; color: var(--danger)"
+                >R$ 0,00</span
+              >
+            </div>
+          </div>
         </div>
 
         <div
@@ -356,19 +406,6 @@
         </div>
 
         <div class="list-container" id="list-items-container"></div>
-
-        <div class="details-footer">
-          <div class="footer-row">
-            <span class="footer-label">Subtotal (Previsão):</span>
-            <span class="footer-value" id="subtotal-all">R$ 0,00</span>
-          </div>
-          <div class="footer-row total-row">
-            <span class="footer-label">Total Marcado:</span>
-            <span class="footer-value highlight" id="total-checked"
-              >R$ 0,00</span
-            >
-          </div>
-        </div>
       </div>
     </div>
 
