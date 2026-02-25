@@ -31,16 +31,8 @@
               Criar nova lista
             </button>
             <button
-              class="btn-secondary"
+              class="btn-secondary btn-view-lists"
               onclick="showScreen('market-lists-screen')"
-              style="
-                margin-top: 10px;
-                background: transparent;
-                color: var(--primary);
-                font-weight: 600;
-                border: none;
-                cursor: pointer;
-              "
             >
               Ver minhas listas
             </button>
@@ -48,17 +40,14 @@
         </div>
       </div>
 
-      <div id="market-lists-screen" style="display: none">
+      <div id="market-lists-screen" class="screen-hidden">
         <header>
           <div class="header-action" onclick="showScreen('home-screen')">
-            <ion-icon
-              name="arrow-back-outline"
-              style="font-size: 28px"
-            ></ion-icon>
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
           <h1 class="header-title">Listas de Compras</h1>
           <div class="header-action" onclick="openNewListForm()">
-            <ion-icon name="add-sharp" style="font-size: 32px"></ion-icon>
+            <ion-icon name="add-sharp" class="icon-add-list"></ion-icon>
           </div>
         </header>
         <div class="search-section">
@@ -78,34 +67,27 @@
         ></div>
       </div>
 
-      <div id="new-list-screen" style="display: none">
+      <div id="new-list-screen" class="screen-hidden">
         <header>
           <div class="header-action" onclick="handleBackFromForm()">
-            <ion-icon
-              name="arrow-back-outline"
-              style="font-size: 28px"
-            ></ion-icon>
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
-          <h1 id="form-title" class="header-title" style="text-align: start">
+          <h1 id="form-title" class="header-title header-title-left">
             Nova Lista
           </h1>
         </header>
         <div class="form-section">
           <div class="form-card dashboard">
-            <span
-              class="emoji-main"
-              style="font-size: 40px; margin-bottom: 20px"
-              >📋</span
-            >
+            <span class="emoji-main emoji-form">📋</span>
             <div class="input-field">
-              <label>Nome da Lista<span style="color: #ff4757">*</span></label>
+              <label>Nome da Lista<span class="required-mark">*</span></label>
               <input
                 type="text"
                 id="new-list-name"
                 placeholder="Ex: Compras do Mês"
               />
             </div>
-            <div class="input-field" style="margin-top: 20px">
+            <div class="input-field mt-20">
               <label>Local da Compra</label>
               <input
                 type="text"
@@ -113,14 +95,13 @@
                 placeholder="Ex: Assaí Atacadista"
               />
             </div>
-            <div class="input-field" style="margin-top: 20px">
-              <label>Data da Compra<span style="color: #ff4757">*</span></label>
+            <div class="input-field mt-20">
+              <label>Data da Compra<span class="required-mark">*</span></label>
               <input type="date" id="new-list-date" />
             </div>
             <button
               id="btn-save-list"
-              class="btn-start"
-              style="margin-top: 30px"
+              class="btn-start mt-30"
               onclick="handleSaveNewList()"
             >
               Salvar
@@ -129,35 +110,24 @@
         </div>
       </div>
 
-      <div id="new-category-screen" style="display: none">
+      <div id="new-category-screen" class="screen-hidden">
         <header>
           <div
             class="header-action"
             onclick="showScreen('market-list-screen-details')"
           >
-            <ion-icon
-              name="arrow-back-outline"
-              style="font-size: 28px"
-            ></ion-icon>
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
-          <h1
-            id="category-form-title"
-            class="header-title"
-            style="text-align: start"
-          >
+          <h1 id="category-form-title" class="header-title header-title-left">
             Nova Categoria
           </h1>
         </header>
         <div class="form-section">
           <div class="form-card dashboard">
-            <span
-              class="emoji-main"
-              style="font-size: 40px; margin-bottom: 20px"
-              >📁</span
-            >
+            <span class="emoji-main emoji-form">📁</span>
             <div class="input-field">
               <label
-                >Nome da Categoria<span style="color: #ff4757">*</span></label
+                >Nome da Categoria<span class="required-mark">*</span></label
               >
               <input
                 type="text"
@@ -167,8 +137,7 @@
             </div>
             <button
               id="btn-save-category"
-              class="btn-start"
-              style="margin-top: 30px"
+              class="btn-start mt-30"
               onclick="handleSaveCategory()"
             >
               Salvar
@@ -177,37 +146,24 @@
         </div>
       </div>
 
-      <div id="new-item-screen" style="display: none">
+      <div id="new-item-screen" class="screen-hidden">
         <header>
           <div
             class="header-action"
             onclick="showScreen('market-list-screen-details')"
           >
-            <ion-icon
-              name="arrow-back-outline"
-              style="font-size: 28px"
-            ></ion-icon>
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
-          <h1
-            id="item-form-title"
-            class="header-title"
-            style="text-align: start"
-          >
+          <h1 id="item-form-title" class="header-title header-title-left">
             Novo Item
           </h1>
         </header>
         <div class="form-section">
           <div class="form-card dashboard">
-            <span
-              class="emoji-main"
-              style="font-size: 40px; margin-bottom: 20px"
-              >🛍️</span
-            >
+            <span class="emoji-main emoji-form">🛍️</span>
 
             <div class="input-field">
-              <label
-                >Nome do Produto<span style="color: #ff4757">*</span></label
-              >
+              <label>Nome do Produto<span class="required-mark">*</span></label>
               <input
                 type="text"
                 id="item-name-input"
@@ -215,7 +171,7 @@
               />
             </div>
 
-            <div class="input-field" style="margin-top: 20px">
+            <div class="input-field mt-20">
               <label>Descrição / Quantidade</label>
               <input
                 type="text"
@@ -224,7 +180,7 @@
               />
             </div>
 
-            <div class="input-field" style="margin-top: 20px">
+            <div class="input-field mt-20">
               <label>Preço Unitário (R$)</label>
               <input
                 type="text"
@@ -234,54 +190,28 @@
               />
             </div>
 
-            <div class="input-field" style="margin-top: 20px">
+            <div class="input-field mt-20">
               <label>Categoria</label>
               <select
                 id="item-category-select"
-                style="
-                  width: 100%;
-                  padding: 14px;
-                  border-radius: 12px;
-                  border: 1px solid var(--border-color);
-                  background-color: var(--bg-page);
-                  font-size: 15px;
-                "
+                class="category-select-input"
               ></select>
             </div>
 
-            <button
-              class="btn-start"
-              style="margin-top: 30px"
-              onclick="handleSaveItem()"
-            >
+            <button class="btn-start mt-30" onclick="handleSaveItem()">
               Salvar
             </button>
           </div>
         </div>
       </div>
 
-      <div id="market-list-screen-details" style="display: none">
+      <div id="market-list-screen-details" class="screen-hidden">
         <header>
           <div class="header-action" onclick="exitDetailsScreen()">
-            <ion-icon
-              name="arrow-back-outline"
-              style="font-size: 28px"
-            ></ion-icon>
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
-          <div
-            style="
-              flex: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 8px;
-            "
-          >
-            <h1
-              id="main-list-title"
-              class="header-title"
-              style="flex: none; padding: 0"
-            >
+          <div class="header-details-container">
+            <h1 id="main-list-title" class="header-title header-title-details">
               Detalhes
             </h1>
           </div>
@@ -300,107 +230,38 @@
             <div class="progress-bar" id="progress-bar"></div>
           </div>
 
-          <div
-            class="dashboard-finance"
-            style="
-              margin-top: 15px;
-              border-top: 1px dashed var(--border-color);
-              padding-top: 15px;
-              display: flex;
-              justify-content: space-between;
-            "
-          >
-            <div style="display: flex; flex-direction: column">
-              <span
-                style="
-                  font-size: 11px;
-                  color: var(--text-secondary);
-                  font-weight: 600;
-                  text-transform: uppercase;
-                "
-                >Previsão</span
-              >
-              <span
-                id="subtotal-all"
-                style="
-                  font-size: 15px;
-                  font-weight: 600;
-                  color: var(--toast-bg);
-                "
+          <div class="dashboard-finance">
+            <div class="finance-col">
+              <span class="finance-label">Previsão</span>
+              <span id="subtotal-all" class="finance-value-subtotal"
                 >R$ 0,00</span
               >
             </div>
-            <div
-              style="display: flex; flex-direction: column; text-align: right"
-            >
-              <span
-                style="
-                  font-size: 11px;
-                  color: var(--text-secondary);
-                  font-weight: 600;
-                  text-transform: uppercase;
-                "
-                >Total Marcado</span
-              >
-              <span
-                id="total-checked"
-                style="font-size: 18px; font-weight: 800; color: var(--danger)"
+            <div class="finance-col text-right">
+              <span class="finance-label">Total Marcado</span>
+              <span id="total-checked" class="finance-value-total"
                 >R$ 0,00</span
               >
             </div>
           </div>
         </div>
 
-        <div
-          class="category-actions"
-          style="padding: 0 16px 10px; display: flex; gap: 10px"
-        >
+        <div class="category-actions">
           <button
-            class="btn-add-cat"
+            class="btn-add-cat action-btn-secondary"
             onclick="openNewCategoryForm()"
-            style="
-              background: var(--bg-card);
-              border: 1px dashed var(--primary);
-              color: var(--primary);
-              padding: 8px 12px;
-              border-radius: 8px;
-              font-size: 12px;
-              font-weight: 600;
-              flex: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 5px;
-            "
           >
             <ion-icon
               name="add-circle-outline"
-              style="color: var(--primary); font-size: 16px"
+              class="icon-primary-small"
             ></ion-icon>
             Nova Categoria
           </button>
           <button
-            class="btn-add-item"
+            class="btn-add-item action-btn-primary"
             onclick="openNewItemForm()"
-            style="
-              background: var(--primary);
-              border: none;
-              color: white;
-              padding: 8px 12px;
-              border-radius: 8px;
-              font-size: 12px;
-              font-weight: 600;
-              flex: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 5px;
-            "
           >
-            <ion-icon
-              name="cart-outline"
-              style="color: white; font-size: 16px"
-            ></ion-icon>
+            <ion-icon name="cart-outline" class="icon-white-small"></ion-icon>
             Adicionar Item
           </button>
         </div>

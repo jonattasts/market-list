@@ -95,7 +95,16 @@ function showScreen(screenId) {
   ];
   screens.forEach((id) => {
     const el = document.getElementById(id);
-    if (el) el.style.display = id === screenId ? "flex" : "none";
+    if (el) {
+      if (id === screenId) {
+        el.classList.remove("screen-hidden");
+        // Força o flexbox para layouts de tela cheia conforme definido no CSS original
+        el.style.display = "flex";
+      } else {
+        el.classList.add("screen-hidden");
+        el.style.display = "none";
+      }
+    }
   });
   if (screenId === "market-lists-screen") renderMarketLists();
 }
@@ -309,9 +318,9 @@ function handleSaveNewList() {
     marketListData[currentListIndex].date = date;
     saveAndSync();
 
-    const detailsVisible =
-      document.getElementById("market-list-screen-details").style.display ===
-      "flex";
+    const detailsVisible = !document
+      .getElementById("market-list-screen-details")
+      .classList.contains("screen-hidden");
     if (detailsVisible) {
       renderListDetails();
     } else {

@@ -113,6 +113,11 @@ header h1,
   justify-content: center;
 }
 
+/* Classes para controle de visibilidade das telas */
+.screen-hidden {
+  display: none;
+}
+
 /* ==========================================================================
    3. COMPONENTES REUTILIZÁVEIS
    ========================================================================== */
@@ -133,6 +138,27 @@ button {
 }
 button:active {
   transform: scale(0.95);
+}
+
+/* Utility classes */
+.mt-20 {
+  margin-top: 20px;
+}
+.mt-30 {
+  margin-top: 30px;
+}
+.text-right {
+  text-align: right;
+}
+.required-mark {
+  color: #ff4757;
+}
+
+.icon-back {
+  font-size: 28px;
+}
+.icon-add-list {
+  font-size: 32px;
 }
 
 /* ==========================================================================
@@ -176,6 +202,11 @@ button:active {
   margin-bottom: 20px;
 }
 
+.emoji-form {
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+
 .btn-start {
   margin-top: 25px;
   padding: 16px 32px;
@@ -185,6 +216,19 @@ button:active {
   font-size: 16px;
   font-weight: 600;
   width: 100%;
+}
+
+.btn-view-lists {
+  margin-top: 10px;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.header-title-left {
+  text-align: start;
 }
 
 /* Estilos de Input do Formulário */
@@ -210,6 +254,15 @@ button:active {
   outline: none;
   background-color: var(--bg-page);
   font-family: inherit;
+}
+
+.category-select-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-page);
+  font-size: 15px;
 }
 
 /* ==========================================================================
@@ -320,6 +373,19 @@ button:active {
   height: 100%;
 }
 
+.header-details-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.header-title-details {
+  flex: none;
+  padding: 0;
+}
+
 .category-section {
   margin-bottom: 25px;
 }
@@ -390,11 +456,83 @@ button:active {
   transition: width 0.5s ease-out;
 }
 
+.dashboard-finance {
+  margin-top: 15px;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.finance-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.finance-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.finance-value-subtotal {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--toast-bg);
+}
+
+.finance-value-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--danger);
+}
+
 /* Seção de botões de ação na tela de detalhes */
 .category-actions {
   padding: 0 16px 15px;
   display: flex;
   gap: 10px;
+}
+
+.action-btn-secondary {
+  background: var(--bg-card);
+  border: 1px dashed var(--primary);
+  color: var(--primary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.action-btn-primary {
+  background: var(--primary);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.icon-primary-small {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+.icon-white-small {
+  color: white;
+  font-size: 16px;
 }
 
 .list-container {
