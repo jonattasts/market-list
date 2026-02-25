@@ -89,12 +89,13 @@ header {
 
 header h1,
 .header-title {
+  max-width: 280px;
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   flex: 1;
   text-align: center;
-  padding: 0 10px;
+  padding: 0 15px;
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: anywhere;
