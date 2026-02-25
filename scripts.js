@@ -142,6 +142,11 @@ function confirmDeleteList(index) {
     saveAndSync();
     renderMarketLists();
     showToast("Lista removida com sucesso", "success");
+
+    // Se após excluir não sobrar nenhuma lista, volta para a Home
+    if (marketListData.length === 0) {
+      showScreen("home-screen");
+    }
   }
 }
 
@@ -686,4 +691,18 @@ function toggleItemStatus(catIdx, itemIdx) {
   renderListDetails();
 }
 
-renderMarketLists();
+/* ==========================================================================
+   7. INICIALIZAÇÃO DO APP
+   ========================================================================== */
+
+function initApp() {
+  if (marketListData.length === 0) {
+    // Se não houver listas, inicia na Home
+    showScreen("home-screen");
+  } else {
+    // Se houver listas, inicia na tela de listagem
+    showScreen("market-lists-screen");
+  }
+}
+
+initApp();
