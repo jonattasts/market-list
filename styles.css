@@ -275,6 +275,8 @@ button:active {
 }
 
 .list-master-title {
+  max-width: 220px;
+
   font-size: 17px;
   font-weight: 700;
   color: var(--text-main);
