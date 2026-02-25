@@ -578,44 +578,54 @@ function renderListDetails() {
     `;
 
     const itemsList = catSection.querySelector(".category-items-list");
-    category.items.forEach((item, itemIdx) => {
-      const swipeContainer = document.createElement("div");
-      swipeContainer.className = "swipe-container";
-      swipeContainer.style.marginBottom = "12px";
 
-      const actionButtons = document.createElement("div");
-      actionButtons.className = "swipe-actions";
-      actionButtons.innerHTML = `
-            <button onclick="enterEditMode(${catIdx}, ${itemIdx})" style="background: var(--primary); width: 75px;">
-                <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
-            </button>
-            <button onclick="confirmDeleteItem(${catIdx}, ${itemIdx})" style="background: var(--danger); width: 75px;">
-                <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
-            </button>
-        `;
+    // Lógica para exibir mensagem de categoria vazia
+    if (category.items.length === 0) {
+      itemsList.innerHTML = `
+        <div style="padding: 10px 16px; color: var(--text-secondary); font-size: 13px; font-style: italic; text-align: center;">
+            Não há itens cadastrados para essa categoria
+        </div>
+      `;
+    } else {
+      category.items.forEach((item, itemIdx) => {
+        const swipeContainer = document.createElement("div");
+        swipeContainer.className = "swipe-container";
+        swipeContainer.style.marginBottom = "12px";
 
-      const card = document.createElement("div");
-      card.className = `item-card ${item.checked ? "checked" : ""}`;
-      card.ontouchstart = handleTouchStart;
-      card.ontouchmove = handleTouchMove;
-      card.ontouchend = handleTouchEnd;
+        const actionButtons = document.createElement("div");
+        actionButtons.className = "swipe-actions";
+        actionButtons.innerHTML = `
+                <button onclick="enterEditMode(${catIdx}, ${itemIdx})" style="background: var(--primary); width: 75px;">
+                    <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
+                </button>
+                <button onclick="confirmDeleteItem(${catIdx}, ${itemIdx})" style="background: var(--danger); width: 75px;">
+                    <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
+                </button>
+            `;
 
-      card.innerHTML = `
-            <div class="item-info">
-                <div class="custom-check" onclick="toggleItemStatus(${catIdx}, ${itemIdx})"></div>
-                <div class="text-group">
-                    <span class="item-name">${item.name}</span>
-                    <span class="item-desc">${item.desc}</span>
+        const card = document.createElement("div");
+        card.className = `item-card ${item.checked ? "checked" : ""}`;
+        card.ontouchstart = handleTouchStart;
+        card.ontouchmove = handleTouchMove;
+        card.ontouchend = handleTouchEnd;
+
+        card.innerHTML = `
+                <div class="item-info">
+                    <div class="custom-check" onclick="toggleItemStatus(${catIdx}, ${itemIdx})"></div>
+                    <div class="text-group">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-desc">${item.desc}</span>
+                    </div>
                 </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="item-price">R$ ${item.price}</span>
-            </div>
-        `;
-      swipeContainer.appendChild(actionButtons);
-      swipeContainer.appendChild(card);
-      itemsList.appendChild(swipeContainer);
-    });
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="item-price">R$ ${item.price}</span>
+                </div>
+            `;
+        swipeContainer.appendChild(actionButtons);
+        swipeContainer.appendChild(card);
+        itemsList.appendChild(swipeContainer);
+      });
+    }
     listItemsContainer.appendChild(catSection);
   });
   updateDashboard();
