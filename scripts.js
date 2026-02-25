@@ -119,11 +119,7 @@ function exitDetailsScreen() {
 }
 
 function handleBackFromForm() {
-  if (isEditingListMode) {
-    showScreen("market-list-screen-details");
-  } else {
-    showScreen("market-lists-screen");
-  }
+  showScreen("market-lists-screen");
 }
 
 /* ==========================================================================
