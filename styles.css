@@ -494,6 +494,7 @@ button:active {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
 }
 
 .item-search-inline {
@@ -560,7 +561,6 @@ button:active {
 .category-items-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
 .category-items-list .swipe-container .swipe-actions {
