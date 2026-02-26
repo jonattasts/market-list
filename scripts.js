@@ -9,6 +9,7 @@ const itemSearchInput = document.getElementById("item-search-input");
 const itemNameInput = document.getElementById("item-name-input");
 const itemDescInput = document.getElementById("item-desc-input");
 const itemPriceInput = document.getElementById("item-price-input");
+const itemQuantityInput = document.getElementById("item-quantity-input"); // Novo campo de quantidade
 const itemCategorySelect = document.getElementById("item-category-select");
 
 const toast = document.getElementById("toast");
@@ -209,12 +210,14 @@ function renderMarketLists() {
       cat.items.forEach((item) => {
         totalItemsCount++;
         if (item.checked) purchased++;
-        const valor = parseFloat(
+        const valorUnitario = parseFloat(
           item.price.replace(/\./g, "").replace(",", "."),
         );
-        if (!isNaN(valor)) {
-          subtotalValue += valor;
-          if (item.checked) totalValue += valor;
+        const qtd = item.quantity || 1;
+        if (!isNaN(valorUnitario)) {
+          const valorTotalItem = valorUnitario * qtd;
+          subtotalValue += valorTotalItem;
+          if (item.checked) totalValue += valorTotalItem;
         }
       });
     });
@@ -463,6 +466,7 @@ function openNewItemForm() {
   itemNameInput.value = "";
   itemDescInput.value = "";
   itemPriceInput.value = "";
+  itemQuantityInput.value = "1"; // Reset para 1 por padrão
 
   // Popula o select de categorias
   itemCategorySelect.innerHTML = "";
@@ -496,6 +500,7 @@ function enterEditMode(catIdx, itemIdx) {
   itemNameInput.value = item.name;
   itemDescInput.value = item.desc;
   itemPriceInput.value = item.price;
+  itemQuantityInput.value = item.quantity || 1;
 
   // Popula select e marca a categoria atual
   itemCategorySelect.innerHTML = "";
@@ -514,6 +519,7 @@ function handleSaveItem() {
   const name = itemNameInput.value.trim();
   const desc = itemDescInput.value.trim();
   const price = itemPriceInput.value.trim() || "0,00";
+  const quantity = parseInt(itemQuantityInput.value) || 1;
   const catIdx = parseInt(itemCategorySelect.value);
 
   if (!name) {
@@ -530,6 +536,7 @@ function handleSaveItem() {
       item.name = name;
       item.desc = desc;
       item.price = price;
+      item.quantity = quantity;
       marketListData[currentListIndex].categories[catIdx].items.push(item);
     } else {
       const item =
@@ -539,6 +546,7 @@ function handleSaveItem() {
       item.name = name;
       item.desc = desc;
       item.price = price;
+      item.quantity = quantity;
     }
     showToast("Item atualizado!", "success");
   } else {
@@ -546,6 +554,7 @@ function handleSaveItem() {
       name,
       desc,
       price,
+      quantity,
       checked: false,
     });
     showToast("Item adicionado!", "success");
@@ -654,16 +663,26 @@ function renderListDetails() {
         card.ontouchmove = handleTouchMove;
         card.ontouchend = handleTouchEnd;
 
+        // Cálculo do valor total exibido no card do item (Preço * Quantidade)
+        const valorUnitario = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+        const qtd = item.quantity || 1;
+        const totalItemExibido = (valorUnitario * qtd).toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+
         card.innerHTML = `
                 <div class="item-info">
                     <div class="custom-check" onclick="toggleItemStatus(${catIdx}, ${itemIdx})"></div>
                     <div class="text-group">
-                        <span class="item-name">${item.name}</span>
+                        <span class="item-name">${item.name} <span style="font-size: 11px; color: var(--text-secondary);">(x${qtd})</span></span>
                         <span class="item-desc">${item.desc}</span>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="item-price">R$ ${item.price}</span>
+                    <span class="item-price">${totalItemExibido}</span>
                 </div>
             `;
         swipeContainer.appendChild(actionButtons);
@@ -698,10 +717,15 @@ function updateDashboard() {
     cat.items.forEach((item) => {
       totalItems++;
       if (item.checked) purchasedItems++;
-      const valor = parseFloat(item.price.replace(/\./g, "").replace(",", "."));
-      if (!isNaN(valor)) {
-        subtotalGeral += valor;
-        if (item.checked) totalMarcado += valor;
+      const valorUnitario = parseFloat(
+        item.price.replace(/\./g, "").replace(",", "."),
+      );
+      const qtd = item.quantity || 1;
+
+      if (!isNaN(valorUnitario)) {
+        const valorTotalItem = valorUnitario * qtd;
+        subtotalGeral += valorTotalItem;
+        if (item.checked) totalMarcado += valorTotalItem;
       }
     });
   });
@@ -748,5 +772,9 @@ function initApp() {
     itemSearchInput.addEventListener("input", renderListDetails);
   }
 }
+
+/* ==========================================================================
+   9. EVENT LISTENERS
+   ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", initApp);

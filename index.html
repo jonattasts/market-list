@@ -147,13 +147,18 @@
           </div>
 
           <div class="input-field mt-20">
-            <label>Descrição / Quantidade</label>
-            <input type="text" id="item-desc-input" placeholder="Ex: Pacote 5kg" />
+            <label>Tipo</label>
+            <input type="text" id="item-desc-input" placeholder="Ex: 1 kg | 500ml | 1 caixa" />
           </div>
 
           <div class="input-field mt-20">
             <label>Preço Unitário (R$)</label>
             <input type="text" id="item-price-input" placeholder="0,00" oninput="formatCurrencyInput(this)" />
+          </div>
+
+          <div class="input-field mt-20">
+            <label>Quantidade<span class="required-mark">*</span></label>
+            <input type="number" id="item-quantity-input" placeholder="1" min="1" />
           </div>
 
           <div class="input-field mt-20">
@@ -210,7 +215,7 @@
         </div>
       </div>
 
-      <div class="category-actions">  
+      <div class="category-actions">
         <div class="action-buttons-group">
           <button class="btn-add-cat action-btn-secondary" onclick="openNewCategoryForm()">
             <ion-icon name="add-circle-outline" class="icon-primary-small"></ion-icon>
