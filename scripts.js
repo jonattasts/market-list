@@ -40,6 +40,14 @@ function normalizeString(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+// Função para Capitalizar a primeira letra e remover espaços (UX Enhancement)
+function capitalize(str) {
+  if (!str) return "";
+  const trimmed = str.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
 function showToast(message, type = "danger") {
   toastMessage.innerText = message;
   toast.classList.remove("success", "danger", "show");
@@ -324,8 +332,10 @@ function openEditListForm() {
 }
 
 function handleSaveNewList() {
-  const name = document.getElementById("new-list-name").value.trim();
-  const location = document.getElementById("new-list-location").value.trim();
+  const name = capitalize(document.getElementById("new-list-name").value);
+  const location = capitalize(
+    document.getElementById("new-list-location").value,
+  );
   const date = document.getElementById("new-list-date").value;
 
   if (!name || !date) {
@@ -408,7 +418,7 @@ function openEditCategoryForm(catIdx) {
 
 function handleSaveCategory() {
   const input = document.getElementById("new-category-name");
-  const name = input.value.trim();
+  const name = capitalize(input.value);
 
   if (!name) {
     showToast("Digite o nome da categoria", "danger");
@@ -516,8 +526,11 @@ function enterEditMode(catIdx, itemIdx) {
 }
 
 function handleSaveItem() {
-  const name = itemNameInput.value.trim();
-  const desc = itemDescInput.value.trim();
+  const name = capitalize(itemNameInput.value);
+  // Lógica de fallback para "Unidade" caso o tipo não seja informado
+  let desc = capitalize(itemDescInput.value);
+  if (!desc) desc = "Unidade";
+
   const price = itemPriceInput.value.trim() || "0,00";
   const quantity = parseInt(itemQuantityInput.value) || 1;
   const catIdx = parseInt(itemCategorySelect.value);
