@@ -1,269 +1,231 @@
 <!doctype html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Market List</title>
-    <link rel="icon" type="image/png" href="assets/favicon.png" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="app-container">
-      <div id="toast" class="toast">
-        <ion-icon id="toast-icon" name="alert-circle-outline"></ion-icon>
-        <span id="toast-message"></span>
-      </div>
 
-      <div id="home-screen">
-        <header>
-          <h1>Market List</h1>
-        </header>
-        <div class="home-content">
-          <div class="welcome-card">
-            <span class="emoji-main">🛒</span>
-            <h2>Boas compras!</h2>
-            <p>Organize suas listas e controle seus gastos de forma simples.</p>
-            <button class="btn-start" onclick="openNewListForm()">
-              Criar nova lista
-            </button>
-            <button
-              class="btn-secondary btn-view-lists"
-              onclick="showScreen('market-lists-screen')"
-            >
-              Ver minhas listas
-            </button>
-          </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market List</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <div id="toast" class="toast">
+      <ion-icon id="toast-icon" name="alert-circle-outline"></ion-icon>
+      <span id="toast-message"></span>
+    </div>
+
+    <div id="home-screen">
+      <header>
+        <h1>Market List</h1>
+      </header>
+
+      <div class="home-content">
+        <div class="welcome-card">
+          <span class="emoji-main">🛒</span>
+
+          <h2>Boas compras!</h2>
+
+          <p>Organize suas listas e controle seus gastos de forma simples.</p>
+
+          <button class="btn-start" onclick="openNewListForm()">
+            Criar nova lista
+          </button>
+
+          <button class="btn-secondary btn-view-lists" onclick="showScreen('market-lists-screen')">
+            Ver minhas listas
+          </button>
         </div>
       </div>
+    </div>
 
-      <div id="market-lists-screen" class="screen-hidden">
-        <header>
-          <div class="header-action" onclick="showScreen('home-screen')">
-            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-          </div>
-          <h1 class="header-title">Listas de Compras</h1>
-          <div class="header-action" onclick="openNewListForm()">
-            <ion-icon name="add-sharp" class="icon-add-list"></ion-icon>
-          </div>
-        </header>
-        <div class="search-section">
-          <div class="search-group">
-            <ion-icon name="search-outline"></ion-icon>
-            <input
-              type="text"
-              id="search-input"
-              placeholder="Buscar por nome, data ou local..."
-              oninput="renderMarketLists()"
-            />
-          </div>
+    <div id="market-lists-screen" class="screen-hidden">
+      <header>
+        <div class="header-action" onclick="showScreen('home-screen')">
+          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
         </div>
-        <div
-          class="list-container master-list"
-          id="lists-master-container"
-        ></div>
-      </div>
 
-      <div id="new-list-screen" class="screen-hidden">
-        <header>
-          <div class="header-action" onclick="handleBackFromForm()">
-            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+        <h1 class="header-title">Listas de Compras</h1>
+
+        <div class="header-action" onclick="openNewListForm()">
+          <ion-icon name="add-sharp" class="icon-add-list"></ion-icon>
+        </div>
+      </header>
+      <div class="search-section">
+        <div class="search-group">
+          <ion-icon name="search-outline"></ion-icon>
+
+          <input type="text" id="search-input" placeholder="Buscar por nome, data ou local..."
+            oninput="renderMarketLists()" />
+        </div>
+      </div>
+      <div class="list-container master-list" id="lists-master-container"></div>
+    </div>
+
+    <div id="new-list-screen" class="screen-hidden">
+      <header>
+        <div class="header-action" onclick="handleBackFromForm()">
+          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+        </div>
+
+        <h1 id="form-title" class="header-title header-title-left">
+          Nova Lista
+        </h1>
+      </header>
+
+      <div class="form-section">
+        <div class="form-card dashboard">
+          <span class="emoji-main emoji-form">📋</span>
+
+          <div class="input-field">
+            <label>Nome da Lista<span class="required-mark">*</span></label>
+            <input type="text" id="new-list-name" placeholder="Ex: Compras do Mês" />
           </div>
-          <h1 id="form-title" class="header-title header-title-left">
-            Nova Lista
+
+          <div class="input-field mt-20">
+            <label>Local da Compra</label>
+            <input type="text" id="new-list-location" placeholder="Ex: Assaí Atacadista" />
+          </div>
+
+          <div class="input-field mt-20">
+            <label>Data da Compra<span class="required-mark">*</span></label>
+            <input type="date" id="new-list-date" />
+          </div>
+
+          <button id="btn-save-list" class="btn-start mt-30" onclick="handleSaveNewList()">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="new-category-screen" class="screen-hidden">
+      <header>
+        <div class="header-action" onclick="showScreen('market-list-screen-details')">
+          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+        </div>
+
+        <h1 id="category-form-title" class="header-title header-title-left">
+          Nova Categoria
+        </h1>
+      </header>
+      <div class="form-section">
+        <div class="form-card dashboard">
+          <span class="emoji-main emoji-form">📁</span>
+
+          <div class="input-field">
+            <label>Nome da Categoria<span class="required-mark">*</span></label>
+            <input type="text" id="new-category-name" placeholder="Ex: Higiene, Bebidas, Carnes..." />
+          </div>
+
+          <button id="btn-save-category" class="btn-start mt-30" onclick="handleSaveCategory()">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="new-item-screen" class="screen-hidden">
+      <header>
+        <div class="header-action" onclick="showScreen('market-list-screen-details')">
+          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+        </div>
+
+        <h1 id="item-form-title" class="header-title header-title-left">
+          Novo Item
+        </h1>
+      </header>
+      <div class="form-section">
+        <div class="form-card dashboard">
+          <span class="emoji-main emoji-form">🛍️</span>
+
+          <div class="input-field">
+            <label>Nome do Produto<span class="required-mark">*</span></label>
+            <input type="text" id="item-name-input" placeholder="Ex: Arroz Integral" />
+          </div>
+
+          <div class="input-field mt-20">
+            <label>Descrição / Quantidade</label>
+            <input type="text" id="item-desc-input" placeholder="Ex: Pacote 5kg" />
+          </div>
+
+          <div class="input-field mt-20">
+            <label>Preço Unitário (R$)</label>
+            <input type="text" id="item-price-input" placeholder="0,00" oninput="formatCurrencyInput(this)" />
+          </div>
+
+          <div class="input-field mt-20">
+            <label>Categoria</label>
+            <select id="item-category-select" class="category-select-input"></select>
+          </div>
+
+          <button class="btn-start mt-30" onclick="handleSaveItem()">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="market-list-screen-details" class="screen-hidden">
+      <header>
+        <div class="header-action" onclick="exitDetailsScreen()">
+          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+        </div>
+
+        <div class="header-details-container">
+          <h1 id="main-list-title" class="header-title header-title-details">
+            Detalhes
           </h1>
-        </header>
-        <div class="form-section">
-          <div class="form-card dashboard">
-            <span class="emoji-main emoji-form">📋</span>
-            <div class="input-field">
-              <label>Nome da Lista<span class="required-mark">*</span></label>
-              <input
-                type="text"
-                id="new-list-name"
-                placeholder="Ex: Compras do Mês"
-              />
-            </div>
-            <div class="input-field mt-20">
-              <label>Local da Compra</label>
-              <input
-                type="text"
-                id="new-list-location"
-                placeholder="Ex: Assaí Atacadista"
-              />
-            </div>
-            <div class="input-field mt-20">
-              <label>Data da Compra<span class="required-mark">*</span></label>
-              <input type="date" id="new-list-date" />
-            </div>
-            <button
-              id="btn-save-list"
-              class="btn-start mt-30"
-              onclick="handleSaveNewList()"
-            >
-              Salvar
-            </button>
+        </div>
+
+        <div class="header-action"></div>
+      </header>
+
+      <div class="dashboard">
+        <div class="dashboard-header">
+          <h2 class="items-label">Resumo:</h2>
+          <span class="item-count" id="total-qty">0 itens</span>
+        </div>
+
+        <div class="status-text">
+          <span id="checked-count">0 comprado(s)</span>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="dashboard-finance">
+          <div class="finance-col">
+            <span class="finance-label">Previsão</span>
+            <span id="subtotal-all" class="finance-value-subtotal">R$ 0,00</span>
+          </div>
+
+          <div class="finance-col text-right">
+            <span class="finance-label">Total Marcado</span>
+            <span id="total-checked" class="finance-value-total">R$ 0,00</span>
           </div>
         </div>
       </div>
 
-      <div id="new-category-screen" class="screen-hidden">
-        <header>
-          <div
-            class="header-action"
-            onclick="showScreen('market-list-screen-details')"
-          >
-            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-          </div>
-          <h1 id="category-form-title" class="header-title header-title-left">
-            Nova Categoria
-          </h1>
-        </header>
-        <div class="form-section">
-          <div class="form-card dashboard">
-            <span class="emoji-main emoji-form">📁</span>
-            <div class="input-field">
-              <label
-                >Nome da Categoria<span class="required-mark">*</span></label
-              >
-              <input
-                type="text"
-                id="new-category-name"
-                placeholder="Ex: Higiene, Bebidas, Carnes..."
-              />
-            </div>
-            <button
-              id="btn-save-category"
-              class="btn-start mt-30"
-              onclick="handleSaveCategory()"
-            >
-              Salvar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="new-item-screen" class="screen-hidden">
-        <header>
-          <div
-            class="header-action"
-            onclick="showScreen('market-list-screen-details')"
-          >
-            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-          </div>
-          <h1 id="item-form-title" class="header-title header-title-left">
-            Novo Item
-          </h1>
-        </header>
-        <div class="form-section">
-          <div class="form-card dashboard">
-            <span class="emoji-main emoji-form">🛍️</span>
-
-            <div class="input-field">
-              <label>Nome do Produto<span class="required-mark">*</span></label>
-              <input
-                type="text"
-                id="item-name-input"
-                placeholder="Ex: Arroz Integral"
-              />
-            </div>
-
-            <div class="input-field mt-20">
-              <label>Descrição / Quantidade</label>
-              <input
-                type="text"
-                id="item-desc-input"
-                placeholder="Ex: Pacote 5kg"
-              />
-            </div>
-
-            <div class="input-field mt-20">
-              <label>Preço Unitário (R$)</label>
-              <input
-                type="text"
-                id="item-price-input"
-                placeholder="0,00"
-                oninput="formatCurrencyInput(this)"
-              />
-            </div>
-
-            <div class="input-field mt-20">
-              <label>Categoria</label>
-              <select
-                id="item-category-select"
-                class="category-select-input"
-              ></select>
-            </div>
-
-            <button class="btn-start mt-30" onclick="handleSaveItem()">
-              Salvar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div id="market-list-screen-details" class="screen-hidden">
-        <header>
-          <div class="header-action" onclick="exitDetailsScreen()">
-            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-          </div>
-          <div class="header-details-container">
-            <h1 id="main-list-title" class="header-title header-title-details">
-              Detalhes
-            </h1>
-          </div>
-          <div class="header-action"></div>
-        </header>
-
-        <div class="dashboard">
-          <div class="dashboard-header">
-            <h2 class="items-label">Resumo:</h2>
-            <span class="item-count" id="total-qty">0 itens</span>
-          </div>
-          <div class="status-text">
-            <span id="checked-count">0 comprado(s)</span>
-          </div>
-          <div class="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-          </div>
-
-          <div class="dashboard-finance">
-            <div class="finance-col">
-              <span class="finance-label">Previsão</span>
-              <span id="subtotal-all" class="finance-value-subtotal"
-                >R$ 0,00</span
-              >
-            </div>
-            <div class="finance-col text-right">
-              <span class="finance-label">Total Marcado</span>
-              <span id="total-checked" class="finance-value-total"
-                >R$ 0,00</span
-              >
-            </div>
-          </div>
-        </div>
-
-        <div class="category-actions">
-          <button
-            class="btn-add-cat action-btn-secondary"
-            onclick="openNewCategoryForm()"
-          >
-            <ion-icon
-              name="add-circle-outline"
-              class="icon-primary-small"
-            ></ion-icon>
+      <div class="category-actions">  
+        <div class="action-buttons-group">
+          <button class="btn-add-cat action-btn-secondary" onclick="openNewCategoryForm()">
+            <ion-icon name="add-circle-outline" class="icon-primary-small"></ion-icon>
             Nova Categoria
           </button>
-          <button
-            class="btn-add-item action-btn-primary"
-            onclick="openNewItemForm()"
-          >
+
+          <button class="btn-add-item action-btn-primary" onclick="openNewItemForm()">
             <ion-icon name="cart-outline" class="icon-white-small"></ion-icon>
             Adicionar Item
           </button>
+        </div>
+
+        <div class="search-group item-search-inline">
+          <ion-icon name="search-outline"></ion-icon>
+          <input type="text" id="item-search-input" placeholder="Buscar item..." />
         </div>
 
         <div class="list-container" id="list-items-container"></div>
@@ -271,13 +233,8 @@
     </div>
 
     <script src="scripts.js"></script>
-    <script
-      type="module"
-      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
-    ></script>
-    <script
-      nomodule
-      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
-    ></script>
-  </body>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</body>
+
 </html>

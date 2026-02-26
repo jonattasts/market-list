@@ -80,8 +80,10 @@ body {
   background-color: var(--bg-page);
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Evita scroll na raiz do app */
+  overflow: hidden; /* Evita scroll no container */
+  height: 100vh; /* principal do app */
   position: relative;
+  padding-bottom: 10px;
 }
 
 header {
@@ -299,7 +301,7 @@ button:active {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 .search-group ion-icon {
-  color: var(--text-secondary);
+  color: var(--primary);
   font-size: 20px;
 }
 .search-group input {
@@ -490,7 +492,21 @@ button:active {
 .category-actions {
   padding: 0 16px 15px;
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-search-inline {
+  box-shadow: none;
+  background: #ffffffde;
+  border: none;
+  padding: 8px 12px;
+}
+
+.action-buttons-group {
+  display: flex;
   gap: 10px;
+  width: 100%;
 }
 
 .action-btn-secondary {
@@ -534,9 +550,11 @@ button:active {
 }
 
 .list-container {
+  overflow-y: auto;
+}
+
+.list-container.master-list {
   padding: 0px 20px;
-  max-height: 900px;
-  overflow: auto;
 }
 
 .category-items-list {

@@ -4,6 +4,7 @@
 const listItemsContainer = document.getElementById("list-items-container");
 const listsMasterContainer = document.getElementById("lists-master-container");
 const searchInput = document.getElementById("search-input");
+const itemSearchInput = document.getElementById("item-search-input");
 
 const itemNameInput = document.getElementById("item-name-input");
 const itemDescInput = document.getElementById("item-desc-input");
@@ -108,6 +109,10 @@ function showScreen(screenId) {
     }
   });
   if (screenId === "market-lists-screen") renderMarketLists();
+  // Limpa a busca de itens ao trocar de tela para não esconder itens por engano
+  if (screenId === "market-list-screen-details" && itemSearchInput) {
+    itemSearchInput.value = "";
+  }
 }
 
 function openListDetails(index) {
@@ -505,7 +510,6 @@ function enterEditMode(catIdx, itemIdx) {
   showScreen("new-item-screen");
 }
 
-// Salva o item (Novo ou Editado)
 function handleSaveItem() {
   const name = itemNameInput.value.trim();
   const desc = itemDescInput.value.trim();
@@ -580,12 +584,29 @@ function handleTouchEnd(e) {
   }
 }
 
+/* ==========================================================================
+   7. RENDERIZAÇÃO DE DETALHES COM BUSCA
+   ========================================================================== */
 function renderListDetails() {
   listItemsContainer.innerHTML = "";
   const currentList = marketListData[currentListIndex];
   document.getElementById("main-list-title").innerText = currentList.listName;
 
+  const term = itemSearchInput ? normalizeString(itemSearchInput.value) : "";
+
   currentList.categories.forEach((category, catIdx) => {
+    // Filtra itens da categoria baseada no termo de busca (nome, descrição ou preço)
+    const filteredItems = category.items.filter((item) => {
+      const nameMatch = normalizeString(item.name).includes(term);
+      const descMatch = normalizeString(item.desc).includes(term);
+      const priceMatch = item.price.includes(term); // Preço costuma ser buscado como texto direto
+      return nameMatch || descMatch || priceMatch;
+    });
+
+    // Só renderiza a seção da categoria se ela tiver itens que deem match com a busca
+    // ou se a busca estiver vazia (para mostrar categorias vazias se for o caso)
+    if (term !== "" && filteredItems.length === 0) return;
+
     const catSection = document.createElement("div");
     catSection.className = "category-section";
     catSection.innerHTML = `
@@ -601,15 +622,17 @@ function renderListDetails() {
 
     const itemsList = catSection.querySelector(".category-items-list");
 
-    // Lógica para exibir mensagem de categoria vazia
-    if (category.items.length === 0) {
+    if (category.items.length === 0 && term === "") {
       itemsList.innerHTML = `
         <div style="padding: 10px 16px; color: var(--text-secondary); font-size: 13px; font-style: italic; text-align: center;">
             Não há itens cadastrados para essa categoria
         </div>
       `;
     } else {
-      category.items.forEach((item, itemIdx) => {
+      filteredItems.forEach((item) => {
+        // Encontra o index original do item para o swipe funcionar corretamente
+        const itemIdx = category.items.indexOf(item);
+
         const swipeContainer = document.createElement("div");
         swipeContainer.className = "swipe-container";
         swipeContainer.style.marginBottom = "12px";
@@ -650,6 +673,17 @@ function renderListDetails() {
     }
     listItemsContainer.appendChild(catSection);
   });
+
+  // Feedback visual se a busca não retornar nada em nenhuma categoria
+  if (term !== "" && listItemsContainer.innerHTML === "") {
+    listItemsContainer.innerHTML = `
+        <div class="empty-state">
+            <span class="empty-emoji">🔍</span>
+            <p>Nenhum item encontrado para "${itemSearchInput.value}"</p>
+        </div>
+      `;
+  }
+
   updateDashboard();
 }
 
@@ -692,7 +726,7 @@ function toggleItemStatus(catIdx, itemIdx) {
 }
 
 /* ==========================================================================
-   7. INICIALIZAÇÃO DO APP
+   8. INICIALIZAÇÃO DO APP
    ========================================================================== */
 
 function initApp() {
@@ -703,6 +737,16 @@ function initApp() {
     // Se houver listas, inicia na tela de listagem
     showScreen("market-lists-screen");
   }
+
+  // Listener para busca na tela principal
+  if (searchInput) {
+    searchInput.addEventListener("input", renderMarketLists);
+  }
+
+  // Listener para busca de itens na tela de detalhes
+  if (itemSearchInput) {
+    itemSearchInput.addEventListener("input", renderListDetails);
+  }
 }
 
-initApp();
+document.addEventListener("DOMContentLoaded", initApp);
