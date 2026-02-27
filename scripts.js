@@ -117,8 +117,10 @@ function showScreen(screenId) {
       }
     }
   });
-  if (screenId === "market-lists-screen") renderMarketLists();
   // Limpa a busca de itens ao trocar de tela para não esconder itens por engano
+  if (screenId === "market-lists-screen") {
+    renderMarketLists();
+  }
   if (screenId === "market-list-screen-details" && itemSearchInput) {
     itemSearchInput.value = "";
   }
@@ -198,7 +200,13 @@ function renderMarketLists() {
   }
 
   searchInput.disabled = false;
-  const filtered = marketListData.filter((list) => {
+
+  // Refatoração: Ordenar listas pela data mais recente antes de filtrar e renderizar
+  const sortedListData = [...marketListData].sort((a, b) => {
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  const filtered = sortedListData.filter((list) => {
     const nameMatch = normalizeString(list.listName).includes(term);
     const locationMatch = list.location
       ? normalizeString(list.location).includes(term)
@@ -208,7 +216,10 @@ function renderMarketLists() {
   });
 
   filtered.forEach((list) => {
-    const originalIndex = marketListData.indexOf(list);
+    // Busca o índice original no array marketListData para garantir que edições/exclusões funcionem no item correto
+    const originalIndex = marketListData.findIndex(
+      (original) => original === list,
+    );
     let totalItemsCount = 0,
       purchased = 0,
       subtotalValue = 0,
@@ -253,9 +264,8 @@ function renderMarketLists() {
 
     const card = document.createElement("div");
     card.className = "list-master-card";
-    card.onclick = () => openListDetails(originalIndex);
+    card.onclick = () => openListDetails(originalIndex); // Adicionando eventos de Swipe
 
-    // Adicionando eventos de Swipe
     card.ontouchstart = handleTouchStart;
     card.ontouchmove = handleTouchMove;
     card.ontouchend = handleTouchEnd;
@@ -476,9 +486,7 @@ function openNewItemForm() {
   itemNameInput.value = "";
   itemDescInput.value = "";
   itemPriceInput.value = "";
-  itemQuantityInput.value = "1"; // Reset para 1 por padrão
-
-  // Popula o select de categorias
+  itemQuantityInput.value = "1";
   itemCategorySelect.innerHTML = "";
   const categories = marketListData[currentListIndex].categories;
 
@@ -511,8 +519,6 @@ function enterEditMode(catIdx, itemIdx) {
   itemDescInput.value = item.desc;
   itemPriceInput.value = item.price;
   itemQuantityInput.value = item.quantity || 1;
-
-  // Popula select e marca a categoria atual
   itemCategorySelect.innerHTML = "";
   marketListData[currentListIndex].categories.forEach((cat, idx) => {
     const option = document.createElement("option");
