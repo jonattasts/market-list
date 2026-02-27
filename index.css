@@ -1,0 +1,89 @@
+/* ==========================================================================
+   GLOBAL TOKENS & RESET
+   ========================================================================== */
+:root {
+  --primary: #4c33e6;
+  --bg-page: #f1f4f8;
+  --bg-card: #ffffff;
+  --text-main: #14181b;
+  --text-secondary: #57636c;
+  --accent-green: #249689;
+  --border-color: #e0e3e7;
+  --transition: all 0.3s ease;
+  --danger: #ff4757;
+  --success: #2ed573;
+  --toast-bg: #2f3542;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  background-color: #e0e3e7; /* Cor de fundo externa para destaque do container */
+}
+
+/* ==========================================================================
+   2. APP CONTAINER & ESTRUTURA
+   ========================================================================== */
+.app-container {
+  width: 100%;
+  max-width: 450px;
+  background-color: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+header {
+  background-color: var(--primary);
+  color: white;
+  padding: 50px 16px 40px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+header h1,
+.header-title {
+  max-width: 250px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  padding: 0 15px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+header.small {
+  padding: 20px 16px 30px;
+}
+
+.screen-hidden {
+  display: none;
+}
+
+/* Utility classes */
+.mt-20 {
+  margin-top: 20px;
+}
+.mt-30 {
+  margin-top: 30px;
+}
+.text-right {
+  text-align: right;
+}
+.required-mark {
+  color: #ff4757;
+}

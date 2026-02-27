@@ -1,0 +1,67 @@
+/* ==========================================================================
+   4. TELA: HOME E FORMULÁRIOS
+   ========================================================================== */
+#home-screen,
+#new-list-screen,
+#new-category-screen,
+#new-item-screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-content,
+.form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.welcome-card,
+.form-card {
+  background: var(--bg-card);
+  padding: 40px 20px;
+  border-radius: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.emoji-main {
+  font-size: 60px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.emoji-form {
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+
+.btn-start {
+  margin-top: 25px;
+  padding: 16px 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+}
+
+.btn-view-lists {
+  margin-top: 10px;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  border: none;
+}
+
+.header-title-left {
+  text-align: start;
+}

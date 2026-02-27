@@ -1,0 +1,46 @@
+/* ==========================================================================
+   1. TOAST NOTIFICATIONS
+   ========================================================================== */
+.toast {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--toast-bg);
+  color: white;
+  padding: 20px 20px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 350px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border-left: 6px solid transparent;
+  cursor: pointer;
+}
+
+.toast.danger {
+  border-left-color: var(--danger);
+}
+.toast.danger ion-icon {
+  color: var(--danger);
+}
+
+.toast.success {
+  border-left-color: var(--success);
+}
+.toast.success ion-icon {
+  color: var(--success);
+}
+
+.toast ion-icon {
+  font-size: 24px;
+}
+
+.toast.show {
+  top: 30px;
+}
