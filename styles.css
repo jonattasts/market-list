@@ -110,6 +110,10 @@ header h1,
   overflow-wrap: anywhere;
 }
 
+header.small {
+  padding: 20px 16px 30px;
+}
+
 #home-screen header {
   justify-content: center;
 }
