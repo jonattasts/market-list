@@ -1,100 +1,144 @@
 /* ==========================================================================
-   1. ESTADO E CONFIGURAÇÕES
+   ESTADO E CONFIGURAÇÕES
    ========================================================================== */
-const listItemsContainer = document.getElementById("list-items-container");
-const listsMasterContainer = document.getElementById("lists-master-container");
-const searchInput = document.getElementById("search-input");
-const itemSearchInput = document.getElementById("item-search-input");
+import {
+  firestore,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+} from "./firebase.js";
+import {
+  query,
+  orderBy,
+  onSnapshot,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const itemNameInput = document.getElementById("item-name-input");
-const itemDescInput = document.getElementById("item-desc-input");
-const itemPriceInput = document.getElementById("item-price-input");
-const itemQuantityInput = document.getElementById("item-quantity-input");
-const itemCategorySelect = document.getElementById("item-category-select");
+window.listItemsContainer = document.getElementById("list-items-container");
+window.listsMasterContainer = document.getElementById("lists-master-container");
+window.searchInput = document.getElementById("search-input");
+window.itemSearchInput = document.getElementById("item-search-input");
 
-const toast = document.getElementById("toast");
-const toastMessage = document.getElementById("toast-message");
-const toastIcon = document.getElementById("toast-icon");
+window.itemNameInput = document.getElementById("item-name-input");
+window.itemDescInput = document.getElementById("item-desc-input");
+window.itemPriceInput = document.getElementById("item-price-input");
+window.itemQuantityInput = document.getElementById("item-quantity-input");
+window.itemCategorySelect = document.getElementById("item-category-select");
 
-let currentListIndex = 0;
-let editingItemIndex = null;
-let editingCategoryIndex = null;
-let isEditingListMode = false;
-let isCopyingListMode = false;
-let previousScreen = "home-screen";
+window.toast = document.getElementById("toast");
+window.toastMessage = document.getElementById("toast-message");
+window.toastIcon = document.getElementById("toast-icon");
+
+// Expondo variáveis de controle ao escopo global para outros módulos
+window.currentListIndex = 0;
+window.editingItemIndex = null;
+window.editingCategoryIndex = null;
+window.isEditingListMode = false;
+window.isCopyingListMode = false;
+window.previousScreen = "home-screen";
 
 // Estado do Swipe
-let touchStartX = 0;
-let activeSwipeCard = null;
+window.touchStartX = 0;
+window.activeSwipeCard = null;
 
-let marketListData = JSON.parse(localStorage.getItem("marketList")) || [];
+window.marketListData = [];
+
+// Variável de controle para primeira carga
+let isFirstLoad = true;
 
 /* ==========================================================================
-   2. UTILITÁRIOS: TOAST E NORMALIZAÇÃO
+   UTILITÁRIOS GLOBAIS
    ========================================================================== */
-function normalizeString(str) {
+window.normalizeString = function (str) {
   if (!str) return "";
   return str
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-}
+};
 
-function capitalize(str) {
+window.capitalize = function (str) {
   if (!str) return "";
   const trimmed = str.trim();
-  if (!trimmed) return "";
-  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
-}
+  return trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : "";
+};
 
-function showToast(message, type = "danger") {
-  toastMessage.innerText = message;
-  toast.classList.remove("success", "danger", "show");
+window.showToast = function (message, type = "danger") {
+  window.toastMessage.innerText = message;
+  window.toast.classList.remove("success", "danger", "show");
+  window.toast.classList.add(type === "success" ? "success" : "danger");
+  window.toastIcon.setAttribute(
+    "name",
+    type === "success" ? "checkmark-circle-outline" : "alert-circle-outline",
+  );
 
-  if (type === "success") {
-    toast.classList.add("success");
-    toastIcon.setAttribute("name", "checkmark-circle-outline");
-  } else {
-    toast.classList.add("danger");
-    toastIcon.setAttribute("name", "alert-circle-outline");
-  }
-
-  setTimeout(() => {
-    toast.classList.add("show");
-  }, 10);
-
-  const autoHide = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3500);
-
-  toast.onclick = () => {
-    toast.classList.remove("show");
+  setTimeout(() => toast.classList.add("show"), 10);
+  const autoHide = setTimeout(() => toast.classList.remove("show"), 3500);
+  window.toast.onclick = () => {
+    window.toast.classList.remove("show");
     clearTimeout(autoHide);
   };
-}
+};
 
-function formatDate(dateStr) {
+window.formatDate = function (dateStr) {
   if (!dateStr) return "";
   const [year, month, day] = dateStr.split("-");
   return `${day}/${month}/${year}`;
-}
+};
 
-function saveAndSync() {
-  localStorage.setItem("marketList", JSON.stringify(marketListData));
-}
-
-function formatCurrencyInput(input) {
+window.formatCurrencyInput = function (input) {
   let value = input.value.replace(/\D/g, "");
   value = (value / 100).toFixed(2) + "";
-  value = value.replace(".", ",");
-  value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+  value = value.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
   input.value = value;
+};
+
+/* ==========================================================================
+   PERSISTÊNCIA FIREBASE
+   ========================================================================== */
+window.saveAndSync = async function () {
+  const currentList = window.marketListData[window.currentListIndex];
+  if (!currentList || !currentList.id) return;
+
+  try {
+    const listRef = doc(firestore, "lists", currentList.id);
+    await updateDoc(listRef, {
+      listName: currentList.listName,
+      location: currentList.location,
+      date: currentList.date,
+      categories: currentList.categories,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.error("Erro ao atualizar Firestore:", e);
+    window.showToast("Erro ao sincronizar dados", "danger");
+  }
+};
+
+/* --- LÓGICA DE MIGRAÇÃO (LOCALSTORAGE -> FIREBASE) --- */
+async function migrateData() {
+  const localData = localStorage.getItem("marketList");
+  if (localData) {
+    const parsedData = JSON.parse(localData);
+    if (parsedData.length > 0) {
+      window.showToast("Sincronizando dados locais...", "success");
+      for (const list of parsedData) {
+        await addDoc(collection(firestore, "lists"), {
+          ...list,
+          createdAt: serverTimestamp(),
+        });
+      }
+    }
+    localStorage.removeItem("marketList");
+    console.log("Migração concluída e LocalStorage limpo.");
+  }
 }
 
 /* ==========================================================================
-   3. NAVEGAÇÃO
+   NAVEGAÇÃO E INICIALIZAÇÃO
    ========================================================================== */
-function showScreen(screenId) {
+window.showScreen = function (screenId) {
   const screens = [
     "home-screen",
     "market-lists-screen",
@@ -106,44 +150,61 @@ function showScreen(screenId) {
   screens.forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
-      if (id === screenId) {
-        el.classList.remove("screen-hidden");
-        el.style.display = "flex";
-      } else {
-        el.classList.add("screen-hidden");
-        el.style.display = "none";
-      }
+      el.classList.toggle("screen-hidden", id !== screenId);
+      el.style.display = id === screenId ? "flex" : "none";
     }
   });
-  if (screenId === "market-lists-screen") {
-    renderMarketLists();
-  }
-  if (screenId === "market-list-screen-details" && itemSearchInput) {
-    itemSearchInput.value = "";
-  }
-}
+  if (screenId === "market-lists-screen" && window.renderMarketLists)
+    window.renderMarketLists();
+};
 
-function handleBackFromForm() {
-  showScreen(previousScreen);
-}
+window.handleBackFromForm = function () {
+  window.showScreen(previousScreen);
+};
 
-/* ==========================================================================
-   8. INICIALIZAÇÃO DO APP
-   ========================================================================== */
-function initApp() {
-  if (marketListData.length === 0) {
-    showScreen("home-screen");
-  } else {
-    showScreen("market-lists-screen");
-  }
+async function initApp() {
+  await migrateData();
 
-  if (searchInput) {
-    searchInput.addEventListener("input", renderMarketLists);
-  }
+  const q = query(collection(firestore, "lists"), orderBy("date", "desc"));
+  onSnapshot(q, (snapshot) => {
+    window.marketListData = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-  if (itemSearchInput) {
-    itemSearchInput.addEventListener("input", renderListDetails);
-  }
+    // UX: Se estiver na tela de listagem ou detalhes, re-renderiza para refletir mudanças em tempo real
+    if (
+      !document
+        .getElementById("market-lists-screen")
+        .classList.contains("screen-hidden")
+    ) {
+      window.renderMarketLists();
+    }
+    if (
+      !document
+        .getElementById("market-list-screen-details")
+        .classList.contains("screen-hidden")
+    ) {
+      window.renderListDetails();
+    }
+
+    // Apenas redireciona na primeira carga para não interromper a navegação do usuário
+    if (isFirstLoad) {
+      if (window.marketListData.length === 0) {
+        window.showScreen("home-screen");
+      } else {
+        window.showScreen("market-lists-screen");
+      }
+      isFirstLoad = false;
+    }
+  });
+
+  document
+    .getElementById("search-input")
+    ?.addEventListener("input", () => window.renderMarketLists());
+  document
+    .getElementById("item-search-input")
+    ?.addEventListener("input", () => window.renderListDetails());
 }
 
 document.addEventListener("DOMContentLoaded", initApp);

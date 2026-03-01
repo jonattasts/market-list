@@ -1,35 +1,37 @@
 /* ==========================================================================
-   7. RENDERIZAÇÃO DE DETALHES COM BUSCA
+   RENDERIZAÇÃO DE DETALHES COM BUSCA
    ========================================================================== */
-function openListDetails(index) {
-  currentListIndex = index;
-  if (!marketListData[currentListIndex].categories) {
-    const oldItems = marketListData[currentListIndex].items || [];
-    marketListData[currentListIndex].categories = [
-      { name: "Geral", items: oldItems },
+window.openListDetails = function (index) {
+  window.currentListIndex = index;
+  if (!window.marketListData[window.currentListIndex].categories) {
+    const oldItems = window.marketListData[window.currentListIndex].items || [];
+    window.marketListData[window.currentListIndex].categories = [
+      { name: "Alimentação", items: oldItems },
     ];
-    delete marketListData[currentListIndex].items;
+    delete window.marketListData[window.currentListIndex].items;
     saveAndSync();
   }
-  showScreen("market-list-screen-details");
-  renderListDetails();
-}
+  window.showScreen("market-list-screen-details");
+  window.renderListDetails();
+};
 
-function exitDetailsScreen() {
-  showScreen("market-lists-screen");
-}
+window.exitDetailsScreen = function () {
+  window.showScreen("market-lists-screen");
+};
 
-function renderListDetails() {
-  listItemsContainer.innerHTML = "";
-  const currentList = marketListData[currentListIndex];
+window.renderListDetails = function () {
+  window.listItemsContainer.innerHTML = "";
+  const currentList = window.marketListData[window.currentListIndex];
   document.getElementById("main-list-title").innerText = currentList.listName;
 
-  const term = itemSearchInput ? normalizeString(itemSearchInput.value) : "";
+  const term = window.itemSearchInput
+    ? window.normalizeString(window.itemSearchInput.value)
+    : "";
 
   currentList.categories.forEach((category, catIdx) => {
     const filteredItems = category.items.filter((item) => {
-      const nameMatch = normalizeString(item.name).includes(term);
-      const descMatch = normalizeString(item.desc).includes(term);
+      const nameMatch = window.normalizeString(item.name).includes(term);
+      const descMatch = window.normalizeString(item.desc).includes(term);
       const priceMatch = item.price.includes(term);
       return nameMatch || descMatch || priceMatch;
     });
@@ -78,9 +80,9 @@ function renderListDetails() {
 
         const card = document.createElement("div");
         card.className = `item-card ${item.checked ? "checked" : ""}`;
-        card.ontouchstart = handleTouchStart;
-        card.ontouchmove = handleTouchMove;
-        card.ontouchend = handleTouchEnd;
+        card.ontouchstart = window.handleTouchStart;
+        card.ontouchmove = window.handleTouchMove;
+        card.ontouchend = window.handleTouchEnd;
 
         const valorUnitario = parseFloat(
           item.price.replace(/\./g, "").replace(",", "."),
@@ -108,23 +110,23 @@ function renderListDetails() {
         itemsList.appendChild(swipeContainer);
       });
     }
-    listItemsContainer.appendChild(catSection);
+    window.listItemsContainer.appendChild(catSection);
   });
 
   if (term !== "" && listItemsContainer.innerHTML === "") {
     listItemsContainer.innerHTML = `
         <div class="empty-state">
             <span class="empty-emoji">🔍</span>
-            <p>Nenhum item encontrado para "${itemSearchInput.value}"</p>
+            <p>Nenhum item encontrado para "${window.itemSearchInput.value}"</p>
         </div>
       `;
   }
 
   updateDashboard();
-}
+};
 
-function updateDashboard() {
-  const list = marketListData[currentListIndex];
+window.updateDashboard = function () {
+  const list = window.marketListData[window.currentListIndex];
   let totalItems = 0,
     purchasedItems = 0,
     subtotalGeral = 0,
@@ -157,39 +159,65 @@ function updateDashboard() {
     val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   document.getElementById("subtotal-all").innerText = format(subtotalGeral);
   document.getElementById("total-checked").innerText = format(totalMarcado);
-}
+};
 
-function toggleItemStatus(catIdx, itemIdx) {
-  marketListData[currentListIndex].categories[catIdx].items[itemIdx].checked =
-    !marketListData[currentListIndex].categories[catIdx].items[itemIdx].checked;
-  saveAndSync();
-  renderListDetails();
-}
+window.toggleItemStatus = async function (catIdx, itemIdx) {
+  // Altera o estado local primeiro para feedback instantâneo
+  const item =
+    window.marketListData[window.currentListIndex].categories[catIdx].items[
+      itemIdx
+    ];
+  item.checked = !item.checked;
 
-function deleteCategory(catIdx) {
-  const category = marketListData[currentListIndex].categories[catIdx];
+  // Sincroniza a alteração com o Firebase
+  await window.saveAndSync();
+
+  // Re-renderiza para atualizar o Dashboard e os estilos do card
+  window.renderListDetails();
+};
+
+window.deleteCategory = async function (catIdx) {
+  const category =
+    window.marketListData[window.currentListIndex].categories[catIdx];
+
+  // UX: Validação de segurança para não apagar dados por erro
   if (
     category.items.length > 0 &&
     !confirm(
-      `A categoria "${category.name}" possui itens. Deseja excluir tudo?`,
+      `A categoria "${category.name}" possui itens. Deseja excluir tudo permanentemente na nuvem?`,
     )
-  )
+  ) {
     return;
-  marketListData[currentListIndex].categories.splice(catIdx, 1);
-  saveAndSync();
-  renderListDetails();
-}
-
-function confirmDeleteItem(catIdx, itemIdx) {
-  const item =
-    marketListData[currentListIndex].categories[catIdx].items[itemIdx];
-  if (confirm(`Deseja remover "${item.name}"?`)) {
-    marketListData[currentListIndex].categories[catIdx].items.splice(
-      itemIdx,
-      1,
-    );
-    saveAndSync();
-    renderListDetails();
-    showToast("Removido!", "success");
   }
-}
+
+  // Remove do array local
+  window.marketListData[window.currentListIndex].categories.splice(catIdx, 1);
+
+  // Persiste a exclusão no Firestore
+  await window.saveAndSync();
+
+  // Atualiza a tela
+  window.renderListDetails();
+  window.showToast("Categoria removida", "success");
+};
+
+window.confirmDeleteItem = async function (catIdx, itemIdx) {
+  const item =
+    window.marketListData[window.currentListIndex].categories[catIdx].items[
+      itemIdx
+    ];
+
+  if (confirm(`Deseja remover "${item.name}" definitivamente?`)) {
+    // Remove o item específico da categoria
+    window.marketListData[window.currentListIndex].categories[
+      catIdx
+    ].items.splice(itemIdx, 1);
+
+    // Sincroniza com o Firebase
+    await window.saveAndSync();
+
+    // Feedback visual e atualização da lista/dashboard
+    window.renderListDetails();
+    window.showToast("Item removido!", "success");
+  }
+};

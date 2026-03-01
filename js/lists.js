@@ -1,72 +1,94 @@
 /* ==========================================================================
-   4. TELA: LISTAS DE COMPRAS
+   TELA: LISTAS DE COMPRAS
    ========================================================================== */
-function confirmDeleteList(index) {
-  const listName = marketListData[index].listName;
-  if (confirm(`Deseja excluir a "${listName}"?`)) {
-    marketListData.splice(index, 1);
-    saveAndSync();
-    renderMarketLists();
-    showToast("Lista removida com sucesso", "success");
 
-    if (marketListData.length === 0) {
-      showScreen("home-screen");
+/**
+ * Exclui permanentemente uma lista do Firestore.
+ */
+window.confirmDeleteList = async function (index) {
+  const list = window.marketListData[index];
+  const listName = list.listName;
+
+  if (
+    confirm(
+      `Deseja excluir a "${listName}"? Esta ação não pode ser desfeita na nuvem.`,
+    )
+  ) {
+    try {
+      // Importa ferramentas necessárias para deletar
+      const { firestore, doc, deleteDoc } = await import("./firebase.js");
+
+      // Remove do Firestore
+      const listRef = doc(firestore, "lists", list.id);
+      await deleteDoc(listRef);
+
+      // O onSnapshot no index.js cuidará de atualizar o marketListData e re-renderizar,
+      // mas removemos localmente para feedback instantâneo se necessário
+      window.marketListData.splice(index, 1);
+
+      window.renderMarketLists();
+      window.showToast("Lista removida com sucesso", "success");
+    } catch (e) {
+      console.error("Erro ao deletar:", e);
+      window.showToast("Erro ao excluir lista", "danger");
     }
   }
-}
+};
 
-function copyList(event, index) {
+window.copyList = function (event, index) {
   event.stopPropagation();
-  isEditingListMode = false;
-  isCopyingListMode = true;
-  currentListIndex = index;
-  previousScreen = "market-lists-screen";
+  window.isEditingListMode = false;
+  window.isCopyingListMode = true;
+  window.currentListIndex = index;
+  window.previousScreen = "market-lists-screen";
 
-  const originalList = marketListData[index];
+  const originalList = window.marketListData[index];
   document.getElementById("form-title").innerText = "Copiar Lista";
   document.getElementById("btn-save-list").innerText = "Confirmar Cópia";
   document.getElementById("new-list-name").value = originalList.listName;
   document.getElementById("new-list-location").value =
     originalList.location || "";
   document.getElementById("new-list-date").value = "";
-  showScreen("new-list-screen");
-}
+  window.showScreen("new-list-screen");
+};
 
-function handleEditListFromSwipe(index) {
-  currentListIndex = index;
-  previousScreen = "market-lists-screen";
-  openEditListForm();
-}
+window.handleEditListFromSwipe = function (index) {
+  window.currentListIndex = index;
+  window.previousScreen = "market-lists-screen";
+  window.openEditListForm();
+};
 
-function renderMarketLists() {
-  listsMasterContainer.innerHTML = "";
-  const term = normalizeString(searchInput.value);
+window.renderMarketLists = function () {
+  window.listsMasterContainer.innerHTML = "";
+  const term = window.normalizeString(window.searchInput.value);
 
-  if (marketListData.length === 0) {
-    searchInput.disabled = true;
-    listsMasterContainer.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
+  if (window.marketListData.length === 0) {
+    window.searchInput.disabled = true;
+    window.listsMasterContainer.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
     return;
   }
 
-  searchInput.disabled = false;
+  window.searchInput.disabled = false;
 
-  const sortedListData = [...marketListData].sort((a, b) => {
+  // Ordenação por data (descendente)
+  const sortedListData = [...window.marketListData].sort((a, b) => {
     return new Date(b.date) - new Date(a.date);
   });
 
   const filtered = sortedListData.filter((list) => {
-    const nameMatch = normalizeString(list.listName).includes(term);
+    const nameMatch = window.normalizeString(list.listName).includes(term);
     const locationMatch = list.location
-      ? normalizeString(list.location).includes(term)
+      ? window.normalizeString(list.location).includes(term)
       : false;
-    const dateMatch = formatDate(list.date).includes(term);
+    const dateMatch = window.formatDate(list.date).includes(term);
     return nameMatch || locationMatch || dateMatch;
   });
 
   filtered.forEach((list) => {
-    const originalIndex = marketListData.findIndex(
-      (original) => original === list,
+    const originalIndex = window.marketListData.findIndex(
+      (original) => original.id === list.id,
     );
+
     let totalItemsCount = 0,
       purchased = 0,
       subtotalValue = 0,
@@ -110,11 +132,11 @@ function renderMarketLists() {
 
     const card = document.createElement("div");
     card.className = "list-master-card";
-    card.onclick = () => openListDetails(originalIndex);
+    card.onclick = () => window.openListDetails(originalIndex);
 
-    card.ontouchstart = handleTouchStart;
-    card.ontouchmove = handleTouchMove;
-    card.ontouchend = handleTouchEnd;
+    card.ontouchstart = window.handleTouchStart;
+    card.ontouchmove = window.handleTouchMove;
+    card.ontouchend = window.handleTouchEnd;
 
     card.innerHTML = `
         <div class="list-master-header dashboard-header">
@@ -130,7 +152,7 @@ function renderMarketLists() {
         </div>
         <div class="date-text" style="margin-top: 4px;">
             <ion-icon name="calendar-outline" style="color: var(--text-secondary); font-size: 14px; vertical-align: middle; margin-top: -4px;"></ion-icon> 
-            ${formatDate(list.date)}
+            ${window.formatDate(list.date)}
         </div>
         <div class="card-financial-info" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 10px;">
             <div style="display: flex; flex-direction: column;">
@@ -148,34 +170,36 @@ function renderMarketLists() {
 
     swipeContainer.appendChild(actionButtons);
     swipeContainer.appendChild(card);
-    listsMasterContainer.appendChild(swipeContainer);
+    window.listsMasterContainer.appendChild(swipeContainer);
   });
-}
+};
 
-/* --- LOGICA DE SWIPE --- */
-function handleTouchStart(e) {
-  touchStartX = e.touches[0].clientX;
+/* ==========================================================================
+   LOGICA DE SWIPE
+   ========================================================================== */
+window.handleTouchStart = function (e) {
+  window.touchStartX = e.touches[0].clientX;
   const card = e.currentTarget;
-  if (activeSwipeCard && activeSwipeCard !== card)
-    activeSwipeCard.style.transform = "translateX(0)";
-}
+  if (window.activeSwipeCard && window.activeSwipeCard !== card)
+    window.activeSwipeCard.style.transform = "translateX(0)";
+};
 
-function handleTouchMove(e) {
+window.handleTouchMove = function (e) {
   const touchX = e.touches[0].clientX;
-  const diff = touchX - touchStartX;
+  const diff = touchX - window.touchStartX;
   const card = e.currentTarget;
   if (diff < 0 && diff > -160) card.style.transform = `translateX(${diff}px)`;
-}
+};
 
-function handleTouchEnd(e) {
+window.handleTouchEnd = function (e) {
   const card = e.currentTarget;
   const touchEndX = e.changedTouches[0].clientX;
-  const diff = touchEndX - touchStartX;
+  const diff = touchEndX - window.touchStartX;
   if (diff < -80) {
     card.style.transform = "translateX(-150px)";
-    activeSwipeCard = card;
+    window.activeSwipeCard = card;
   } else {
     card.style.transform = "translateX(0)";
-    activeSwipeCard = null;
+    window.activeSwipeCard = null;
   }
-}
+};
