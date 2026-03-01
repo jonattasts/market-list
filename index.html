@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="css/home.css" />
   <link rel="stylesheet" href="css/market-lists.css" />
   <link rel="stylesheet" href="css/details.css" />
+  <link rel="stylesheet" href="css/onboarding.css" />
 </head>
 
 <body>
@@ -25,10 +26,46 @@
   <!-- ===================== CONTAINER PRINCIPAL DO APP ===================== -->
   <div class="app-container">
 
+    <!-- ============================================================= -->
+    <!-- ===================== OVERLAY DE SINCRONIZAÇÃO ===================== -->
+    <!-- ============================================================= -->
+    <div id="sync-overlay" class="sync-overlay">
+      <div class="sync-visual">
+        <span class="icon-local">📱</span>
+        <span class="sync-arrow">⬆️</span>
+        <span class="icon-cloud">☁️</span>
+      </div>
+      <div class="sync-text">Sincronizando suas listas...</div>
+      <p class="sync-subtext">Estamos movendo seus dados locais com segurança para a nuvem.</p>
+      <div class="progress-container">
+        <div id="sync-progress" class="progress-bar"></div>
+      </div>
+    </div>
+
     <!-- ===================== TOAST GLOBAL (FEEDBACK AO USUÁRIO) ===================== -->
     <div id="toast" class="toast">
       <ion-icon id="toast-icon" name="alert-circle-outline"></ion-icon>
       <span id="toast-message"></span>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ===================== TELA DE ONBOARDING ===================== -->
+    <!-- ============================================================= -->
+    <div id="onboarding-screen" class="screen-hidden">
+      <div class="onboarding-card">
+        <span class="emoji-main">👋</span>
+        <h1 class="onboarding-title">Olá!</h1>
+        <p class="onboarding-subtitle">Para organizar suas compras, como gostaria de ser chamado?</p>
+
+        <div class="onboarding-input-group">
+          <label>Seu nome</label>
+          <input type="text" id="user-name-input" placeholder="Digite seu nome aqui..." />
+        </div>
+
+        <button class="btn-start" onclick="handleUserIdentification()">
+          Começar a usar
+        </button>
+      </div>
     </div>
 
     <!-- ============================================================= -->

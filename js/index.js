@@ -8,11 +8,14 @@ import {
   addDoc,
   updateDoc,
   serverTimestamp,
+  setDoc,
+  getDoc,
 } from "./firebase.js";
 import {
   query,
   orderBy,
   onSnapshot,
+  where,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 window.listItemsContainer = document.getElementById("list-items-container");
@@ -109,6 +112,7 @@ window.saveAndSync = async function () {
       date: currentList.date,
       categories: currentList.categories,
       updatedAt: serverTimestamp(),
+      userName: localStorage.getItem("marketUserName"),
     });
   } catch (e) {
     console.error("Erro ao atualizar Firestore:", e);
@@ -116,30 +120,132 @@ window.saveAndSync = async function () {
   }
 };
 
-/* --- LÓGICA DE MIGRAÇÃO (LOCALSTORAGE -> FIREBASE) --- */
-async function migrateData() {
+/* --- LÓGICA DE MIGRAÇÃO/CONFIGURAÇÃO COM UI DE ANIMAÇÃO --- */
+async function runSetupAnimation(userName) {
   const localData = localStorage.getItem("marketList");
+  const overlay = document.getElementById("sync-overlay");
+  const progressBar = document.getElementById("sync-progress");
+  const syncText = document.querySelector(".sync-text");
+  const syncSubtext = document.querySelector(".sync-subtext");
+
+  // Ativa a Overlay Visual
+  if (overlay) {
+    overlay.style.display = "flex";
+    await new Promise((r) => setTimeout(r, 50));
+    overlay.classList.add("active");
+  }
+
+  // CENÁRIO A: Existe dados locais (Migração Real)
   if (localData) {
-    const parsedData = JSON.parse(localData);
-    if (parsedData.length > 0) {
-      window.showToast("Sincronizando dados locais...", "success");
-      for (const list of parsedData) {
-        await addDoc(collection(firestore, "lists"), {
-          ...list,
-          createdAt: serverTimestamp(),
-        });
+    try {
+      const parsedData = JSON.parse(localData);
+      if (Array.isArray(parsedData) && parsedData.length > 0) {
+        const total = parsedData.length;
+        for (let i = 0; i < total; i++) {
+          await new Promise((r) => setTimeout(r, 600));
+          await addDoc(collection(firestore, "lists"), {
+            ...parsedData[i],
+            userName: userName,
+            createdAt: serverTimestamp(),
+          });
+          if (progressBar)
+            progressBar.style.width = `${((i + 1) / total) * 100}%`;
+        }
+        localStorage.removeItem("marketList");
+      }
+    } catch (err) {
+      console.error("Erro migração:", err);
+    }
+  }
+  // CENÁRIO B: Usuário Novo (Simulação de Configuração)
+  else {
+    if (syncText) syncText.innerText = "Configurando seu espaço...";
+    if (syncSubtext)
+      syncSubtext.innerText =
+        "Preparando sua nuvem e organizando as prateleiras.";
+
+    // Simula 3 etapas de carregamento para UX
+    for (let i = 1; i <= 3; i++) {
+      await new Promise((r) => setTimeout(r, 700));
+      if (progressBar) progressBar.style.width = `${(i / 3) * 100}%`;
+    }
+  }
+
+  // Finalização da Animação
+  await new Promise((r) => setTimeout(r, 800));
+  if (overlay) {
+    overlay.classList.remove("active");
+    setTimeout(() => (overlay.style.display = "none"), 500);
+  }
+  return true;
+}
+
+/* ==========================================================================
+   IDENTIFICAÇÃO DE USUÁRIO
+   ========================================================================== */
+window.handleUserIdentification = async function () {
+  const nameInput = document.getElementById("user-name-input");
+  const btnStart = document.querySelector(".btn-start");
+  const onboardingScreen = document.getElementById("onboarding-screen");
+
+  const name = window.capitalize(nameInput.value);
+  const userId = name.toLowerCase().replace(/\s/g, "");
+
+  if (!name || name.length < 3) {
+    window.showToast("O nome deve ter pelo menos 3 caracteres", "danger");
+    return;
+  }
+
+  if (btnStart) btnStart.classList.add("is-loading");
+
+  try {
+    const userRef = doc(firestore, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const savedLocalName = localStorage.getItem("marketUserName");
+      if (savedLocalName !== name) {
+        if (btnStart) btnStart.classList.remove("is-loading");
+        window.showToast("Este nome já está em uso!", "danger");
+        return;
       }
     }
-    localStorage.removeItem("marketList");
-    console.log("Migração concluída e LocalStorage limpo.");
+
+    // Salva identificação
+    localStorage.setItem("marketUserName", name);
+    await setDoc(
+      userRef,
+      { name: name, lastLogin: serverTimestamp() },
+      { merge: true },
+    );
+
+    // Roda a animação SEMPRE (Migração ou Configuração inicial)
+    // Ocultamos o onboarding "por baixo" da animação
+    if (onboardingScreen) {
+      onboardingScreen.classList.add("screen-hidden");
+      onboardingScreen.style.display = "none";
+    }
+
+    await runSetupAnimation(name);
+
+    // Inicia o App após a animação sumir
+    setTimeout(() => {
+      isFirstLoad = true;
+      initFirebaseListener(name);
+    }, 100);
+  } catch (error) {
+    if (btnStart) btnStart.classList.remove("is-loading");
+    console.error("Erro identificação:", error);
+    window.showToast("Erro de conexão", "danger");
   }
-}
+};
 
 /* ==========================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ========================================================================== */
 window.showScreen = function (screenId) {
   const screens = [
+    "onboarding-screen",
     "home-screen",
     "market-lists-screen",
     "market-list-screen-details",
@@ -150,8 +256,14 @@ window.showScreen = function (screenId) {
   screens.forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
+      el.classList.remove("screen-fade-out");
       el.classList.toggle("screen-hidden", id !== screenId);
-      el.style.display = id === screenId ? "flex" : "none";
+      el.style.display =
+        id === screenId
+          ? id === "onboarding-screen"
+            ? "block"
+            : "flex"
+          : "none";
     }
   });
   if (screenId === "market-lists-screen" && window.renderMarketLists)
@@ -162,42 +274,83 @@ window.handleBackFromForm = function () {
   window.showScreen(previousScreen);
 };
 
-async function initApp() {
-  await migrateData();
+function initFirebaseListener(userName) {
+  const q = query(
+    collection(firestore, "lists"),
+    where("userName", "==", userName),
+    orderBy("date", "desc"),
+  );
 
-  const q = query(collection(firestore, "lists"), orderBy("date", "desc"));
-  onSnapshot(q, (snapshot) => {
-    window.marketListData = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+  onSnapshot(
+    q,
+    (snapshot) => {
+      window.marketListData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-    // UX: Se estiver na tela de listagem ou detalhes, re-renderiza para refletir mudanças em tempo real
-    if (
-      !document
-        .getElementById("market-lists-screen")
-        .classList.contains("screen-hidden")
-    ) {
-      window.renderMarketLists();
-    }
-    if (
-      !document
-        .getElementById("market-list-screen-details")
-        .classList.contains("screen-hidden")
-    ) {
-      window.renderListDetails();
-    }
-
-    // Apenas redireciona na primeira carga para não interromper a navegação do usuário
-    if (isFirstLoad) {
-      if (window.marketListData.length === 0) {
-        window.showScreen("home-screen");
+      if (isFirstLoad) {
+        if (window.marketListData.length === 0) {
+          window.showScreen("home-screen");
+        } else {
+          window.showScreen("market-lists-screen");
+        }
+        isFirstLoad = false;
       } else {
-        window.showScreen("market-lists-screen");
+        if (
+          !document
+            .getElementById("market-lists-screen")
+            .classList.contains("screen-hidden")
+        ) {
+          window.renderMarketLists();
+        }
+        if (
+          !document
+            .getElementById("market-list-screen-details")
+            .classList.contains("screen-hidden")
+        ) {
+          window.renderListDetails();
+        }
       }
-      isFirstLoad = false;
+    },
+    (error) => {
+      console.error("Erro listener:", error);
+      if (isFirstLoad) {
+        window.showScreen("home-screen");
+        isFirstLoad = false;
+      }
+    },
+  );
+}
+
+async function validateUserPersistence(savedName) {
+  try {
+    const userId = savedName.toLowerCase().replace(/\s/g, "");
+    const userRef = doc(firestore, "users", userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      localStorage.removeItem("marketUserName");
+      window.showScreen("onboarding-screen");
+      window.showToast("Sessão expirada ou usuário removido.", "danger");
+      return;
     }
-  });
+
+    initFirebaseListener(savedName);
+  } catch (error) {
+    console.error("Erro ao validar persistência:", error);
+    initFirebaseListener(savedName);
+  }
+}
+
+async function initApp() {
+  const savedName = localStorage.getItem("marketUserName");
+
+  if (!savedName) {
+    window.showScreen("onboarding-screen");
+  } else {
+    await validateUserPersistence(savedName);
+  }
 
   document
     .getElementById("search-input")

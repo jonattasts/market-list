@@ -44,6 +44,8 @@ window.handleSaveNewList = async function () {
   );
   const date = document.getElementById("new-list-date").value;
 
+  const currentUserName = localStorage.getItem("marketUserName");
+
   if (!name || !date) {
     window.showToast("Por favor, preencha os campos obrigatórios", "danger");
     return;
@@ -87,6 +89,7 @@ window.handleSaveNewList = async function () {
         listName: name,
         location,
         date,
+        userName: currentUserName,
         categories: clonedCategories,
         createdAt: serverTimestamp(),
       });
@@ -103,6 +106,7 @@ window.handleSaveNewList = async function () {
         listName: name,
         location,
         date,
+        userName: currentUserName,
         categories: [{ name: "Alimentação", items: [] }],
         createdAt: serverTimestamp(),
       });

@@ -1,0 +1,221 @@
+/* ==========================================================================
+   TELA: ONBOARDING (IDENTIFICAÇÃO DO USUÁRIO)
+   ========================================================================== */
+#onboarding-screen {
+  width: 100%;
+  /* flex: 1; */
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  margin-top: 80px;
+  padding: 30px;
+  background-color: var(--bg-page);
+  text-align: center;
+}
+
+.onboarding-card {
+  background: var(--bg-card);
+  padding: 40px 30px;
+  border-radius: 28px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 380px;
+}
+
+.onboarding-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.onboarding-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.onboarding-input-group {
+  margin-bottom: 25px;
+  text-align: left;
+}
+
+.onboarding-input-group label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-left: 4px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.onboarding-input-group input {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  font-size: 16px;
+  transition: var(--transition);
+  outline: none;
+}
+
+.onboarding-input-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(76, 51, 230, 0.1);
+}
+
+/* Animação de fade out para transição de telas */
+.screen-fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+  pointer-events: none;
+}
+
+/* Estado de loading no botão */
+.btn-start.is-loading {
+  color: transparent !important;
+  position: relative;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.btn-start.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin: -10px 0 0 -10px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ==========================================================================
+   ANIMAÇÃO DE SINCRONIZAÇÃO (SYNC VISUALS)
+   ========================================================================== */
+.sync-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.sync-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.sync-visual {
+  position: relative;
+  font-size: 50px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon-local {
+  animation: bounce 2s infinite;
+}
+.icon-cloud {
+  animation: pulse 2s infinite;
+}
+
+.sync-arrow {
+  font-size: 30px;
+  animation: moveUp 1.5s infinite;
+  color: var(--primary);
+}
+
+.sync-text {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.sync-subtext {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 250px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.progress-container {
+  width: 200px;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 10px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  width: 0%;
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+/* Keyframes para o spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Keyframes para o espetáculo visual */
+@keyframes moveUp {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
