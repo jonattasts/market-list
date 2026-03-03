@@ -1,0 +1,925 @@
+/* ==========================================================================
+   DASHBOARD & DATA ANALYTICS MODULE
+   ========================================================================= */
+
+// Utilitário local para formatação de moeda
+const formatBRL = (val) =>
+  val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+// Estado dos Gráficos (para destruí-los antes de recriar)
+let chartShareWallet = null;
+let chartVolumeItens = null;
+let chartPerfilSaude = null;
+
+// Filtro Ativo Padrão (Geral)
+let activeFilter = { type: "geral", value: null };
+
+/* ==========================================================================
+   INICIALIZAÇÃO E FLUXO PRINCIPAL
+   ========================================================================== */
+window.initDashboardAnalisys = function () {
+  const data = window.marketListData;
+
+  if (!data || data.length === 0) {
+    window.showToast("Crie listas para ativar a análise.", "info");
+    window.showScreen("market-lists-screen");
+    return;
+  }
+
+  // REFACTOR: Reinicia o filtro para o padrão "geral" ao abrir a página
+  activeFilter = { type: "geral", value: null };
+
+  // Limpa campos visuais do modal de filtro para refletir o reset
+  const filterSelect = document.getElementById("filter-type-select");
+  if (filterSelect) filterSelect.value = "geral";
+  const dynamicContainer = document.getElementById("dynamic-filter-inputs");
+  if (dynamicContainer) dynamicContainer.innerHTML = "";
+
+  updateFilterIndicator();
+  processDashboardData(data);
+};
+
+/* ==========================================================================
+   PROCESSAMENTO DE DADOS E CÁLCULO DE MÉTRICAS
+   ========================================================================== */
+function processDashboardData(allLists) {
+  // 1. Aplica o filtro ativo aos dados
+  const filteredLists = applyCurrentFilter(allLists);
+
+  const dashboardContent = document.querySelector(".dashboard-content");
+  const emptyStateContainer = document.getElementById("dashboard-empty-state");
+
+  if (filteredLists.length === 0) {
+    renderEmptyState();
+    return;
+  }
+
+  // Garante que o conteúdo seja exibido e o estado vazio ocultado
+  if (dashboardContent) dashboardContent.style.display = "flex";
+  if (emptyStateContainer) emptyStateContainer.style.display = "none";
+
+  // Agrega todos os itens e categorias das listas filtradas
+  const allFlattenedItems = [];
+  const categoryTotals = {};
+  let totalSpentInPeriod = 0;
+  let totalItemsAdded = 0;
+  let totalItemsChecked = 0;
+  let forecastTotal = 0;
+
+  filteredLists.forEach((list) => {
+    (list.categories || []).forEach((cat) => {
+      // Agregação para Share of Wallet
+      if (!categoryTotals[cat.name]) categoryTotals[cat.name] = 0;
+
+      cat.items.forEach((item) => {
+        allFlattenedItems.push(item);
+        totalItemsAdded += item.quantity || 1;
+
+        const valorUnitario = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+        const qtd = item.quantity || 1;
+        const valorTotalItem = valorUnitario * qtd;
+
+        forecastTotal += valorTotalItem;
+
+        if (item.checked) {
+          totalItemsChecked += item.quantity || 1;
+          categoryTotals[cat.name] += valorTotalItem;
+          totalSpentInPeriod += valorTotalItem;
+        }
+      });
+    });
+  });
+
+  // ---------------------------------------------------------
+  // 1. MÉTICAS DE PERFORMANCE FINANCEIRA
+  // ---------------------------------------------------------
+
+  // A. Ticket Médio por Lista
+  const ticketMedio = totalSpentInPeriod / filteredLists.length;
+  document.getElementById("metric-ticket-medio").innerText =
+    formatBRL(ticketMedio);
+
+  // B. Economia Potencial (Desejado - Comprado)
+  const economia = forecastTotal - totalSpentInPeriod;
+  document.getElementById("metric-economia").innerText = formatBRL(economia);
+
+  // C. Share of Wallet (Gráfico Pizza)
+  renderShareWalletChart(categoryTotals);
+
+  // D. Inflação Pessoal (CPI) - Requer análise comparativa histórica
+  calculateCPI(allLists, filteredLists);
+
+  // ---------------------------------------------------------
+  // 2. MÉTICAS DE COMPORTAMENTO E HÁBITO
+  // ---------------------------------------------------------
+
+  // A. Índice de Fidelidade de Local
+  calculateLocationFidelity(filteredLists);
+
+  // B. Recorrência de Itens e Ciclo de Reposição
+  calculateItemRecurrenceAndRepo(filteredLists);
+
+  // ---------------------------------------------------------
+  // 3. MÉTICAS DE EFICIÊNCIA DA COMPRA
+  // ---------------------------------------------------------
+
+  // A. Volume de Itens por Lista (Gráfico Coluna)
+  renderVolumeItensChart(filteredLists);
+
+  // B. Taxa de Conversão da Lista
+  const taxaConversao =
+    totalItemsAdded > 0 ? (totalItemsChecked / totalItemsAdded) * 100 : 0;
+  document.getElementById("metric-conversao").innerText =
+    `${taxaConversao.toFixed(0)}%`;
+
+  // C. Variabilidade de Preço por Local
+  calculatePriceVariability(filteredLists);
+
+  // ---------------------------------------------------------
+  // 4. INSIGHTS DE SAÚDE E NUTRIÇÃO
+  // ---------------------------------------------------------
+
+  // A. Ratio Ultraprocessados vs In Natura (Gráfico Pizza)
+  calculateHealthRatio(categoryTotals);
+
+  // B. Sazonalidade de Consumo
+  calculateSazonalidade(filteredLists);
+}
+
+/* ==========================================================================
+   CÁLCULOS ESPECÍPECÍFICOS E LÓGICA DE DADOS
+   ========================================================================== */
+
+/**
+ * Métrica 1.D: Inflação Pessoal (CPI)
+ */
+function calculateCPI(allLists, filteredLists) {
+  const container = document.getElementById("cpi-container");
+  container.innerHTML = "";
+
+  const itemPricesCurrent = {};
+  const listCount = filteredLists.length;
+
+  if (listCount < 2) {
+    container.innerHTML = `<div class="empty-state-minor">Gere mais listas para comparar preços.</div>`;
+    return;
+  }
+
+  filteredLists.forEach((list) => {
+    (list.categories || []).forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (!item.checked) return;
+        const normalizedName = window.normalizeString(item.name);
+        if (!itemPricesCurrent[normalizedName])
+          itemPricesCurrent[normalizedName] = { total: 0, count: 0 };
+
+        const valorUnitario = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+        itemPricesCurrent[normalizedName].total += valorUnitario;
+        itemPricesCurrent[normalizedName].count++;
+      });
+    });
+  });
+
+  const recorrentes = Object.keys(itemPricesCurrent)
+    .filter((name) => itemPricesCurrent[name].count >= listCount * 0.5)
+    .slice(0, 3);
+
+  if (recorrentes.length === 0) {
+    container.innerHTML = `<div class="empty-state-minor">Sem itens recorrentes suficientes no período.</div>`;
+    return;
+  }
+
+  const filteredIds = new Set(filteredLists.map((l) => l.id));
+  const previousLists = allLists.filter((l) => !filteredIds.has(l.id));
+
+  if (previousLists.length === 0) {
+    container.innerHTML = `<div class="empty-state-minor">Histórico anterior insuficiente para comparação.</div>`;
+    return;
+  }
+
+  const itemPricesPrevious = {};
+  previousLists.forEach((list) => {
+    (list.categories || []).forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (!item.checked) return;
+        const normalizedName = window.normalizeString(item.name);
+        if (!itemPricesPrevious[normalizedName])
+          itemPricesPrevious[normalizedName] = { total: 0, count: 0 };
+
+        const valorUnitario = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+        itemPricesPrevious[normalizedName].total += valorUnitario;
+        itemPricesPrevious[normalizedName].count++;
+      });
+    });
+  });
+
+  let hasComparison = false;
+  recorrentes.forEach((name) => {
+    if (itemPricesPrevious[name]) {
+      hasComparison = true;
+      const priceCurr =
+        itemPricesCurrent[name].total / itemPricesCurrent[name].count;
+      const pricePrev =
+        itemPricesPrevious[name].total / itemPricesPrevious[name].count;
+
+      const variacao = ((priceCurr - pricePrev) / pricePrev) * 100;
+      const classe = variacao > 0 ? "up" : "down";
+      const icone = variacao > 0 ? "📈" : "📉";
+
+      const div = document.createElement("div");
+      div.className = `cpi-item ${classe}`;
+      div.innerHTML = `
+                <div>
+                    <span class="item-main-text">${window.capitalize(name)}</span>
+                    <span class="item-sub-text">Atual: ${formatBRL(priceCurr)} / Ant: ${formatBRL(pricePrev)}</span>
+                </div>
+                <strong style="color: ${variacao > 0 ? "var(--danger)" : "var(--accent-green)"}">
+                    ${icone} ${variacao.toFixed(1)}%
+                </strong>
+            `;
+      container.appendChild(div);
+    }
+  });
+
+  if (!hasComparison) {
+    container.innerHTML = `<div class="empty-state-minor">Os itens recorrentes não foram comprados anteriormente.</div>`;
+  }
+}
+
+/**
+ * Métrica 2.A: Índice de Fidelidade de Local
+ */
+function calculateLocationFidelity(filteredLists) {
+  const localMap = {};
+  filteredLists.forEach((list) => {
+    const local = list.location || "Não Informado";
+    if (!localMap[local]) localMap[local] = 0;
+    localMap[local]++;
+  });
+
+  let topLocal = "--";
+  let maxFreq = 0;
+  for (const [local, freq] of Object.entries(localMap)) {
+    if (freq > maxFreq) {
+      maxFreq = freq;
+      topLocal = local;
+    }
+  }
+
+  document.getElementById("metric-top-local").innerText = topLocal;
+  document.getElementById("metric-local-freq").innerText = `${maxFreq} compras`;
+}
+
+/**
+ * Métrica 2.A e 2.B: Recorrência de Itens e Ciclo de Reposição
+ */
+function calculateItemRecurrenceAndRepo(filteredLists) {
+  const listCount = filteredLists.length;
+  const itemMap = {};
+
+  const sortedLists = [...filteredLists].sort(
+    (a, b) => new Date(a.date) - new Date(b.date),
+  );
+
+  sortedLists.forEach((list) => {
+    (list.categories || []).forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (!item.checked) return;
+        const normalizedName = window.normalizeString(item.name);
+        if (!itemMap[normalizedName]) itemMap[normalizedName] = { dates: [] };
+        itemMap[normalizedName].dates.push(list.date);
+      });
+    });
+  });
+
+  const essenciais = Object.keys(itemMap).filter((name) => {
+    const uniqueDates = new Set(itemMap[name].dates);
+    return uniqueDates.size === listCount;
+  });
+  document.getElementById("metric-essenciais-count").innerText =
+    essenciais.length;
+
+  const repoContainer = document.getElementById("reposicao-list");
+  repoContainer.innerHTML = "";
+
+  if (listCount < 3) {
+    repoContainer.innerHTML = `<div class="empty-state-minor">Gere mais listas para prever reposição.</div>`;
+    return;
+  }
+
+  const previsoes = [];
+
+  Object.keys(itemMap).forEach((name) => {
+    const dates = itemMap[name].dates;
+    if (dates.length >= 3) {
+      const intervalos = [];
+      for (let i = 1; i < dates.length; i++) {
+        const diffTime = new Date(dates[i]) - new Date(dates[i - 1]);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) intervalos.push(diffDays);
+      }
+
+      if (intervalos.length > 0) {
+        const mediaDias =
+          intervalos.reduce((a, b) => a + b, 0) / intervalos.length;
+
+        const lastPurchase = new Date(dates[dates.length - 1]);
+        const nextDate = new Date(lastPurchase);
+        nextDate.setDate(lastPurchase.getDate() + Math.round(mediaDias));
+
+        previsoes.push({
+          name: window.capitalize(name),
+          ciclo: Math.round(mediaDias),
+          nextDate: nextDate,
+          lastDateStr: formatDateBRL(dates[dates.length - 1]),
+        });
+      }
+    }
+  });
+
+  previsoes.sort((a, b) => a.nextDate - b.nextDate);
+
+  if (previsoes.length === 0) {
+    repoContainer.innerHTML = `<div class="empty-state-minor">Padrão de compra não identificado.</div>`;
+    return;
+  }
+
+  previsoes.slice(0, 3).forEach((prev) => {
+    const div = document.createElement("div");
+    div.className = "data-item";
+    div.innerHTML = `
+            <div>
+                <span class="item-main-text">${prev.name}</span>
+                <span class="item-sub-text">Ciclo médio: ${prev.ciclo} dias. Última: ${prev.lastDateStr}</span>
+            </div>
+            <strong style="color: var(--toast-bg)">
+               📅 ${formatDateBRL(prev.nextDate.toISOString().split("T")[0])}
+            </strong>
+        `;
+    repoContainer.appendChild(div);
+  });
+}
+
+/**
+ * Métrica 3.C: Variabilidade de Preço por Local
+ */
+function calculatePriceVariability(filteredLists) {
+  const itemPricesByLocal = {};
+
+  filteredLists.forEach((list) => {
+    const local = list.location || "Não Informado";
+    (list.categories || []).forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (!item.checked) return;
+        const normalizedName = window.normalizeString(item.name);
+        if (!itemPricesByLocal[normalizedName])
+          itemPricesByLocal[normalizedName] = {};
+
+        const valorUnitario = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+
+        itemPricesByLocal[normalizedName][local] = valorUnitario;
+      });
+    });
+  });
+
+  let variacaoDetectada = false;
+  let totalVariacoes = 0;
+
+  Object.keys(itemPricesByLocal).forEach((name) => {
+    const locais = itemPricesByLocal[name];
+    const precos = Object.values(locais);
+
+    if (precos.length >= 2) {
+      const maxPrice = Math.max(...precos);
+      const minPrice = Math.min(...precos);
+
+      if (minPrice > 0 && (maxPrice - minPrice) / minPrice > 0.15) {
+        variacaoDetectada = true;
+        totalVariacoes++;
+      }
+    }
+  });
+
+  const el = document.getElementById("metric-alerta-preco");
+  if (variacaoDetectada) {
+    el.innerText = `${totalVariacoes} itens`;
+    el.style.color = "var(--danger)";
+  } else {
+    el.innerText = `Ok`;
+    el.style.color = "var(--accent-green)";
+  }
+}
+
+/**
+ * Métrica 4.A: Ratio Ultraprocessados vs In Natura
+ */
+function calculateHealthRatio(categoryTotals) {
+  const healthyKeywords = [
+    "hortifruti",
+    "fruta",
+    "legume",
+    "verdura",
+    "acougue",
+    "peixaria",
+    "natural",
+  ];
+  const unhealthyKeywords = [
+    "snack",
+    "biscoito",
+    "bolacha",
+    "congelado",
+    "refrigerante",
+    "doce",
+    "processado",
+  ];
+
+  let healthySpent = 0;
+  let unhealthySpent = 0;
+
+  Object.keys(categoryTotals).forEach((catName) => {
+    const normName = window.normalizeString(catName);
+    const valor = categoryTotals[catName];
+
+    if (healthyKeywords.some((key) => normName.includes(key))) {
+      healthySpent += valor;
+    } else if (unhealthyKeywords.some((key) => normName.includes(key))) {
+      unhealthySpent += valor;
+    }
+  });
+
+  const totalMapeado = healthySpent + unhealthySpent;
+  renderHealthRatioChart(healthySpent, unhealthySpent, totalMapeado);
+}
+
+/**
+ * Métrica 4.B: Sazonalidade de Consumo
+ */
+function calculateSazonalidade(filteredLists) {
+  const sazonalidadeEl = document.getElementById("metric-sazonalidade-text");
+  const catMonthSpend = {};
+
+  filteredLists.forEach((list) => {
+    const month = new Date(list.date).getMonth();
+
+    (list.categories || []).forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (!item.checked) return;
+
+        const valorUnitario = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+        const qtd = item.quantity || 1;
+        const valorTotalItem = valorUnitario * qtd;
+
+        if (!catMonthSpend[cat.name]) catMonthSpend[cat.name] = {};
+        if (!catMonthSpend[cat.name][month]) catMonthSpend[cat.name][month] = 0;
+
+        catMonthSpend[cat.name][month] += valorTotalItem;
+      });
+    });
+  });
+
+  const insights = [];
+  const DEZEMBRO = 11;
+
+  Object.keys(catMonthSpend).forEach((catName) => {
+    const meses = catMonthSpend[catName];
+    const gastoDez = meses[DEZEMBRO];
+
+    if (gastoDez) {
+      const outrosMeses = Object.keys(meses).filter(
+        (m) => parseInt(m) !== DEZEMBRO,
+      );
+      if (outrosMeses.length > 0) {
+        const totalOutros = outrosMeses.reduce((sum, m) => sum + meses[m], 0);
+        const mediaOutros = totalOutros / outrosMeses.length;
+        if (gastoDez > mediaOutros * 1.3) {
+          insights.push(`Alto consumo de "${catName}" detectado em Dezembro.`);
+        }
+      }
+    }
+  });
+
+  const VERAO = [0, 1];
+  Object.keys(catMonthSpend).forEach((catName) => {
+    const meses = catMonthSpend[catName];
+    const gastoVerao = (meses[0] || 0) + (meses[1] || 0);
+
+    if (gastoVerao > 0) {
+      const outrosMeses = Object.keys(meses).filter(
+        (m) => !VERAO.includes(parseInt(m)),
+      );
+      if (outrosMeses.length > 0) {
+        const totalOutros = outrosMeses.reduce((sum, m) => sum + meses[m], 0);
+        const mediaOutros = totalOutros / outrosMeses.length;
+        const countVerao = VERAO.filter((m) => meses[m]).length;
+        const mediaVerao = gastoVerao / (countVerao || 1);
+
+        if (mediaVerao > mediaOutros * 1.3) {
+          insights.push(`Alto consumo de "${catName}" detectado no Verão.`);
+        }
+      }
+    }
+  });
+
+  if (insights.length > 0) {
+    sazonalidadeEl.innerText = insights[0];
+  } else if (filteredLists.length < 5) {
+    sazonalidadeEl.innerText =
+      "Histórico de compras insuficiente para análise sazonal precisa.";
+  } else {
+    sazonalidadeEl.innerText =
+      "Padrão de consumo estável. Nenhuma sazonalidade detectada no momento.";
+  }
+}
+
+/* ==========================================================================
+   RENDERIZAÇÃO DE GRÁFICOS (Chart.js)
+   ========================================================================== */
+
+function renderShareWalletChart(categoryTotals) {
+  const canvas = document.getElementById("chart-share-wallet");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  if (chartShareWallet) chartShareWallet.destroy();
+
+  const labels = Object.keys(categoryTotals).filter(
+    (cat) => categoryTotals[cat] > 0,
+  );
+  const data = labels.map((cat) => categoryTotals[cat]);
+
+  if (labels.length === 0) {
+    showEmptyChartText("chart-share-wallet", "Sem gastos registrados");
+    return;
+  }
+
+  chartShareWallet = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: [
+            "rgba(76, 51, 230, 0.7)",
+            "rgba(36, 150, 137, 0.7)",
+            "rgba(255, 71, 87, 0.7)",
+            "#f1c40f",
+            "#3498db",
+            "#9b59b6",
+            "#e67e22",
+          ],
+          borderColor: "#fff",
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const label = context.label || "";
+              const value = context.parsed;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage =
+                total > 0 ? ((value / total) * 100).toFixed(0) : 0;
+              return `${label}: ${formatBRL(value)} (${percentage}%)`;
+            },
+          },
+        },
+      },
+      cutout: "60%",
+    },
+  });
+}
+
+function renderVolumeItensChart(filteredLists) {
+  const canvas = document.getElementById("chart-volume-itens");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (chartVolumeItens) chartVolumeItens.destroy();
+
+  const sorted = [...filteredLists].sort(
+    (a, b) => new Date(a.date) - new Date(b.date),
+  );
+  const lastLists = sorted.slice(-5);
+
+  const labels = lastLists.map((list) => formatDateBRLMini(list.date));
+  const data = lastLists.map((list) => {
+    let count = 0;
+    (list.categories || []).forEach((cat) => {
+      count += cat.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    });
+    return count;
+  });
+
+  chartVolumeItens = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Qtd. Itens",
+          data: data,
+          backgroundColor: "rgba(76, 51, 230, 0.6)",
+          borderRadius: 8,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { display: false },
+          ticks: { stepSize: 10 },
+        },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+}
+
+function renderHealthRatioChart(healthy, unhealthy, totalMapeado) {
+  const canvas = document.getElementById("chart-perfil-saude");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (chartPerfilSaude) chartPerfilSaude.destroy();
+
+  if (totalMapeado === 0) {
+    showEmptyChartText("chart-perfil-saude", "Categorias não mapeadas.");
+    return;
+  }
+
+  chartPerfilSaude = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["In Natura / Proteína", "Processados / Snacks"],
+      datasets: [
+        {
+          data: [healthy, unhealthy],
+          backgroundColor: [
+            "rgba(36, 150, 137, 0.7)",
+            "rgba(255, 71, 87, 0.7)",
+          ],
+          borderColor: "#fff",
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { boxWidth: 12, font: { size: 11 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const value = context.parsed;
+              const percentage =
+                totalMapeado > 0
+                  ? ((value / totalMapeado) * 100).toFixed(0)
+                  : 0;
+              return `${percentage}% (${formatBRL(value)})`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+/* ==========================================================================
+   SISTEMA DE FILTROS E MODAL
+   ========================================================================== */
+const filterModal = document.getElementById("filter-modal");
+let backdrop = null;
+
+window.toggleFilterModal = function () {
+  const isActive = filterModal.classList.contains("modal-visible");
+  const modalContent = document.querySelector(
+    ".modal-content.dashboard-filter",
+  );
+
+  if (!isActive) {
+    filterModal.classList.remove("modal-hidden");
+    filterModal.classList.add("modal-visible");
+
+    if (!document.querySelector(".modal-backdrop")) {
+      backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+      backdrop.onclick = window.toggleFilterModal;
+      document.body.appendChild(backdrop);
+    }
+
+    setTimeout(() => {
+      if (modalContent) modalContent.classList.add("active");
+    }, 10);
+  } else {
+    if (modalContent) modalContent.classList.remove("active");
+    const currentBackdrop = document.querySelector(".modal-backdrop");
+    if (currentBackdrop) currentBackdrop.remove();
+
+    setTimeout(() => {
+      filterModal.classList.add("modal-hidden");
+      filterModal.classList.remove("modal-visible");
+    }, 50);
+  }
+};
+
+window.handleFilterTypeChange = function () {
+  const type = document.getElementById("filter-type-select").value;
+  const container = document.getElementById("dynamic-filter-inputs");
+  container.innerHTML = "";
+
+  if (type === "mes") {
+    const now = new Date();
+    const year = now.getFullYear();
+    container.innerHTML = `
+            <div class="input-field mt-10">
+                <label>Selecione o Mês</label>
+                <input type="month" id="filter-mes-input" value="${year}-${String(now.getMonth() + 1).padStart(2, "0")}"/>
+            </div>
+        `;
+  } else if (type === "periodo") {
+    container.innerHTML = `
+            <div style="display: flex; gap: 10px;" class="mt-10">
+                <div class="input-field">
+                    <label>Data Início</label>
+                    <input type="date" id="filter-date-start"/>
+                </div>
+                <div class="input-field">
+                    <label>Data Fim</label>
+                    <input type="date" id="filter-date-end"/>
+                </div>
+            </div>
+        `;
+  } else if (type === "local") {
+    const locais = new Set();
+    window.marketListData.forEach((list) => {
+      if (list.location) locais.add(list.location);
+    });
+    const localArray = Array.from(locais);
+    if (localArray.length === 0) {
+      container.innerHTML = `<div class="empty-state-minor">Nenhum local cadastrado.</div>`;
+      return;
+    }
+    let optionsHtml = localArray
+      .map((l) => `<option value="${l}">${l}</option>`)
+      .join("");
+    container.innerHTML = `
+            <div class="input-field mt-10">
+                <label>Selecione o Local</label>
+                <select id="filter-local-select">${optionsHtml}</select>
+            </div>
+        `;
+  }
+};
+
+window.applyDashboardFilter = function () {
+  const type = document.getElementById("filter-type-select").value;
+  let value = null;
+
+  if (type === "mes") {
+    value = document.getElementById("filter-mes-input").value;
+    if (!value) {
+      window.showToast("Selecione o mês.", "warning");
+      return;
+    }
+  } else if (type === "periodo") {
+    const start = document.getElementById("filter-date-start").value;
+    const end = document.getElementById("filter-date-end").value;
+    if (!start || !end) {
+      window.showToast("Preencha as datas.", "warning");
+      return;
+    }
+    if (new Date(start) > new Date(end)) {
+      window.showToast("Data inválida.", "warning");
+      return;
+    }
+    value = { start, end };
+  } else if (type === "local") {
+    value = document.getElementById("filter-local-select")?.value;
+    if (!value) {
+      window.showToast("Selecione um local.", "warning");
+      return;
+    }
+  }
+
+  activeFilter = { type, value };
+  window.toggleFilterModal();
+  updateFilterIndicator();
+  processDashboardData(window.marketListData);
+};
+
+function applyCurrentFilter(data) {
+  if (activeFilter.type === "geral") return data;
+  if (activeFilter.type === "mes") {
+    const [year, month] = activeFilter.value.split("-");
+    return data.filter((list) => {
+      const d = new Date(list.date);
+      return (
+        d.getFullYear() === parseInt(year) &&
+        d.getMonth() + 1 === parseInt(month)
+      );
+    });
+  }
+  if (activeFilter.type === "periodo") {
+    const s = new Date(activeFilter.value.start);
+    const e = new Date(activeFilter.value.end);
+    return data.filter((list) => {
+      const d = new Date(list.date);
+      return d >= s && d <= e;
+    });
+  }
+  if (activeFilter.type === "local") {
+    return data.filter((list) => list.location === activeFilter.value);
+  }
+  return data;
+}
+
+function updateFilterIndicator() {
+  const textEl = document.getElementById("filter-text-display");
+  let text = "";
+  if (activeFilter.type === "geral") {
+    text = "Geral (Histórico Completo)";
+  } else if (activeFilter.type === "mes") {
+    const [year, month] = activeFilter.value.split("-");
+    const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+    text = `${window.capitalize(d.toLocaleDateString("pt-BR", { month: "long" }))} ${year}`;
+  } else if (activeFilter.type === "periodo") {
+    text = `De ${formatDateBRL(activeFilter.value.start)} até ${formatDateBRL(activeFilter.value.end)}`;
+  } else if (activeFilter.type === "local") {
+    text = `Local: ${activeFilter.value}`;
+  }
+  if (textEl) textEl.innerText = text;
+}
+
+/* ==========================================================================
+   UTILITÁRIOS INTERNOS DE UI E DATA
+   ========================================================================== */
+
+function showEmptyChartText(canvasId, text) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (canvasId === "chart-share-wallet" && chartShareWallet)
+    chartShareWallet.destroy();
+  if (canvasId === "chart-perfil-saude" && chartPerfilSaude)
+    chartPerfilSaude.destroy();
+  ctx.fillStyle = "#57636c";
+  ctx.font = "italic 13px Inter, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+}
+
+/**
+ * Lógica: Exibe um estado vazio com imagem quando não há dados para o filtro aplicado.
+ */
+function renderEmptyState() {
+  const dashboardContent = document.querySelector(".dashboard-content");
+  const emptyStateContainer = document.getElementById("dashboard-empty-state");
+
+  // Oculta o conteúdo principal
+  if (dashboardContent) dashboardContent.style.display = "none";
+
+  // Exibe o container de estado vazio com imagem e mensagem
+  if (emptyStateContainer) {
+    emptyStateContainer.style.display = "flex";
+    emptyStateContainer.innerHTML = `
+      <img src="assets/no-results.png" alt="Nenhum resultado" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6134/6134065.png'">
+      <h3>Nenhuma compra encontrada</h3>
+      <p>Não encontramos registros para o filtro aplicado. Tente selecionar outro período ou local.</p>
+    `;
+  }
+}
+
+const formatDateBRL = (dateStr) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}`;
+};
+
+const formatDateBRLMini = (dateStr) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}`;
+};

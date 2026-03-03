@@ -111,3 +111,87 @@
 .list-container.master-list {
   padding: 0px 20px;
 }
+
+/* ==========================================================================
+   ESTILIZAÇÃO DO POPOVER
+   ========================================================================== */
+#options-popover {
+  /* Anula a centralização automática do navegador */
+  inset: auto !important;
+
+  /* Define a posição exata */
+  position: fixed !important;
+  top: 60px !important; /* Ajustado para ficar logo abaixo do header */
+  right: 16px !important; /* Fixado na lateral direita */
+
+  /* Reseta estilos nativos de borda/fundo do popover */
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  z-index: 10000;
+  width: auto;
+  height: auto;
+}
+
+/* Estado Escondido */
+.popover-hidden {
+  display: none !important;
+  opacity: 0;
+}
+
+/* Estado Visível com animação suave */
+.popover-visible {
+  display: block !important;
+  opacity: 1;
+  animation: slideInRight 0.15s ease-out;
+}
+
+.popover-content {
+  background-color: #ffffff;
+  min-width: 190px;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color, #eee);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.popover-item {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-main, #333);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.popover-item:active {
+  background-color: #f8f9fa;
+}
+
+.popover-item ion-icon {
+  font-size: 20px;
+  color: var(--primary, #6200ee);
+}
+
+.popover-divider {
+  height: 1px;
+  background-color: var(--border-color, #eee);
+  margin: 0 10px;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}

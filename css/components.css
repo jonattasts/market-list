@@ -24,8 +24,13 @@ button:active {
 .icon-back {
   font-size: 28px;
 }
-.icon-add-list {
+.icon-add-list,
+.icon-options-list {
   font-size: 32px;
+}
+
+.icon-filter {
+  font-size: 26px;
 }
 
 /* Inputs globais */

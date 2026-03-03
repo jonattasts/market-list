@@ -156,22 +156,18 @@ async function runSetupAnimation(userName) {
     } catch (err) {
       console.error("Erro migração:", err);
     }
-  }
-  // CENÁRIO B: Usuário Novo (Simulação de Configuração)
-  else {
+  } else {
     if (syncText) syncText.innerText = "Configurando seu espaço...";
     if (syncSubtext)
       syncSubtext.innerText =
         "Preparando sua nuvem e organizando as prateleiras.";
 
-    // Simula 3 etapas de carregamento para UX
     for (let i = 1; i <= 3; i++) {
       await new Promise((r) => setTimeout(r, 700));
       if (progressBar) progressBar.style.width = `${(i / 3) * 100}%`;
     }
   }
 
-  // Finalização da Animação
   await new Promise((r) => setTimeout(r, 800));
   if (overlay) {
     overlay.classList.remove("active");
@@ -211,7 +207,6 @@ window.handleUserIdentification = async function () {
       }
     }
 
-    // Salva identificação
     localStorage.setItem("marketUserName", name);
     await setDoc(
       userRef,
@@ -219,8 +214,6 @@ window.handleUserIdentification = async function () {
       { merge: true },
     );
 
-    // Roda a animação SEMPRE (Migração ou Configuração inicial)
-    // Ocultamos o onboarding "por baixo" da animação
     if (onboardingScreen) {
       onboardingScreen.classList.add("screen-hidden");
       onboardingScreen.style.display = "none";
@@ -228,7 +221,6 @@ window.handleUserIdentification = async function () {
 
     await runSetupAnimation(name);
 
-    // Inicia o App após a animação sumir
     setTimeout(() => {
       isFirstLoad = true;
       initFirebaseListener(name);
@@ -252,6 +244,7 @@ window.showScreen = function (screenId) {
     "new-list-screen",
     "new-category-screen",
     "new-item-screen",
+    "dashboard-screen",
   ];
   screens.forEach((id) => {
     const el = document.getElementById(id);
@@ -266,14 +259,87 @@ window.showScreen = function (screenId) {
           : "none";
     }
   });
+
+  window.closePopover();
+
   if (screenId === "market-lists-screen" && window.renderMarketLists)
     window.renderMarketLists();
+
+  if (screenId === "dashboard-screen" && window.initDashboardAnalisys)
+    window.initDashboardAnalisys();
 };
 
 window.handleBackFromForm = function () {
   window.showScreen(previousScreen);
 };
 
+/* ==========================================================================
+   UX NOVA: LÓGICA DO POPOVER DE OPÇÕES
+   ========================================================================== */
+window.toggleMenuOptions = function (event) {
+  if (event) event.stopPropagation();
+
+  const popover = document.getElementById("options-popover");
+  if (!popover) return;
+
+  const isHidden = popover.classList.contains("popover-hidden");
+
+  if (isHidden) {
+    popover.classList.remove("popover-hidden");
+    popover.classList.add("popover-visible");
+
+    if (popover.showPopover) {
+      try {
+        popover.showPopover();
+      } catch (e) {
+        console.log("Manual trigger active");
+      }
+    }
+  } else {
+    window.closePopover();
+  }
+};
+
+window.closePopover = function () {
+  const popover = document.getElementById("options-popover");
+  if (popover) {
+    popover.classList.add("popover-hidden");
+    popover.classList.remove("popover-visible");
+    if (popover.hidePopover) {
+      try {
+        popover.hidePopover();
+      } catch (e) {}
+    }
+  }
+};
+
+window.handlePopoverAction = function (action) {
+  window.closePopover();
+  if (action === "new-list") {
+    if (window.openNewListForm) window.openNewListForm();
+  } else if (action === "dashboard") {
+    window.showScreen("dashboard-screen");
+  }
+};
+
+// Listener global para fechar ao clicar fora
+document.addEventListener("click", function (event) {
+  const popover = document.getElementById("options-popover");
+  const btn = document.getElementById("btn-options-list");
+
+  if (
+    popover &&
+    !popover.contains(event.target) &&
+    btn &&
+    !btn.contains(event.target)
+  ) {
+    window.closePopover();
+  }
+});
+
+/* ==========================================================================
+   FIREBASE LISTENER E PERSISTÊNCIA
+   ========================================================================== */
 function initFirebaseListener(userName) {
   const q = query(
     collection(firestore, "lists"),
@@ -352,12 +418,19 @@ async function initApp() {
     await validateUserPersistence(savedName);
   }
 
-  document
-    .getElementById("search-input")
-    ?.addEventListener("input", () => window.renderMarketLists());
-  document
-    .getElementById("item-search-input")
-    ?.addEventListener("input", () => window.renderListDetails());
+  const searchInputEl = document.getElementById("search-input");
+  if (searchInputEl) {
+    searchInputEl.addEventListener("input", () => {
+      if (window.renderMarketLists) window.renderMarketLists();
+    });
+  }
+
+  const itemSearchInputEl = document.getElementById("item-search-input");
+  if (itemSearchInputEl) {
+    itemSearchInputEl.addEventListener("input", () => {
+      if (window.renderListDetails) window.renderListDetails();
+    });
+  }
 }
 
 document.addEventListener("DOMContentLoaded", initApp);
