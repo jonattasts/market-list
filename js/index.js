@@ -120,51 +120,28 @@ window.saveAndSync = async function () {
   }
 };
 
-/* --- LÓGICA DE MIGRAÇÃO/CONFIGURAÇÃO COM UI DE ANIMAÇÃO --- */
+/* --- LÓGICA DE CONFIGURAÇÃO COM UI DE ANIMAÇÃO --- */
 async function runSetupAnimation(userName) {
-  const localData = localStorage.getItem("marketList");
   const overlay = document.getElementById("sync-overlay");
   const progressBar = document.getElementById("sync-progress");
   const syncText = document.querySelector(".sync-text");
-  const syncSubtext = document.querySelector(".sync-subtext");
+  const syncSubtext = document.querySelector(".sync-subtext"); // Ativa a Overlay Visual
 
-  // Ativa a Overlay Visual
   if (overlay) {
     overlay.style.display = "flex";
     await new Promise((r) => setTimeout(r, 50));
     overlay.classList.add("active");
   }
 
-  // CENÁRIO A: Existe dados locais (Migração Real)
-  if (localData) {
-    try {
-      const parsedData = JSON.parse(localData);
-      if (Array.isArray(parsedData) && parsedData.length > 0) {
-        const total = parsedData.length;
-        for (let i = 0; i < total; i++) {
-          await new Promise((r) => setTimeout(r, 600));
-          await addDoc(collection(firestore, "lists"), {
-            ...parsedData[i],
-            userName: userName,
-            createdAt: serverTimestamp(),
-          });
-          if (progressBar)
-            progressBar.style.width = `${((i + 1) / total) * 100}%`;
-        }
-        localStorage.removeItem("marketList");
-      }
-    } catch (err) {
-      console.error("Erro migração:", err);
-    }
-  } else {
-    if (syncText) syncText.innerText = "Configurando seu espaço...";
-    if (syncSubtext)
-      syncSubtext.innerText =
-        "Preparando sua nuvem e organizando as prateleiras.";
+  if (syncText) syncText.innerText = "Configurando seu espaço...";
+  if (syncSubtext)
+    syncSubtext.innerText =
+      "Preparando sua nuvem e organizando as prateleiras.";
 
-    for (let i = 1; i <= 3; i++) {
-      await new Promise((r) => setTimeout(r, 700));
-      if (progressBar) progressBar.style.width = `${(i / 3) * 100}%`;
+  for (let i = 1; i <= 3; i++) {
+    await new Promise((r) => setTimeout(r, 700));
+    if (progressBar) {
+      progressBar.style.width = `${(i / 3) * 100}%`;
     }
   }
 
