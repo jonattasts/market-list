@@ -232,7 +232,7 @@
 }
 
 /* ===================================================== */
-/* MODAL DE FILTROS (FLOATING CARD REFACTOR)             */
+/* MODAL DE FILTROS */
 /* ===================================================== */
 
 /* Container Principal do Modal */
@@ -253,122 +253,232 @@
   display: none !important;
 }
 
-/* Backdrop escurecido com desfoque (Blur) */
+.modal-visible {
+  display: flex !important;
+}
+
 .modal-backdrop {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Backdrop visível */
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 10000;
 }
 
-/* O Card Flutuante - AGORA BRANCO SÓLIDO */
-.modal-content.dashboard-filter {
+/* Card Principal do Filtro */
+.filter-card {
   position: relative;
   width: 100%;
-  max-width: 380px;
-  background-color: #ffffff !important; /* Branco sólido obrigatório */
-  border-radius: 35px; /* Bordas arredondadas pílula */
-  padding: 28px;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
   z-index: 10002;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  border: none;
+  gap: 20px;
+  animation: filterSlideUp 0.3s ease-out;
 }
 
-/* Cabeçalho */
-.modal-header {
+@keyframes filterSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.filter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
 }
 
-.modal-header h3 {
+.filter-header h3 {
   margin: 0;
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: #1a1a1a;
 }
 
-/* Ícone de Fechar (X) */
-.modal-header ion-icon {
-  font-size: 26px;
-  color: #333;
+.filter-close-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  margin: -8px;
   cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
 }
 
-/* Estilo dos campos de seleção */
-.modal-body-filter {
+.filter-close-btn:hover {
+  background: #f1f3f5;
+}
+
+.filter-close-btn ion-icon {
+  font-size: 24px;
+  color: #666;
+}
+
+.filter-body {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 20px;
 }
 
-.input-field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: #666;
-  margin-bottom: 8px;
-  padding-left: 5px;
-}
-
-.input-field select,
-.input-field input {
-  width: 100%;
-  padding: 15px;
-  background: #f1f3f5;
-  border: 1px solid #e9ecef;
-  border-radius: 15px;
-  font-size: 15px;
-  color: #333;
-  font-weight: 600;
-  outline: none;
-}
-
-/* Ações: Dois botões lado a lado */
-.filter-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* Divide o espaço em 2 colunas iguais */
+.filter-section {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-/* Botão Remover Filtro (Volta para o Geral) */
-.btn-clear-filter {
-  background-color: #e0f7fa; /* Azul pastel suave */
-  color: #008ba3;
-  border: none;
-  padding: 15px;
-  border-radius: 15px;
-  font-weight: 800;
-  font-size: 12px;
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: opacity 0.2s;
+  letter-spacing: 0.5px;
 }
 
-/* Botão Aplicar Filtro */
-.btn-apply-filter {
-  background-color: #4c33e6; /* Cor roxa do seu app */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #e0e3e7;
+  background: #ffffff;
+  color: #57636c;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  border-color: #4c33e6;
+  color: #4c33e6;
+}
+
+.filter-chip.active {
+  background: #4c33e6;
+  border-color: #4c33e6;
   color: #ffffff;
-  border: none;
-  padding: 15px;
-  border-radius: 15px;
-  font-weight: 800;
-  font-size: 12px;
-  text-transform: uppercase;
-  box-shadow: 0 5px 15px rgba(76, 51, 230, 0.3);
-  cursor: pointer;
 }
 
-.btn-clear-filter:active,
-.btn-apply-filter:active {
+/* Inputs Dinâmicos */
+#dynamic-filter-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #e0e3e7;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1a1a1a;
+  background: #f8f9fa;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.filter-input:focus {
+  border-color: #4c33e6;
+  background: #ffffff;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #e0e3e7;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1a1a1a;
+  background: #f8f9fa;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2357636c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+.date-range-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Footer */
+.filter-footer {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e3e7;
+}
+
+.btn-filter-clear {
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1.5px solid #e0e3e7;
+  background: #ffffff;
+  color: #57636c;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filter-clear:hover {
+  background: #f1f3f5;
+  border-color: #d0d5dd;
+}
+
+.btn-filter-clear:active {
+  transform: scale(0.98);
+}
+
+.btn-filter-apply {
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  background: #4c33e6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(76, 51, 230, 0.3);
+}
+
+.btn-filter-apply:hover {
+  background: #3d29b8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(76, 51, 230, 0.4);
+}
+
+.btn-filter-apply:active {
   transform: scale(0.98);
 }

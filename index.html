@@ -410,7 +410,7 @@
       <div id="dashboard-empty-state" class="dashboard-empty-state"></div>
 
       <div class="dashboard-content">
-        <div id="active-filter-indicator" class="active-filter-cardscreen-hidden">
+        <div id="active-filter-indicator" class="active-filter-card screen-hidden">
           <span>Filtrado por:</span>
           <strong id="filter-text-display">Geral (Tudo)</strong>
         </div>
@@ -509,27 +509,57 @@
 
       </div>
 
+      <!-- ============================================================= -->
+      <!-- ===================== MODAL DE FILTROS ===================== -->
+      <!-- ============================================================= -->
       <div id="filter-modal" class="modal-hidden">
-        <div class="modal-contentdashboard-filter">
-          <div class="modal-header">
+        <div class="modal-backdrop"></div>
+
+        <div class="filter-card">
+          <!-- Header -->
+          <div class="filter-header">
             <h3>Filtrar Análise</h3>
-            <ion-icon name="close-outline" onclick="toggleFilterModal()"></ion-icon>
+            <button class="filter-close-btn" onclick="toggleFilterModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
           </div>
 
-          <div class="filter-options">
-            <div class="input-field">
-              <label>Tipo de Agrupamento</label>
-              <select id="filter-type-select" onchange="handleFilterTypeChange()">
-                <option value="geral">Geral (Tudo)</option>
-                <option value="mes">Por Mês</option>
-                <option value="periodo">Período Específico</option>
-                <option value="local">Por Local</option>
-              </select>
+          <!-- Conteúdo dos Filtros -->
+          <div class="filter-body">
+
+            <!-- Seção: Tipo de Agrupamento (Chips) -->
+            <div class="filter-section">
+              <label class="filter-label">Tipo de Agrupamento</label>
+              <div class="filter-chips" id="filter-type-chips">
+                <button class="filter-chip active" data-value="geral" onclick="selectFilterType('geral')">
+                  Geral (Tudo)
+                </button>
+                <button class="filter-chip" data-value="mes" onclick="selectFilterType('mes')">
+                  Por Mês
+                </button>
+                <button class="filter-chip" data-value="periodo" onclick="selectFilterType('periodo')">
+                  Período
+                </button>
+                <button class="filter-chip" data-value="local" onclick="selectFilterType('local')">
+                  Por Local
+                </button>
+              </div>
             </div>
 
-            <div id="dynamic-filter-inputs"></div>
+            <!-- Seção Dinâmica: Inputs específicos do filtro selecionado -->
+            <div class="filter-section" id="dynamic-filter-section" style="display: none;">
+              <label class="filter-label" id="dynamic-filter-label"></label>
+              <div id="dynamic-filter-inputs"></div>
+            </div>
 
-            <button class="btn-start mt-20" onclick="applyDashboardFilter()">
+          </div>
+
+          <!-- Footer: Ações -->
+          <div class="filter-footer">
+            <button class="btn-filter-clear" onclick="clearFilter()">
+              Limpar
+            </button>
+            <button class="btn-filter-apply" onclick="applyDashboardFilter()">
               Aplicar Filtro
             </button>
           </div>

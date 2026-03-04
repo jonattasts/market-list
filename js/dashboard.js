@@ -30,10 +30,9 @@ window.initDashboardAnalisys = function () {
   activeFilter = { type: "geral", value: null };
 
   // Limpa campos visuais do modal de filtro para refletir o reset
-  const filterSelect = document.getElementById("filter-type-select");
-  if (filterSelect) filterSelect.value = "geral";
-  const dynamicContainer = document.getElementById("dynamic-filter-inputs");
-  if (dynamicContainer) dynamicContainer.innerHTML = "";
+  updateFilterChipsUI();
+  const dynamicSection = document.getElementById("dynamic-filter-section");
+  if (dynamicSection) dynamicSection.style.display = "none";
 
   updateFilterIndicator();
   processDashboardData(data);
@@ -710,122 +709,179 @@ function renderHealthRatioChart(healthy, unhealthy, totalMapeado) {
 /* ==========================================================================
    SISTEMA DE FILTROS E MODAL
    ========================================================================== */
-const filterModal = document.getElementById("filter-modal");
-let backdrop = null;
 
+/**
+ * Abre/Fecha o modal de filtros com animação suave
+ */
 window.toggleFilterModal = function () {
-  const isActive = filterModal.classList.contains("modal-visible");
-  const modalContent = document.querySelector(
-    ".modal-content.dashboard-filter",
-  );
+  const modal = document.getElementById("filter-modal");
+  const isVisible = modal.classList.contains("modal-visible");
 
-  if (!isActive) {
-    filterModal.classList.remove("modal-hidden");
-    filterModal.classList.add("modal-visible");
+  if (!isVisible) {
+    // Abrir modal
+    modal.classList.remove("modal-hidden");
+    modal.classList.add("modal-visible");
 
-    if (!document.querySelector(".modal-backdrop")) {
-      backdrop = document.createElement("div");
-      backdrop.className = "modal-backdrop";
-      backdrop.onclick = window.toggleFilterModal;
-      document.body.appendChild(backdrop);
+    // Resetar visual dos chips para o filtro atual
+    updateFilterChipsUI();
+
+    // Renderizar inputs dinâmicos se necessário
+    if (activeFilter.type !== "geral") {
+      const dynamicSection = document.getElementById("dynamic-filter-section");
+      if (dynamicSection) dynamicSection.style.display = "flex";
+      renderDynamicInputs(activeFilter.type);
     }
-
-    setTimeout(() => {
-      if (modalContent) modalContent.classList.add("active");
-    }, 10);
   } else {
-    if (modalContent) modalContent.classList.remove("active");
-    const currentBackdrop = document.querySelector(".modal-backdrop");
-    if (currentBackdrop) currentBackdrop.remove();
-
-    setTimeout(() => {
-      filterModal.classList.add("modal-hidden");
-      filterModal.classList.remove("modal-visible");
-    }, 50);
+    // Fechar modal
+    modal.classList.remove("modal-visible");
+    modal.classList.add("modal-hidden");
   }
 };
 
-window.handleFilterTypeChange = function () {
-  const type = document.getElementById("filter-type-select").value;
+/**
+ * Seleciona o tipo de filtro via chips
+ */
+window.selectFilterType = function (type) {
+  activeFilter.type = type;
+  activeFilter.value = null;
+
+  // Atualizar UI dos chips
+  updateFilterChipsUI();
+
+  // Mostrar/esconder seção dinâmica
+  const dynamicSection = document.getElementById("dynamic-filter-section");
+
+  if (type === "geral") {
+    if (dynamicSection) dynamicSection.style.display = "none";
+  } else {
+    if (dynamicSection) dynamicSection.style.display = "flex";
+    renderDynamicInputs(type);
+  }
+};
+
+/**
+ * Atualiza a aparência dos chips de filtro
+ */
+function updateFilterChipsUI() {
+  const chips = document.querySelectorAll(".filter-chip");
+  chips.forEach((chip) => {
+    if (chip.dataset.value === activeFilter.type) {
+      chip.classList.add("active");
+    } else {
+      chip.classList.remove("active");
+    }
+  });
+}
+
+/**
+ * Renderiza os inputs dinâmicos baseados no tipo de filtro
+ */
+function renderDynamicInputs(type) {
   const container = document.getElementById("dynamic-filter-inputs");
+  const label = document.getElementById("dynamic-filter-label");
+  if (!container) return;
+
   container.innerHTML = "";
 
   if (type === "mes") {
+    if (label) label.textContent = "Selecione o Mês";
     const now = new Date();
     const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+
     container.innerHTML = `
-            <div class="input-field mt-10">
-                <label>Selecione o Mês</label>
-                <input type="month" id="filter-mes-input" value="${year}-${String(now.getMonth() + 1).padStart(2, "0")}"/>
-            </div>
-        `;
+      <input type="month" 
+             id="filter-mes-input" 
+             class="filter-input"
+             value="${year}-${month}" />
+    `;
   } else if (type === "periodo") {
+    if (label) label.textContent = "Período de Análise";
     container.innerHTML = `
-            <div style="display: flex; gap: 10px;" class="mt-10">
-                <div class="input-field">
-                    <label>Data Início</label>
-                    <input type="date" id="filter-date-start"/>
-                </div>
-                <div class="input-field">
-                    <label>Data Fim</label>
-                    <input type="date" id="filter-date-end"/>
-                </div>
-            </div>
-        `;
+      <div class="date-range-inputs">
+        <input type="date" 
+               id="filter-date-start" 
+               class="filter-input"
+               placeholder="Data Início" />
+        <input type="date" 
+               id="filter-date-end" 
+               class="filter-input"
+               placeholder="Data Fim" />
+      </div>
+    `;
   } else if (type === "local") {
+    if (label) label.textContent = "Local de Compra";
     const locais = new Set();
     window.marketListData.forEach((list) => {
       if (list.location) locais.add(list.location);
     });
-    const localArray = Array.from(locais);
-    if (localArray.length === 0) {
-      container.innerHTML = `<div class="empty-state-minor">Nenhum local cadastrado.</div>`;
+
+    if (locais.size === 0) {
+      container.innerHTML = `<div class="empty-state-minor">Nenhum local cadastrado</div>`;
       return;
     }
-    let optionsHtml = localArray
+
+    let optionsHtml = Array.from(locais)
       .map((l) => `<option value="${l}">${l}</option>`)
       .join("");
+
     container.innerHTML = `
-            <div class="input-field mt-10">
-                <label>Selecione o Local</label>
-                <select id="filter-local-select">${optionsHtml}</select>
-            </div>
-        `;
+      <select id="filter-local-select" class="filter-select">
+        ${optionsHtml}
+      </select>
+    `;
   }
+}
+
+/**
+ * Limpa o filtro e volta para "Geral"
+ */
+window.clearFilter = function () {
+  activeFilter = { type: "geral", value: null };
+  updateFilterChipsUI();
+  const dynamicSection = document.getElementById("dynamic-filter-section");
+  if (dynamicSection) dynamicSection.style.display = "none";
+  applyDashboardFilter();
+  toggleFilterModal();
 };
 
+/**
+ * Aplica o filtro selecionado
+ */
 window.applyDashboardFilter = function () {
-  const type = document.getElementById("filter-type-select").value;
+  const type = activeFilter.type;
   let value = null;
 
   if (type === "mes") {
-    value = document.getElementById("filter-mes-input").value;
+    const input = document.getElementById("filter-mes-input");
+    value = input ? input.value : null;
     if (!value) {
-      window.showToast("Selecione o mês.", "warning");
+      window.showToast("Selecione o mês", "warning");
       return;
     }
   } else if (type === "periodo") {
-    const start = document.getElementById("filter-date-start").value;
-    const end = document.getElementById("filter-date-end").value;
+    const start = document.getElementById("filter-date-start")?.value;
+    const end = document.getElementById("filter-date-end")?.value;
     if (!start || !end) {
-      window.showToast("Preencha as datas.", "warning");
+      window.showToast("Preencha as datas", "warning");
       return;
     }
     if (new Date(start) > new Date(end)) {
-      window.showToast("Data inválida.", "warning");
+      window.showToast("Data inválida", "warning");
       return;
     }
     value = { start, end };
   } else if (type === "local") {
-    value = document.getElementById("filter-local-select")?.value;
+    const select = document.getElementById("filter-local-select");
+    value = select ? select.value : null;
     if (!value) {
-      window.showToast("Selecione um local.", "warning");
+      window.showToast("Selecione um local", "warning");
       return;
     }
   }
 
-  activeFilter = { type, value };
-  window.toggleFilterModal();
+  activeFilter.value = value;
+  toggleFilterModal();
   updateFilterIndicator();
   processDashboardData(window.marketListData);
 };
@@ -857,20 +913,29 @@ function applyCurrentFilter(data) {
 }
 
 function updateFilterIndicator() {
+  const indicator = document.getElementById("active-filter-indicator");
   const textEl = document.getElementById("filter-text-display");
+
+  if (!indicator || !textEl) return;
+
   let text = "";
   if (activeFilter.type === "geral") {
-    text = "Geral (Histórico Completo)";
-  } else if (activeFilter.type === "mes") {
-    const [year, month] = activeFilter.value.split("-");
-    const d = new Date(parseInt(year), parseInt(month) - 1, 1);
-    text = `${window.capitalize(d.toLocaleDateString("pt-BR", { month: "long" }))} ${year}`;
-  } else if (activeFilter.type === "periodo") {
-    text = `De ${formatDateBRL(activeFilter.value.start)} até ${formatDateBRL(activeFilter.value.end)}`;
-  } else if (activeFilter.type === "local") {
-    text = `Local: ${activeFilter.value}`;
+    text = "Geral (Tudo)";
+    indicator.style.display = "none";
+  } else {
+    indicator.style.display = "flex";
+    if (activeFilter.type === "mes") {
+      const [year, month] = activeFilter.value.split("-");
+      const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+      text = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    } else if (activeFilter.type === "periodo") {
+      text = `${formatDateBRL(activeFilter.value.start)} - ${formatDateBRL(activeFilter.value.end)}`;
+    } else if (activeFilter.type === "local") {
+      text = activeFilter.value;
+    }
   }
-  if (textEl) textEl.innerText = text;
+
+  textEl.innerText = text;
 }
 
 /* ==========================================================================
@@ -923,3 +988,17 @@ const formatDateBRLMini = (dateStr) => {
   const [year, month, day] = dateStr.split("-");
   return `${day}/${month}`;
 };
+
+// Fechar modal ao clicar no backdrop
+document.addEventListener("click", function (event) {
+  const modal = document.getElementById("filter-modal");
+  const backdrop = document.querySelector(".modal-backdrop");
+
+  if (
+    event.target === backdrop &&
+    modal &&
+    modal.classList.contains("modal-visible")
+  ) {
+    toggleFilterModal();
+  }
+});
