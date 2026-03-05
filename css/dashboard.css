@@ -618,6 +618,9 @@
   flex-direction: column;
   gap: 24px;
   animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Garante que o card não estoure o viewport em telas pequenas */
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 @keyframes modalSlideUp {
@@ -635,6 +638,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .filter-header h3 {
@@ -658,6 +662,7 @@
   transition: all 0.2s;
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
 }
 
 .filter-close-btn:hover {
@@ -674,6 +679,9 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  /* Permite scroll interno se necessário */
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .filter-section {
@@ -762,6 +770,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Garante que não ultrapasse o container */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-input {
@@ -774,6 +785,10 @@
   background: rgba(0, 0, 0, 0.2);
   outline: none;
   transition: all 0.3s;
+  /* Garante que o input respeite o box-sizing */
+  box-sizing: border-box;
+  /* Previne overflow de texto */
+  min-width: 0;
 }
 
 .filter-input:focus {
@@ -797,10 +812,12 @@
   outline: none;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg ' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 16px center;
   padding-right: 45px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .filter-select:focus {
@@ -808,10 +825,20 @@
   box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
 }
 
+/* Container de datas em período - layout flexível */
 .date-range-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: row;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.date-range-inputs .filter-input {
+  flex: 1;
+  min-width: 0;
+  /* Reduz padding lateral em telas pequenas */
+  padding: 16px 12px;
 }
 
 /* Footer do modal */
@@ -822,6 +849,7 @@
   margin-top: 8px;
   padding-top: 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .btn-filter-clear {
@@ -1075,6 +1103,16 @@
 
   .stat-value {
     font-size: 20px;
+  }
+
+  .date-range-inputs {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .date-range-inputs .filter-input {
+    width: 100%;
+    padding: 16px;
   }
 }
 

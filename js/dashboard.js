@@ -945,6 +945,8 @@ function updateFilterButtonVisualState() {
  * Bloqueia quando tipo está selecionado sem valor
  */
 function updateApplyButtonState() {
+  console.log('updateApplyButtonState');
+  
   const applyBtn = document.getElementById("apply-filter-btn");
   if (!applyBtn) return;
 
