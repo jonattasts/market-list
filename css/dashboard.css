@@ -1088,3 +1088,42 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Efeito visual no botão de filtros quando ativo */
+#dashboard-filter-btn.filter-active {
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 0 0 3px rgba(76, 51, 230, 0.3);
+  animation: pulse-filter 2s infinite;
+}
+
+#dashboard-filter-btn.filter-active svg,
+#dashboard-filter-btn.filter-active i {
+  color: white;
+}
+
+@keyframes pulse-filter {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 51, 230, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(76, 51, 230, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 51, 230, 0);
+  }
+}
+
+/* Estilo para botão desabilitado */
+#apply-filter-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Estilo para chips ativos */
+.filter-chip.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}

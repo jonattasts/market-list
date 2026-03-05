@@ -50,7 +50,6 @@ window.initDashboardAnalisys = function () {
     return;
   }
 
-  // REFACTOR: Reinicia o filtro para o padrão "geral" ao abrir a página
   activeFilter = { type: "geral", value: null };
 
   // Limpa campos visuais do modal de filtro para refletir o reset
@@ -59,6 +58,7 @@ window.initDashboardAnalisys = function () {
   if (dynamicSection) dynamicSection.style.display = "none";
 
   updateFilterIndicator();
+  updateFilterButtonVisualState();
   processDashboardData(data);
 };
 
@@ -926,7 +926,51 @@ function renderHealthRatioChart(healthy, unhealthy, totalMapeado) {
    ========================================================================== */
 
 /**
+ * Atualiza o estado visual do botão de filtros (ícone ativo/inativo)
+ * Adiciona classe 'filter-active' quando há filtro aplicado
+ */
+function updateFilterButtonVisualState() {
+  const filterBtn = document.getElementById("dashboard-filter-btn");
+  if (!filterBtn) return;
+
+  if (activeFilter.type !== "geral") {
+    filterBtn.classList.add("filter-active");
+  } else {
+    filterBtn.classList.remove("filter-active");
+  }
+}
+
+/**
+ * Atualiza o estado do botão de aplicar filtros (habilitado/desabilitado)
+ * Bloqueia quando tipo está selecionado sem valor
+ */
+function updateApplyButtonState() {
+  const applyBtn = document.getElementById("apply-filter-btn");
+  if (!applyBtn) return;
+
+  let isValid = true;
+
+  if (activeFilter.type === "local") {
+    const select = document.getElementById("filter-local-select");
+    const hasValue = select && select.value;
+    isValid = hasValue;
+  } else if (activeFilter.type === "mes") {
+    const input = document.getElementById("filter-mes-input");
+    isValid = input && input.value;
+  } else if (activeFilter.type === "periodo") {
+    const start = document.getElementById("filter-date-start")?.value;
+    const end = document.getElementById("filter-date-end")?.value;
+    isValid = start && end && new Date(start) <= new Date(end);
+  }
+
+  applyBtn.disabled = !isValid;
+  applyBtn.style.opacity = isValid ? "1" : "0.5";
+  applyBtn.style.cursor = isValid ? "pointer" : "not-allowed";
+}
+
+/**
  * Abre/Fecha o modal de filtros com animação suave
+ * Mantém seleção do chip ativo ao abrir e atualiza estado do botão aplicar
  */
 window.toggleFilterModal = function () {
   const modal = document.getElementById("filter-modal");
@@ -937,21 +981,48 @@ window.toggleFilterModal = function () {
     modal.classList.remove("modal-hidden");
     modal.classList.add("modal-visible");
 
-    // Resetar visual dos chips para o filtro atual
+    // Sincroniza UI com o filtro ativo
     updateFilterChipsUI();
 
-    // Renderizar inputs dinâmicos se necessário
+    // Renderiza inputs dinâmicos baseado no filtro ATIVO
     if (activeFilter.type !== "geral") {
       const dynamicSection = document.getElementById("dynamic-filter-section");
       if (dynamicSection) dynamicSection.style.display = "flex";
       renderDynamicInputs(activeFilter.type);
+
+      // Preenche os inputs com os valores do filtro ativo
+      populateFilterInputsWithActiveValues();
+    } else {
+      const dynamicSection = document.getElementById("dynamic-filter-section");
+      if (dynamicSection) dynamicSection.style.display = "none";
     }
+
+    // Atualiza estado do botão aplicar baseado na seleção atual
+    updateApplyButtonState();
   } else {
     // Fechar modal
     modal.classList.remove("modal-visible");
     modal.classList.add("modal-hidden");
   }
 };
+
+/**
+ * Preenche os inputs dinâmicos com os valores do filtro ativo
+ */
+function populateFilterInputsWithActiveValues() {
+  if (activeFilter.type === "mes" && activeFilter.value) {
+    const input = document.getElementById("filter-mes-input");
+    if (input) input.value = activeFilter.value;
+  } else if (activeFilter.type === "periodo" && activeFilter.value) {
+    const startInput = document.getElementById("filter-date-start");
+    const endInput = document.getElementById("filter-date-end");
+    if (startInput) startInput.value = activeFilter.value.start;
+    if (endInput) endInput.value = activeFilter.value.end;
+  } else if (activeFilter.type === "local" && activeFilter.value) {
+    const select = document.getElementById("filter-local-select");
+    if (select) select.value = activeFilter.value;
+  }
+}
 
 /**
  * Seleciona o tipo de filtro via chips
@@ -972,6 +1043,9 @@ window.selectFilterType = function (type) {
     if (dynamicSection) dynamicSection.style.display = "flex";
     renderDynamicInputs(type);
   }
+
+  // Atualiza estado do botão aplicar
+  updateApplyButtonState();
 };
 
 /**
@@ -1010,6 +1084,12 @@ function renderDynamicInputs(type) {
              class="filter-input"
              value="${year}-${month}" />
     `;
+
+    const input = container.querySelector("#filter-mes-input");
+    if (input) {
+      input.addEventListener("change", updateApplyButtonState);
+      input.addEventListener("input", updateApplyButtonState);
+    }
   } else if (type === "periodo") {
     if (label) label.textContent = "Período de Análise";
     container.innerHTML = `
@@ -1024,6 +1104,17 @@ function renderDynamicInputs(type) {
                placeholder="Data Fim" />
       </div>
     `;
+
+    const startInput = container.querySelector("#filter-date-start");
+    const endInput = container.querySelector("#filter-date-end");
+    if (startInput) {
+      startInput.addEventListener("change", updateApplyButtonState);
+      startInput.addEventListener("input", updateApplyButtonState);
+    }
+    if (endInput) {
+      endInput.addEventListener("change", updateApplyButtonState);
+      endInput.addEventListener("input", updateApplyButtonState);
+    }
   } else if (type === "local") {
     if (label) label.textContent = "Local de Compra";
     const locais = new Set();
@@ -1042,9 +1133,15 @@ function renderDynamicInputs(type) {
 
     container.innerHTML = `
       <select id="filter-local-select" class="filter-select">
+        <option value="">Selecione um local...</option>
         ${optionsHtml}
       </select>
     `;
+
+    const select = container.querySelector("#filter-local-select");
+    if (select) {
+      select.addEventListener("change", updateApplyButtonState);
+    }
   }
 }
 
@@ -1056,6 +1153,9 @@ window.clearFilter = function () {
   updateFilterChipsUI();
   const dynamicSection = document.getElementById("dynamic-filter-section");
   if (dynamicSection) dynamicSection.style.display = "none";
+
+  updateFilterButtonVisualState();
+
   applyDashboardFilter();
 };
 
@@ -1070,14 +1170,12 @@ window.applyDashboardFilter = function () {
     const input = document.getElementById("filter-mes-input");
     value = input ? input.value : null;
     if (!value) {
-      window.showToast("Selecione o mês", "warning");
       return;
     }
   } else if (type === "periodo") {
     const start = document.getElementById("filter-date-start")?.value;
     const end = document.getElementById("filter-date-end")?.value;
     if (!start || !end) {
-      window.showToast("Preencha as datas", "warning");
       return;
     }
     if (new Date(start) > new Date(end)) {
@@ -1089,7 +1187,6 @@ window.applyDashboardFilter = function () {
     const select = document.getElementById("filter-local-select");
     value = select ? select.value : null;
     if (!value) {
-      // window.showToast("Selecione um local", "warning");
       return;
     }
   }
@@ -1097,6 +1194,9 @@ window.applyDashboardFilter = function () {
   activeFilter.value = value;
   toggleFilterModal();
   updateFilterIndicator();
+
+  updateFilterButtonVisualState();
+
   processDashboardData(window.marketListData);
 };
 
