@@ -3,8 +3,10 @@
    ========================================================================== */
 :root {
   --primary: #4c33e6;
+  --primary-light: #8a78ff;
   --bg-page: #f1f4f8;
   --bg-card: #ffffff;
+  --bg-card-light: #ffffff80;
   --text-main: #14181b;
   --text-secondary: #57636c;
   --accent-green: #249689;

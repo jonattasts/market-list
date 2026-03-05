@@ -443,7 +443,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
             <span class="item-main-text">${item.name}</span>
             <span class="item-sub-text">Média: ${item.media} dias | ${item.compras} compras</span>
           </div>
-          <strong style="color: var(--primary)">
+          <strong style="color: var(--primary-light)">
             ${item.texto}
           </strong>
         `;
@@ -514,7 +514,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
     div.className = "data-item";
 
     let statusText = "";
-    let statusColor = "var(--toast-bg)";
+    let statusColor = "var(--bg-card-light)";
 
     if (prev.diasRestantes < 0) {
       statusText = `Atraso ${Math.abs(prev.diasRestantes)}d`;
@@ -524,7 +524,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
       statusColor = "var(--accent-green)";
     } else if (prev.diasRestantes <= 3) {
       statusText = `Em ${prev.diasRestantes}d`;
-      statusColor = "var(--primary)";
+      statusColor = "var(--primary-light)";
     } else {
       statusText = `📅 ${formatDateBRL(prev.nextDate.toISOString().split("T")[0])}`;
     }
