@@ -15,6 +15,30 @@ let chartPerfilSaude = null;
 let activeFilter = { type: "geral", value: null };
 
 /* ==========================================================================
+   UTILITÁRIO: Parse de Data Local
+   ========================================================================== */
+/**
+ * Converte string de data YYYY-MM-DD para objeto Date considerando timezone local
+ * Evita deslocamento de dia devido a UTC
+ */
+function parseDateLocal(dateStr) {
+  if (!dateStr) return new Date();
+  const [year, month, day] = dateStr.split("-").map(Number);
+  // Cria data com horário meio-dia para evitar problemas de mudança de dia
+  return new Date(year, month - 1, day, 12, 0, 0);
+}
+
+/**
+ * Extrai ano e mês de uma data string (YYYY-MM-DD) para comparação
+ * Retorna objeto {year, month} sem criar Date (evita timezone issues)
+ */
+function getYearMonth(dateStr) {
+  if (!dateStr) return { year: 0, month: 0 };
+  const [year, month] = dateStr.split("-").map(Number);
+  return { year, month };
+}
+
+/* ==========================================================================
    INICIALIZAÇÃO E FLUXO PRINCIPAL
    ========================================================================== */
 window.initDashboardAnalisys = function () {
@@ -177,19 +201,16 @@ function calculateCPI(filteredLists, allLists) {
       1,
     );
     const prevYearStr = prevMonth.getFullYear();
-    const prevMonthStr = String(prevMonth.getMonth() + 1).padStart(2, "0");
+    const prevMonthStr = prevMonth.getMonth() + 1;
 
     previousLists = allLists.filter((list) => {
-      const d = new Date(list.date);
-      return (
-        d.getFullYear() === prevYearStr &&
-        d.getMonth() + 1 === parseInt(prevMonthStr)
-      );
+      const listDate = getYearMonth(list.date);
+      return listDate.year === prevYearStr && listDate.month === prevMonthStr;
     });
   } else if (activeFilter.type === "periodo") {
     // Se filtrou por período, pega período de mesma duração imediatamente anterior
-    const start = new Date(activeFilter.value.start);
-    const end = new Date(activeFilter.value.end);
+    const start = parseDateLocal(activeFilter.value.start);
+    const end = parseDateLocal(activeFilter.value.end);
     const duration = end - start;
 
     const prevEnd = new Date(start);
@@ -198,13 +219,13 @@ function calculateCPI(filteredLists, allLists) {
     prevStart.setTime(prevStart.getTime() - duration);
 
     previousLists = allLists.filter((list) => {
-      const d = new Date(list.date);
-      return d >= prevStart && d <= prevEnd;
+      const listDate = parseDateLocal(list.date);
+      return listDate >= prevStart && listDate <= prevEnd;
     });
   } else {
     // Para "geral" ou "local", compara com metade anterior do histórico
     const sortedAll = [...allLists].sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
+      (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
     );
     const midPoint = Math.floor(sortedAll.length / 2);
     const filteredIds = new Set(filteredLists.map((l) => l.id));
@@ -342,7 +363,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
 
   // Ordena listas por data para cálculo correto do ciclo
   const sortedLists = [...filteredLists].sort(
-    (a, b) => new Date(a.date) - new Date(b.date),
+    (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
   );
 
   sortedLists.forEach((list) => {
@@ -380,7 +401,8 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
     if (dates.length >= 2) {
       const intervalos = [];
       for (let i = 1; i < dates.length; i++) {
-        const diffTime = new Date(dates[i]) - new Date(dates[i - 1]);
+        const diffTime =
+          parseDateLocal(dates[i]) - parseDateLocal(dates[i - 1]);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays > 0 && diffDays < 365) intervalos.push(diffDays); // Ignora intervalos absurdos
       }
@@ -389,12 +411,13 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
         const mediaDias =
           intervalos.reduce((a, b) => a + b, 0) / intervalos.length;
 
-        const lastPurchase = new Date(dates[dates.length - 1]);
+        const lastPurchase = parseDateLocal(dates[dates.length - 1]);
         const nextDate = new Date(lastPurchase);
         nextDate.setDate(lastPurchase.getDate() + Math.round(mediaDias));
 
         // Só mostra previsões para datas futuras ou próximas
         const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
         const diasAteCompra = Math.ceil(
           (nextDate - hoje) / (1000 * 60 * 60 * 24),
         );
@@ -654,7 +677,8 @@ function calculateSazonalidade(filteredLists) {
   const catMonthSpend = {};
 
   filteredLists.forEach((list) => {
-    const month = new Date(list.date).getMonth();
+    const listDate = parseDateLocal(list.date);
+    const month = listDate.getMonth();
 
     (list.categories || []).forEach((cat) => {
       cat.items.forEach((item) => {
@@ -803,7 +827,7 @@ function renderVolumeItensChart(filteredLists) {
   if (chartVolumeItens) chartVolumeItens.destroy();
 
   const sorted = [...filteredLists].sort(
-    (a, b) => new Date(a.date) - new Date(b.date),
+    (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
   );
   const lastLists = sorted.slice(-5);
 
@@ -1079,27 +1103,29 @@ window.applyDashboardFilter = function () {
 
 function applyCurrentFilter(data) {
   if (activeFilter.type === "geral") return data;
+
   if (activeFilter.type === "mes") {
-    const [year, month] = activeFilter.value.split("-");
+    const [filterYear, filterMonth] = activeFilter.value.split("-").map(Number);
+
     return data.filter((list) => {
-      const d = new Date(list.date);
-      return (
-        d.getFullYear() === parseInt(year) &&
-        d.getMonth() + 1 === parseInt(month)
-      );
+      const listDate = getYearMonth(list.date);
+      return listDate.year === filterYear && listDate.month === filterMonth;
     });
   }
+
   if (activeFilter.type === "periodo") {
-    const s = new Date(activeFilter.value.start);
-    const e = new Date(activeFilter.value.end);
+    const s = parseDateLocal(activeFilter.value.start);
+    const e = parseDateLocal(activeFilter.value.end);
     return data.filter((list) => {
-      const d = new Date(list.date);
+      const d = parseDateLocal(list.date);
       return d >= s && d <= e;
     });
   }
+
   if (activeFilter.type === "local") {
     return data.filter((list) => list.location === activeFilter.value);
   }
+
   return data;
 }
 
