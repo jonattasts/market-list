@@ -91,7 +91,7 @@ function processDashboardData(allLists) {
 
   filteredLists.forEach((list) => {
     (list.categories || []).forEach((cat) => {
-      // Agregação para Share of Wallet
+      // Agregação para gasto por categoria
       if (!categoryTotals[cat.name]) categoryTotals[cat.name] = 0;
 
       cat.items.forEach((item) => {
@@ -128,7 +128,7 @@ function processDashboardData(allLists) {
   const economia = forecastTotal - totalSpentInPeriod;
   document.getElementById("metric-economia").innerText = formatBRL(economia);
 
-  // C. Share of Wallet (Gráfico Pizza)
+  // C. Gasto por Categoria (Gráfico Pizza)
   renderShareWalletChart(categoryTotals);
 
   // D. Inflação Pessoal (CPI) - CORRIGIDO: Compara com período anterior
@@ -291,42 +291,46 @@ function calculateCPI(filteredLists, allLists) {
     });
   });
 
-  // Encontra itens recorrentes (aparecem em ambos os períodos)
-  const recorrentes = Object.keys(currentPrices).filter((name) => {
-    return previousPrices[name] && currentPrices[name].count >= 1;
-  });
-
-  if (recorrentes.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Sem itens recorrentes entre os períodos.</div>`;
-    return;
-  }
-
+  // Compara e renderiza
   let hasComparison = false;
-  recorrentes.slice(0, 5).forEach((name) => {
-    const priceCurr = currentPrices[name].total / currentPrices[name].count;
-    const pricePrev = previousPrices[name].total / previousPrices[name].count;
+  Object.keys(currentPrices).forEach((name) => {
+    if (previousPrices[name]) {
+      hasComparison = true;
+      const avgCurrent = currentPrices[name].total / currentPrices[name].count;
+      const avgPrev = previousPrices[name].total / previousPrices[name].count;
+      const diff = ((avgCurrent - avgPrev) / avgPrev) * 100;
 
-    const variacao = ((priceCurr - pricePrev) / pricePrev) * 100;
-    const classe = variacao > 0 ? "up" : "down";
-    const icone = variacao > 0 ? "📈" : "📉";
+      // Renderiza mesmo se a diferença for 0, conforme a imagem do usuário
+      const itemDiv = document.createElement("div");
+      itemDiv.className = `cpi-item ${diff > 0 ? "up" : "down"}`;
 
-    hasComparison = true;
-    const div = document.createElement("div");
-    div.className = `cpi-item ${classe}`;
-    div.innerHTML = `
-      <div>
-        <span class="item-main-text">${window.capitalize(currentPrices[name].name)}</span>
-        <span class="item-sub-text">Ant: ${formatBRL(pricePrev)} → Atual: ${formatBRL(priceCurr)}</span>
-      </div>
-      <strong style="color: ${variacao > 0 ? "var(--danger)" : "var(--accent-green)"}">
-        ${icone} ${Math.abs(variacao).toFixed(1)}%
-      </strong>
-    `;
-    container.appendChild(div);
+      // Define o emoji e a cor baseada na variação
+      let emoji = "📉";
+      let color = "var(--accent-green)";
+
+      if (diff > 0) {
+        emoji = "📈";
+        color = "var(--danger)";
+      } else if (diff === 0) {
+        emoji = "📉"; // Mantém o padrão da imagem para 0.0%
+        color = "var(--accent-green)";
+      }
+
+      itemDiv.innerHTML = `
+        <div>
+          <span class="item-main-text">${window.capitalize(currentPrices[name].name)}</span>
+          <span class="item-sub-text">Ant: ${formatBRL(avgPrev)} → Atual: ${formatBRL(avgCurrent)}</span>
+        </div>
+        <strong style="color: ${color}">
+          ${emoji} ${Math.abs(diff).toFixed(1)}%
+        </strong>
+      `;
+      container.appendChild(itemDiv);
+    }
   });
 
   if (!hasComparison) {
-    container.innerHTML = `<div class="empty-state-minor">Não foi possível comparar preços.</div>`;
+    container.innerHTML = `<div class="empty-state-minor">Itens recorrentes não encontrados para comparação.</div>`;
   }
 }
 
@@ -334,19 +338,19 @@ function calculateCPI(filteredLists, allLists) {
  * Métrica 2.A: Índice de Fidelidade de Local
  */
 function calculateLocationFidelity(filteredLists) {
-  const localMap = {};
-  filteredLists.forEach((list) => {
-    const local = list.location || "Não Informado";
-    if (!localMap[local]) localMap[local] = 0;
-    localMap[local]++;
+  const localFreq = {};
+  filteredLists.forEach((l) => {
+    const loc = l.location || "Não Informado";
+    localFreq[loc] = (localFreq[loc] || 0) + 1;
   });
 
   let topLocal = "--";
   let maxFreq = 0;
-  for (const [local, freq] of Object.entries(localMap)) {
-    if (freq > maxFreq) {
-      maxFreq = freq;
-      topLocal = local;
+
+  for (const loc in localFreq) {
+    if (localFreq[loc] > maxFreq) {
+      maxFreq = localFreq[loc];
+      topLocal = loc;
     }
   }
 
@@ -385,6 +389,68 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
   });
   document.getElementById("metric-essenciais-count").innerText =
     essenciais.length;
+
+  // EXIBIÇÃO DE RECORRÊNCIA (FREQUÊNCIA) ---
+  const recorrenciaContainer = document.getElementById(
+    "recorrencia-itens-list",
+  );
+  if (recorrenciaContainer) {
+    recorrenciaContainer.innerHTML = "";
+
+    const itensRecorrentes = [];
+
+    Object.keys(itemMap).forEach((name) => {
+      const dates = [...new Set(itemMap[name].dates)].sort();
+      if (dates.length >= 2) {
+        const intervalos = [];
+        for (let i = 1; i < dates.length; i++) {
+          const diffTime =
+            parseDateLocal(dates[i]) - parseDateLocal(dates[i - 1]);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays > 0 && diffDays < 365) intervalos.push(diffDays);
+        }
+
+        if (intervalos.length > 0) {
+          const mediaDias =
+            intervalos.reduce((a, b) => a + b, 0) / intervalos.length;
+          let frequenciaTexto = "";
+
+          if (mediaDias <= 8) frequenciaTexto = "Semanal";
+          else if (mediaDias <= 16) frequenciaTexto = "Quinzenal";
+          else if (mediaDias <= 35) frequenciaTexto = "Mensal";
+          else frequenciaTexto = `A cada ${Math.round(mediaDias)} dias`;
+
+          itensRecorrentes.push({
+            name: window.capitalize(itemMap[name].name),
+            media: Math.round(mediaDias),
+            texto: frequenciaTexto,
+            compras: dates.length,
+          });
+        }
+      }
+    });
+
+    itensRecorrentes.sort((a, b) => b.compras - a.compras);
+
+    if (itensRecorrentes.length === 0) {
+      recorrenciaContainer.innerHTML = `<div class="empty-state-minor">Gere mais listas para ver a frequência.</div>`;
+    } else {
+      itensRecorrentes.slice(0, 5).forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "data-item";
+        div.innerHTML = `
+          <div>
+            <span class="item-main-text">${item.name}</span>
+            <span class="item-sub-text">Média: ${item.media} dias | ${item.compras} compras</span>
+          </div>
+          <strong style="color: var(--primary)">
+            ${item.texto}
+          </strong>
+        `;
+        recorrenciaContainer.appendChild(div);
+      });
+    }
+  }
 
   const repoContainer = document.getElementById("reposicao-list");
   repoContainer.innerHTML = "";
@@ -548,233 +614,127 @@ function calculateHealthRatio(categoryTotals) {
   const categoryClassification = {
     // In Natura / Saudáveis
     healthy: [
-      "hortifruti",
       "fruta",
       "legume",
       "verdura",
-      "acougue",
-      "açougue",
-      "peixaria",
-      "natural",
-      "orgânico",
-      "organico",
-      "feira",
-      "ovos",
-      "leite",
-      "iogurte",
-      "queijo",
-      "frios",
-      "embutidos",
+      "hortifruti",
       "carne",
       "peixe",
-      "frango",
-      "pescado",
-      "grãos",
+      "ovo",
+      "leite",
+      "natural",
+      "saudavel",
       "graos",
-      "cereal",
-      "aveia",
-      "granola",
-      "nuts",
-      "castanha",
-      "semente",
+      "cereais",
     ],
-    // Ultraprocessados / Menos saudáveis
-    unhealthy: [
-      "snack",
-      "biscoito",
+    // Ultraprocessados / Menos Saudáveis
+    processed: [
       "bolacha",
-      "congelado",
+      "biscoito",
       "refrigerante",
       "doce",
-      "processado",
       "salgadinho",
-      "chocolate",
-      "balas",
-      "sorvete",
-      "fast food",
-      "lanche",
-      "pizza",
-      "hamburguer",
-      "nuggets",
-      "lasanha congelada",
-      "pão de queijo congelado",
-      "batata frita",
-      "suco em pó",
-      "refresco",
-      "energético",
+      "congelado",
+      "embutido",
+      "salsicha",
+      "presunto",
+      "bebida alcoolica",
       "cerveja",
-      "vodka",
-      "whisky",
       "vinho",
-      "bebida alcoólica",
-    ],
-    // Neutros (não entram no cálculo ou são proporcionalmente distribuídos)
-    neutral: [
-      "mercearia",
-      "padaria",
-      "açougue",
-      "açougue",
-      "limpeza",
-      "higiene",
-      "perfumaria",
-      "utensílios",
-      "papelaria",
-      "pet",
     ],
   };
 
-  let healthySpent = 0;
-  let unhealthySpent = 0;
-  let neutralSpent = 0;
-  let unclassifiedSpent = 0;
+  let healthyTotal = 0;
+  let processedTotal = 0;
+  let othersTotal = 0;
 
   Object.keys(categoryTotals).forEach((catName) => {
-    const normName = window.normalizeString(catName);
-    const valor = categoryTotals[catName];
+    const normalizedCat = window.normalizeString(catName);
+    const value = categoryTotals[catName];
 
-    const isHealthy = categoryClassification.healthy.some(
-      (key) => normName.includes(key) || key.includes(normName),
+    const isHealthy = categoryClassification.healthy.some((keyword) =>
+      normalizedCat.includes(keyword),
     );
-    const isUnhealthy = categoryClassification.unhealthy.some(
-      (key) => normName.includes(key) || key.includes(normName),
-    );
-    const isNeutral = categoryClassification.neutral.some(
-      (key) => normName.includes(key) || key.includes(normName),
+    const isProcessed = categoryClassification.processed.some((keyword) =>
+      normalizedCat.includes(keyword),
     );
 
-    if (isHealthy && !isUnhealthy) {
-      healthySpent += valor;
-    } else if (isUnhealthy && !isHealthy) {
-      unhealthySpent += valor;
-    } else if (isNeutral) {
-      neutralSpent += valor;
-    } else {
-      // Se não conseguiu classificar, distribui proporcionalmente
-      unclassifiedSpent += valor;
-    }
+    if (isHealthy) healthyTotal += value;
+    else if (isProcessed) processedTotal += value;
+    else othersTotal += value;
   });
 
-  // Distribui gastos não classificados proporcionalmente
-  const totalClassified = healthySpent + unhealthySpent;
-  if (totalClassified > 0 && unclassifiedSpent > 0) {
-    const healthyRatio = healthySpent / totalClassified;
-    healthySpent += unclassifiedSpent * healthyRatio;
-    unhealthySpent += unclassifiedSpent * (1 - healthyRatio);
-  } else if (unclassifiedSpent > 0) {
-    // Se não há classificados, joga tudo em neutro
-    neutralSpent += unclassifiedSpent;
-  }
-
-  const totalMapeado = healthySpent + unhealthySpent;
-  renderHealthRatioChart(healthySpent, unhealthySpent, totalMapeado);
+  renderHealthRatioChart(healthyTotal, processedTotal, othersTotal);
 }
 
 /**
  * Métrica 4.B: Sazonalidade de Consumo
  */
 function calculateSazonalidade(filteredLists) {
-  const sazonalidadeEl = document.getElementById("metric-sazonalidade-text");
-  const catMonthSpend = {};
+  const monthNames = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+
+  const categoryByMonth = {};
 
   filteredLists.forEach((list) => {
-    const listDate = parseDateLocal(list.date);
-    const month = listDate.getMonth();
+    const date = parseDateLocal(list.date);
+    const month = date.getMonth();
+
+    if (!categoryByMonth[month]) categoryByMonth[month] = {};
 
     (list.categories || []).forEach((cat) => {
-      cat.items.forEach((item) => {
-        if (!item.checked) return;
-
-        const valorUnitario = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-        const qtd = item.quantity || 1;
-        const valorTotalItem = valorUnitario * qtd;
-
-        if (!catMonthSpend[cat.name]) catMonthSpend[cat.name] = {};
-        if (!catMonthSpend[cat.name][month]) catMonthSpend[cat.name][month] = 0;
-
-        catMonthSpend[cat.name][month] += valorTotalItem;
-      });
+      categoryByMonth[month][cat.name] =
+        (categoryByMonth[month][cat.name] || 0) + 1;
     });
   });
 
-  const insights = [];
-  const monthNames = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-  ];
+  const currentMonth = new Date().getMonth();
+  const monthData = categoryByMonth[currentMonth];
 
-  // Analisa cada categoria para picos de consumo
-  Object.keys(catMonthSpend).forEach((catName) => {
-    const meses = catMonthSpend[catName];
-    const monthValues = Object.entries(meses).map(([m, v]) => ({
-      month: parseInt(m),
-      value: v,
-    }));
+  const el = document.getElementById("metric-sazonalidade-text");
 
-    if (monthValues.length >= 2) {
-      const avg =
-        monthValues.reduce((sum, mv) => sum + mv.value, 0) / monthValues.length;
-      const max = Math.max(...monthValues.map((mv) => mv.value));
-      const maxMonth = monthValues.find((mv) => mv.value === max);
-
-      // Detecta pico se for 50% acima da média
-      if (max > avg * 1.5 && maxMonth.value > 0) {
-        insights.push({
-          cat: catName,
-          month: maxMonth.month,
-          text: `Alto consumo de "${catName}" em ${monthNames[maxMonth.month]}`,
-        });
+  if (monthData) {
+    let topCat = "";
+    let maxCount = 0;
+    for (const cat in monthData) {
+      if (monthData[cat] > maxCount) {
+        maxCount = monthData[cat];
+        topCat = cat;
       }
     }
-  });
-
-  // Ordena por valor e pega os top 3
-  insights.sort((a, b) => b.value - a.value);
-
-  if (insights.length > 0) {
-    sazonalidadeEl.innerText =
-      insights[0].text +
-      (insights.length > 1 ? ` e mais ${insights.length - 1} padrões` : "");
-  } else if (filteredLists.length < 4) {
-    sazonalidadeEl.innerText =
-      "Histórico de compras insuficiente para análise sazonal precisa.";
+    el.innerText = `Neste mês de ${monthNames[currentMonth]}, sua categoria mais frequente é "${topCat}".`;
   } else {
-    sazonalidadeEl.innerText =
-      "Padrão de consumo estável. Nenhuma sazonalidade significativa detectada.";
+    el.innerText =
+      "Continue registrando suas compras para identificar padrões sazonais.";
   }
 }
 
 /* ==========================================================================
-   RENDERIZAÇÃO DE GRÁFICOS (Chart.js)
+   RENDERIZAÇÃO DE GRÁFICOS (CHART.JS)
    ========================================================================== */
 
 function renderShareWalletChart(categoryTotals) {
-  const canvas = document.getElementById("chart-share-wallet");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  const ctx = document.getElementById("chart-share-wallet");
+  if (!ctx) return;
 
   if (chartShareWallet) chartShareWallet.destroy();
 
-  const labels = Object.keys(categoryTotals).filter(
-    (cat) => categoryTotals[cat] > 0,
-  );
-  const data = labels.map((cat) => categoryTotals[cat]);
+  const labels = Object.keys(categoryTotals);
+  const data = Object.values(categoryTotals);
 
-  if (labels.length === 0) {
-    showEmptyChartText("chart-share-wallet", "Sem gastos registrados");
-    return;
-  }
+  if (labels.length === 0) return;
 
   chartShareWallet = new Chart(ctx, {
     type: "doughnut",
@@ -784,16 +744,16 @@ function renderShareWalletChart(categoryTotals) {
         {
           data: data,
           backgroundColor: [
-            "rgba(76, 51, 230, 0.7)",
-            "rgba(36, 150, 137, 0.7)",
-            "rgba(255, 71, 87, 0.7)",
-            "#f1c40f",
+            "#4c33e6",
+            "#249689",
+            "#ff4757",
+            "#ffa502",
             "#3498db",
-            "#9b59b6",
-            "#e67e22",
+            "#2ed573",
+            "#eccc68",
           ],
-          borderColor: "#fff",
-          borderWidth: 2,
+          borderWidth: 0,
+          hoverOffset: 10,
         },
       ],
     },
@@ -801,41 +761,35 @@ function renderShareWalletChart(categoryTotals) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const label = context.label || "";
-              const value = context.parsed;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage =
-                total > 0 ? ((value / total) * 100).toFixed(0) : 0;
-              return `${label}: ${formatBRL(value)} (${percentage}%)`;
-            },
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "rgba(255,255,255,0.7)",
+            font: { size: 10 },
+            padding: 15,
           },
         },
       },
-      cutout: "60%",
+      cutout: "70%",
     },
   });
 }
 
 function renderVolumeItensChart(filteredLists) {
-  const canvas = document.getElementById("chart-volume-itens");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  const ctx = document.getElementById("chart-volume-itens");
+  if (!ctx) return;
+
   if (chartVolumeItens) chartVolumeItens.destroy();
 
-  const sorted = [...filteredLists].sort(
-    (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
+  const labels = filteredLists.map((l) =>
+    formatDateBRL(l.date).split("/").slice(0, 2).join("/"),
   );
-  const lastLists = sorted.slice(-5);
-
-  const labels = lastLists.map((list) => formatDateBRLMini(list.date));
-  const data = lastLists.map((list) => {
+  const data = filteredLists.map((l) => {
     let count = 0;
-    (list.categories || []).forEach((cat) => {
-      count += cat.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    (l.categories || []).forEach((c) => {
+      c.items.forEach((i) => {
+        if (i.checked) count += i.quantity || 1;
+      });
     });
     return count;
   });
@@ -846,53 +800,49 @@ function renderVolumeItensChart(filteredLists) {
       labels: labels,
       datasets: [
         {
-          label: "Qtd. Itens",
+          label: "Itens Comprados",
           data: data,
           backgroundColor: "rgba(76, 51, 230, 0.6)",
-          borderRadius: 8,
+          borderColor: "#4c33e6",
+          borderWidth: 1,
+          borderRadius: 5,
         },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
       scales: {
         y: {
           beginAtZero: true,
-          grid: { display: false },
-          ticks: { stepSize: 10 },
+          grid: { color: "rgba(255,255,255,0.05)" },
+          ticks: { color: "rgba(255,255,255,0.5)" },
         },
-        x: { grid: { display: false } },
+        x: {
+          grid: { display: false },
+          ticks: { color: "rgba(255,255,255,0.5)" },
+        },
       },
+      plugins: { legend: { display: false } },
     },
   });
 }
 
-function renderHealthRatioChart(healthy, unhealthy, totalMapeado) {
-  const canvas = document.getElementById("chart-perfil-saude");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (chartPerfilSaude) chartPerfilSaude.destroy();
+function renderHealthRatioChart(healthy, processed, others) {
+  const ctx = document.getElementById("chart-perfil-saude");
+  if (!ctx) return;
 
-  if (totalMapeado === 0) {
-    showEmptyChartText("chart-perfil-saude", "Categorias não mapeadas.");
-    return;
-  }
+  if (chartPerfilSaude) chartPerfilSaude.destroy();
 
   chartPerfilSaude = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["In Natura / Saudável", "Processados / Industrializados"],
+      labels: ["In Natura / Saudável", "Processados", "Outros"],
       datasets: [
         {
-          data: [healthy, unhealthy],
-          backgroundColor: [
-            "rgba(36, 150, 137, 0.7)",
-            "rgba(255, 71, 87, 0.7)",
-          ],
-          borderColor: "#fff",
-          borderWidth: 2,
+          data: [healthy, processed, others],
+          backgroundColor: ["#249689", "#ff4757", "rgba(255,255,255,0.2)"],
+          borderWidth: 0,
         },
       ],
     },
@@ -902,19 +852,7 @@ function renderHealthRatioChart(healthy, unhealthy, totalMapeado) {
       plugins: {
         legend: {
           position: "bottom",
-          labels: { boxWidth: 12, font: { size: 11 } },
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const value = context.parsed;
-              const percentage =
-                totalMapeado > 0
-                  ? ((value / totalMapeado) * 100).toFixed(0)
-                  : 0;
-              return `${percentage}% (${formatBRL(value)})`;
-            },
-          },
+          labels: { color: "rgba(255,255,255,0.7)", font: { size: 10 } },
         },
       },
     },
@@ -922,141 +860,24 @@ function renderHealthRatioChart(healthy, unhealthy, totalMapeado) {
 }
 
 /* ==========================================================================
-   SISTEMA DE FILTROS E MODAL
+   SISTEMA DE FILTROS DO DASHBOARD
    ========================================================================== */
 
-/**
- * Atualiza o estado visual do botão de filtros (ícone ativo/inativo)
- * Adiciona classe 'filter-active' quando há filtro aplicado
- */
-function updateFilterButtonVisualState() {
-  const filterBtn = document.getElementById("dashboard-filter-btn");
-  if (!filterBtn) return;
-
-  if (activeFilter.type !== "geral") {
-    filterBtn.classList.add("filter-active");
-  } else {
-    filterBtn.classList.remove("filter-active");
-  }
-}
-
-/**
- * Atualiza o estado do botão de aplicar filtros (habilitado/desabilitado)
- * Bloqueia quando tipo está selecionado sem valor
- */
-function updateApplyButtonState() {
-  console.log('updateApplyButtonState');
-  
-  const applyBtn = document.getElementById("apply-filter-btn");
-  if (!applyBtn) return;
-
-  let isValid = true;
-
-  if (activeFilter.type === "local") {
-    const select = document.getElementById("filter-local-select");
-    const hasValue = select && select.value;
-    isValid = hasValue;
-  } else if (activeFilter.type === "mes") {
-    const input = document.getElementById("filter-mes-input");
-    isValid = input && input.value;
-  } else if (activeFilter.type === "periodo") {
-    const start = document.getElementById("filter-date-start")?.value;
-    const end = document.getElementById("filter-date-end")?.value;
-    isValid = start && end && new Date(start) <= new Date(end);
-  }
-
-  applyBtn.disabled = !isValid;
-  applyBtn.style.opacity = isValid ? "1" : "0.5";
-  applyBtn.style.cursor = isValid ? "pointer" : "not-allowed";
-}
-
-/**
- * Abre/Fecha o modal de filtros com animação suave
- * Mantém seleção do chip ativo ao abrir e atualiza estado do botão aplicar
- */
 window.toggleFilterModal = function () {
   const modal = document.getElementById("filter-modal");
-  const isVisible = modal.classList.contains("modal-visible");
-
-  if (!isVisible) {
-    // Abrir modal
-    modal.classList.remove("modal-hidden");
-    modal.classList.add("modal-visible");
-
-    // Sincroniza UI com o filtro ativo
-    updateFilterChipsUI();
-
-    // Renderiza inputs dinâmicos baseado no filtro ATIVO
-    if (activeFilter.type !== "geral") {
-      const dynamicSection = document.getElementById("dynamic-filter-section");
-      if (dynamicSection) dynamicSection.style.display = "flex";
-      renderDynamicInputs(activeFilter.type);
-
-      // Preenche os inputs com os valores do filtro ativo
-      populateFilterInputsWithActiveValues();
-    } else {
-      const dynamicSection = document.getElementById("dynamic-filter-section");
-      if (dynamicSection) dynamicSection.style.display = "none";
-    }
-
-    // Atualiza estado do botão aplicar baseado na seleção atual
-    updateApplyButtonState();
-  } else {
-    // Fechar modal
-    modal.classList.remove("modal-visible");
-    modal.classList.add("modal-hidden");
-  }
+  modal.classList.toggle("modal-hidden");
 };
 
-/**
- * Preenche os inputs dinâmicos com os valores do filtro ativo
- */
-function populateFilterInputsWithActiveValues() {
-  if (activeFilter.type === "mes" && activeFilter.value) {
-    const input = document.getElementById("filter-mes-input");
-    if (input) input.value = activeFilter.value;
-  } else if (activeFilter.type === "periodo" && activeFilter.value) {
-    const startInput = document.getElementById("filter-date-start");
-    const endInput = document.getElementById("filter-date-end");
-    if (startInput) startInput.value = activeFilter.value.start;
-    if (endInput) endInput.value = activeFilter.value.end;
-  } else if (activeFilter.type === "local" && activeFilter.value) {
-    const select = document.getElementById("filter-local-select");
-    if (select) select.value = activeFilter.value;
-  }
-}
-
-/**
- * Seleciona o tipo de filtro via chips
- */
 window.selectFilterType = function (type) {
   activeFilter.type = type;
-  activeFilter.value = null;
-
-  // Atualizar UI dos chips
   updateFilterChipsUI();
-
-  // Mostrar/esconder seção dinâmica
-  const dynamicSection = document.getElementById("dynamic-filter-section");
-
-  if (type === "geral") {
-    if (dynamicSection) dynamicSection.style.display = "none";
-  } else {
-    if (dynamicSection) dynamicSection.style.display = "flex";
-    renderDynamicInputs(type);
-  }
-
-  // Atualiza estado do botão aplicar
-  updateApplyButtonState();
+  renderDynamicFilterInputs();
 };
 
-/**
- * Atualiza a aparência dos chips de filtro
- */
 function updateFilterChipsUI() {
-  const chips = document.querySelectorAll(".filter-chip");
+  const chips = document.querySelectorAll("#filter-type-chips .filter-chip");
   chips.forEach((chip) => {
-    if (chip.dataset.value === activeFilter.type) {
+    if (chip.getAttribute("data-value") === activeFilter.type) {
       chip.classList.add("active");
     } else {
       chip.classList.remove("active");
@@ -1064,260 +885,173 @@ function updateFilterChipsUI() {
   });
 }
 
-/**
- * Renderiza os inputs dinâmicos baseados no tipo de filtro
- */
-function renderDynamicInputs(type) {
-  const container = document.getElementById("dynamic-filter-inputs");
+function renderDynamicFilterInputs() {
+  const section = document.getElementById("dynamic-filter-section");
   const label = document.getElementById("dynamic-filter-label");
-  if (!container) return;
+  const container = document.getElementById("dynamic-filter-inputs");
 
   container.innerHTML = "";
 
-  if (type === "mes") {
-    if (label) label.textContent = "Selecione o Mês";
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
+  if (activeFilter.type === "geral") {
+    section.style.display = "none";
+    return;
+  }
 
-    container.innerHTML = `
-      <input type="month" 
-             id="filter-mes-input" 
-             class="filter-input"
-             value="${year}-${month}" />
-    `;
+  section.style.display = "block";
 
-    const input = container.querySelector("#filter-mes-input");
-    if (input) {
-      input.addEventListener("change", updateApplyButtonState);
-      input.addEventListener("input", updateApplyButtonState);
-    }
-  } else if (type === "periodo") {
-    if (label) label.textContent = "Período de Análise";
-    container.innerHTML = `
-      <div class="date-range-inputs">
-        <input type="date" 
-               id="filter-date-start" 
-               class="filter-input"
-               placeholder="Data Início" />
-        <input type="date" 
-               id="filter-date-end" 
-               class="filter-input"
-               placeholder="Data Fim" />
-      </div>
-    `;
+  if (activeFilter.type === "mes") {
+    label.innerText = "Selecione o Mês";
+    // Gera lista de meses únicos do histórico
+    const months = [
+      ...new Set(window.marketListData.map((l) => l.date.substring(0, 7))),
+    ]
+      .sort()
+      .reverse();
 
-    const startInput = container.querySelector("#filter-date-start");
-    const endInput = container.querySelector("#filter-date-end");
-    if (startInput) {
-      startInput.addEventListener("change", updateApplyButtonState);
-      startInput.addEventListener("input", updateApplyButtonState);
-    }
-    if (endInput) {
-      endInput.addEventListener("change", updateApplyButtonState);
-      endInput.addEventListener("input", updateApplyButtonState);
-    }
-  } else if (type === "local") {
-    if (label) label.textContent = "Local de Compra";
-    const locais = new Set();
-    window.marketListData.forEach((list) => {
-      if (list.location) locais.add(list.location);
+    const select = document.createElement("select");
+    select.id = "filter-month-select";
+    select.className = "filter-select";
+
+    months.forEach((m) => {
+      const [y, mon] = m.split("-");
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.innerText = `${mon}/${y}`;
+      select.appendChild(opt);
     });
 
-    if (locais.size === 0) {
-      container.innerHTML = `<div class="empty-state-minor">Nenhum local cadastrado</div>`;
-      return;
-    }
-
-    let optionsHtml = Array.from(locais)
-      .map((l) => `<option value="${l}">${l}</option>`)
-      .join("");
-
+    container.appendChild(select);
+  } else if (activeFilter.type === "periodo") {
+    label.innerText = "Intervalo de Datas";
     container.innerHTML = `
-      <select id="filter-local-select" class="filter-select">
-        <option value="">Selecione um local...</option>
-        ${optionsHtml}
-      </select>
+      <div class="filter-date-group">
+        <input type="date" id="filter-date-start" class="filter-input" />
+        <span>até</span>
+        <input type="date" id="filter-date-end" class="filter-input" />
+      </div>
     `;
+  } else if (activeFilter.type === "local") {
+    label.innerText = "Selecione o Local";
+    const locals = [
+      ...new Set(
+        window.marketListData.map((l) => l.location || "Não Informado"),
+      ),
+    ].sort();
 
-    const select = container.querySelector("#filter-local-select");
-    if (select) {
-      select.addEventListener("change", updateApplyButtonState);
-    }
+    const select = document.createElement("select");
+    select.id = "filter-local-select";
+    select.className = "filter-select";
+
+    locals.forEach((l) => {
+      const opt = document.createElement("option");
+      opt.value = l;
+      opt.innerText = l;
+      select.appendChild(opt);
+    });
+
+    container.appendChild(select);
   }
 }
 
-/**
- * Limpa o filtro e volta para "Geral"
- */
+window.applyDashboardFilter = function () {
+  if (activeFilter.type === "mes") {
+    activeFilter.value = document.getElementById("filter-month-select").value;
+  } else if (activeFilter.type === "periodo") {
+    activeFilter.value = {
+      start: document.getElementById("filter-date-start").value,
+      end: document.getElementById("filter-date-end").value,
+    };
+    if (!activeFilter.value.start || !activeFilter.value.end) {
+      window.showToast("Selecione as datas de início e fim.", "warning");
+      return;
+    }
+  } else if (activeFilter.type === "local") {
+    activeFilter.value = document.getElementById("filter-local-select").value;
+  }
+
+  updateFilterIndicator();
+  updateFilterButtonVisualState();
+  processDashboardData(window.marketListData);
+  window.toggleFilterModal();
+};
+
 window.clearFilter = function () {
   activeFilter = { type: "geral", value: null };
   updateFilterChipsUI();
-  const dynamicSection = document.getElementById("dynamic-filter-section");
-  if (dynamicSection) dynamicSection.style.display = "none";
-
-  updateFilterButtonVisualState();
-
+  document.getElementById("dynamic-filter-section").style.display = "none";
   applyDashboardFilter();
 };
 
-/**
- * Aplica o filtro selecionado
- */
-window.applyDashboardFilter = function () {
-  const type = activeFilter.type;
-  let value = null;
+function applyCurrentFilter(allLists) {
+  if (activeFilter.type === "geral") return allLists;
 
-  if (type === "mes") {
-    const input = document.getElementById("filter-mes-input");
-    value = input ? input.value : null;
-    if (!value) {
-      return;
-    }
-  } else if (type === "periodo") {
-    const start = document.getElementById("filter-date-start")?.value;
-    const end = document.getElementById("filter-date-end")?.value;
-    if (!start || !end) {
-      return;
-    }
-    if (new Date(start) > new Date(end)) {
-      window.showToast("Data inválida", "warning");
-      return;
-    }
-    value = { start, end };
-  } else if (type === "local") {
-    const select = document.getElementById("filter-local-select");
-    value = select ? select.value : null;
-    if (!value) {
-      return;
-    }
-  }
-
-  activeFilter.value = value;
-  toggleFilterModal();
-  updateFilterIndicator();
-
-  updateFilterButtonVisualState();
-
-  processDashboardData(window.marketListData);
-};
-
-function applyCurrentFilter(data) {
-  if (activeFilter.type === "geral") return data;
-
-  if (activeFilter.type === "mes") {
-    const [filterYear, filterMonth] = activeFilter.value.split("-").map(Number);
-
-    return data.filter((list) => {
-      const listDate = getYearMonth(list.date);
-      return listDate.year === filterYear && listDate.month === filterMonth;
-    });
-  }
-
-  if (activeFilter.type === "periodo") {
-    const s = parseDateLocal(activeFilter.value.start);
-    const e = parseDateLocal(activeFilter.value.end);
-    return data.filter((list) => {
+  return allLists.filter((list) => {
+    if (activeFilter.type === "mes") {
+      return list.date.startsWith(activeFilter.value);
+    } else if (activeFilter.type === "periodo") {
       const d = parseDateLocal(list.date);
-      return d >= s && d <= e;
-    });
-  }
-
-  if (activeFilter.type === "local") {
-    return data.filter((list) => list.location === activeFilter.value);
-  }
-
-  return data;
+      const start = parseDateLocal(activeFilter.value.start);
+      const end = parseDateLocal(activeFilter.value.end);
+      return d >= start && d <= end;
+    } else if (activeFilter.type === "local") {
+      return (list.location || "Não Informado") === activeFilter.value;
+    }
+    return true;
+  });
 }
 
 function updateFilterIndicator() {
   const indicator = document.getElementById("active-filter-indicator");
-  const textEl = document.getElementById("filter-text-display");
+  const text = document.getElementById("filter-text-display");
 
-  if (!indicator || !textEl) return;
-
-  let text = "";
   if (activeFilter.type === "geral") {
-    text = "Geral";
-    indicator.style.display = "none";
+    indicator.classList.add("screen-hidden");
   } else {
-    indicator.style.display = "flex";
+    indicator.classList.remove("screen-hidden");
     if (activeFilter.type === "mes") {
-      const [year, month] = activeFilter.value.split("-");
-      const d = new Date(parseInt(year), parseInt(month) - 1, 1);
-      text = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      const [y, m] = activeFilter.value.split("-");
+      text.innerText = `Mês: ${m}/${y}`;
     } else if (activeFilter.type === "periodo") {
-      text = `${formatDateBRL(activeFilter.value.start)} - ${formatDateBRL(activeFilter.value.end)}`;
+      text.innerText = `${formatDateBRL(activeFilter.value.start)} - ${formatDateBRL(activeFilter.value.end)}`;
     } else if (activeFilter.type === "local") {
-      text = activeFilter.value;
+      text.innerText = `Local: ${activeFilter.value}`;
     }
   }
+}
 
-  textEl.innerText = text;
+function updateFilterButtonVisualState() {
+  const btn = document.querySelector(".icon-filter");
+  if (activeFilter.type !== "geral") {
+    btn.style.color = "var(--accent-green)";
+    btn.style.filter = "drop-shadow(0 0 5px var(--accent-green))";
+  } else {
+    btn.style.color = "";
+    btn.style.filter = "";
+  }
 }
 
 /* ==========================================================================
-   UTILITÁRIOS INTERNOS DE UI E DATA
+   ESTADOS VAZIOS E AUXILIARES
    ========================================================================== */
 
-function showEmptyChartText(canvasId, text) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (canvasId === "chart-share-wallet" && chartShareWallet)
-    chartShareWallet.destroy();
-  if (canvasId === "chart-perfil-saude" && chartPerfilSaude)
-    chartPerfilSaude.destroy();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#57636c";
-  ctx.font = "italic 13px Inter, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-}
-
-/**
- * Lógica: Exibe um estado vazio com imagem quando não há dados para o filtro aplicado.
- */
 function renderEmptyState() {
   const dashboardContent = document.querySelector(".dashboard-content");
   const emptyStateContainer = document.getElementById("dashboard-empty-state");
 
-  // Oculta o conteúdo principal
   if (dashboardContent) dashboardContent.style.display = "none";
-
-  // Exibe o container de estado vazio com imagem e mensagem
   if (emptyStateContainer) {
     emptyStateContainer.style.display = "flex";
     emptyStateContainer.innerHTML = `
-      <img src="assets/no-results.png" alt="Nenhum resultado" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6134/6134065.png'">
-      <h3>Nenhuma compra encontrada</h3>
-      <p>Não encontramos registros para o filtro aplicado. Tente selecionar outro período ou local.</p>
+      <img src="assets/empty-dashboard.png" alt="Sem dados" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4076/4076432.png'">
+      <h3>Nenhum dado encontrado</h3>
+      <p>Não há compras registradas para o filtro selecionado. Tente mudar o filtro ou criar novas listas.</p>
+      <button class="btn-filter-apply mt-20" onclick="clearFilter()">Limpar Filtros</button>
     `;
   }
 }
 
-const formatDateBRL = (dateStr) => {
+function formatDateBRL(dateStr) {
   if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}`;
-};
-
-const formatDateBRLMini = (dateStr) => {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}`;
-};
-
-// Fechar modal ao clicar no backdrop
-document.addEventListener("click", function (event) {
-  const modal = document.getElementById("filter-modal");
-  const backdrop = document.querySelector(".modal-backdrop");
-
-  if (
-    event.target === backdrop &&
-    modal &&
-    modal.classList.contains("modal-visible")
-  ) {
-    toggleFilterModal();
-  }
-});
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+}

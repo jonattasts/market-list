@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TELA: DASHBOARD E ANÁLISE DE DADOS - VERSÃO FUTURISTA
+   TELA: DASHBOARD E ANÁLISE DE DADOS
    ========================================================================== */
 #dashboard-screen {
   width: 100%;
@@ -498,139 +498,53 @@
 }
 
 .sazonalidade-card ion-icon {
-  font-size: 28px;
-  color: #249689;
-  filter: drop-shadow(0 0 10px rgba(36, 150, 137, 0.5));
-  animation: leafFloat 3s ease-in-out infinite;
-}
-
-@keyframes leafFloat {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-5px) rotate(5deg);
-  }
+  font-size: 32px;
+  color: #2ed573;
+  filter: drop-shadow(0 0 10px rgba(46, 213, 115, 0.5));
 }
 
 .sazonalidade-card p {
-  margin: 0;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-/* Indicador de Filtro Ativo */
-.active-filter-card {
-  background: linear-gradient(
-    135deg,
-    rgba(76, 51, 230, 0.2),
-    rgba(76, 51, 230, 0.1)
-  );
-  color: white;
-  padding: 14px 20px;
-  border-radius: 16px;
-  margin-bottom: 24px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid rgba(76, 51, 230, 0.3);
-  backdrop-filter: blur(10px);
-  animation: glowPulse 2s ease-in-out infinite;
-}
-
-.active-filter-card span {
-  opacity: 0.7;
-  font-weight: 500;
-}
-
-.active-filter-card strong {
-  font-weight: 700;
   color: #ffffff;
+  line-height: 1.5;
+  margin: 0;
 }
 
-/* Modal de Filtros - Versão Futurista */
-#filter-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 10001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
+/* Modal de Filtros */
 .modal-hidden {
-  display: none !important;
-}
-
-.modal-visible {
-  display: flex !important;
+  display: none;
 }
 
 .modal-backdrop {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(15, 12, 41, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 10000;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
 }
 
 .filter-card {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
-  backdrop-filter: blur(20px);
-  border-radius: 28px;
-  padding: 28px;
-  z-index: 10002;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow:
-    0 25px 50px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-    0 0 100px rgba(76, 51, 230, 0.2) inset;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* Garante que o card não estoure o viewport em telas pequenas */
-  max-height: 90vh;
-  overflow-y: auto;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a1a2e;
+  border-radius: 30px 30px 0 0;
+  padding: 24px;
+  z-index: 1001;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes modalSlideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(50px) scale(0.9);
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  to {
+    transform: translateY(0);
   }
 }
 
@@ -638,530 +552,124 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
+  margin-bottom: 24px;
 }
 
 .filter-header h3 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .filter-close-btn {
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 10px;
-  margin: -10px;
-  cursor: pointer;
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-}
-
-.filter-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
-}
-
-.filter-close-btn ion-icon {
-  font-size: 24px;
-  color: #ffffff;
-}
-
-.filter-body {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  /* Permite scroll interno se necessário */
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.filter-section {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  cursor: pointer;
 }
 
 .filter-label {
-  font-size: 11px;
+  display: block;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
 }
 
-/* Chips futuristas */
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
 .filter-chip {
-  padding: 12px 20px;
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-}
-
-.filter-chip::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.filter-chip:hover::before {
-  left: 100%;
-}
-
-.filter-chip:hover {
-  border-color: rgba(76, 51, 230, 0.5);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(76, 51, 230, 0.3);
+  transition: all 0.2s;
 }
 
 .filter-chip.active {
-  background: linear-gradient(135deg, #4c33e6, #6b5ce7);
-  border-color: transparent;
-  color: #ffffff;
-  box-shadow: 0 5px 25px rgba(76, 51, 230, 0.5);
-  animation: chipPulse 2s ease-in-out infinite;
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.4);
 }
 
-@keyframes chipPulse {
-  0%,
-  100% {
-    box-shadow: 0 5px 25px rgba(76, 51, 230, 0.5);
-  }
-  50% {
-    box-shadow: 0 5px 35px rgba(76, 51, 230, 0.8);
-  }
-}
-
-/* Inputs dinâmicos */
-#dynamic-filter-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  /* Garante que não ultrapasse o container */
-  width: 100%;
-  box-sizing: border-box;
-}
-
+.filter-select,
 .filter-input {
   width: 100%;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  font-size: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px;
   color: #ffffff;
-  background: rgba(0, 0, 0, 0.2);
-  outline: none;
-  transition: all 0.3s;
-  /* Garante que o input respeite o box-sizing */
-  box-sizing: border-box;
-  /* Previne overflow de texto */
-  min-width: 0;
+  font-size: 14px;
+  margin-bottom: 24px;
 }
 
-.filter-input:focus {
-  border-color: #4c33e6;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
-}
-
-.filter-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.filter-select {
-  width: 100%;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  font-size: 15px;
-  color: #ffffff;
-  background: rgba(0, 0, 0, 0.2);
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  padding-right: 45px;
-  box-sizing: border-box;
-  min-width: 0;
-}
-
-.filter-select:focus {
-  border-color: #4c33e6;
-  box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
-}
-
-/* Container de datas em período - layout flexível */
-.date-range-inputs {
+.filter-date-group {
   display: flex;
-  flex-direction: row;
+  align-items: center;
   gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.date-range-inputs .filter-input {
-  flex: 1;
-  min-width: 0;
-  /* Reduz padding lateral em telas pequenas */
-  padding: 16px 12px;
-}
-
-/* Footer do modal */
 .filter-footer {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  display: flex;
   gap: 12px;
-  margin-top: 8px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
+  margin-top: 12px;
 }
 
 .btn-filter-clear {
-  padding: 16px;
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 14px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-filter-clear:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-filter-clear:active {
-  transform: scale(0.98);
 }
 
 .btn-filter-apply {
-  padding: 16px;
-  border-radius: 16px;
+  flex: 2;
+  background: var(--primary);
   border: none;
-  background: linear-gradient(135deg, #4c33e6, #6b5ce7);
   color: #ffffff;
-  font-size: 14px;
+  padding: 14px;
+  border-radius: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 5px 25px rgba(76, 51, 230, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-filter-apply::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.btn-filter-apply:hover::before {
-  left: 100%;
-}
-
-.btn-filter-apply:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 35px rgba(76, 51, 230, 0.6);
-}
-
-.btn-filter-apply:active {
-  transform: scale(0.98);
-}
-
-/* Animação de contador para números */
-@keyframes countUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Animação de brilho para elementos ativos */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Animação de pulso suave */
-@keyframes softPulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.02);
-  }
-}
-
-/* Animação de flutuação */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Animação de rotação lenta */
-@keyframes slowRotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Animação de entrada escalonada para gráficos */
-@keyframes chartFadeIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.8) rotate(-5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) rotate(0);
-  }
-}
-
-/* Aplicar animação aos gráficos */
-.chart-card canvas {
-  animation: chartFadeIn 0.8s ease-out backwards;
-}
-
-/* Animação de brilho nas bordas */
-@keyframes borderShimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Efeito de vidro com borda brilhante */
-.glass-effect {
-  position: relative;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-effect::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.2),
-    transparent,
-    rgba(76, 51, 230, 0.3)
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* Scrollbar personalizada futurista */
-.dashboard-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dashboard-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-.dashboard-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #4c33e6, #249689);
-  border-radius: 3px;
-}
-
-.dashboard-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #5d44f7, #35a79a);
-}
-
-/* Animação de entrada para o indicador de filtro */
-@keyframes filterIndicatorSlide {
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  box-shadow: 0 4px 15px rgba(76, 51, 230, 0.3);
 }
 
 .active-filter-card {
-  animation:
-    filterIndicatorSlide 0.5s ease-out,
-    glowPulse 2s ease-in-out infinite 0.5s;
+  background: rgba(36, 150, 137, 0.1);
+  border: 1px solid rgba(36, 150, 137, 0.3);
+  padding: 12px 16px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 8px;
 }
 
-/* Efeito de partículas sutis no background */
-@keyframes particleFloat {
-  0%,
-  100% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(50px);
-    opacity: 0;
-  }
-}
-
-/* Responsividade */
-@media (max-width: 380px) {
-  .metrics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-card {
-    padding: 20px;
-  }
-
-  .stat-value {
-    font-size: 20px;
-  }
-
-  .date-range-inputs {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .date-range-inputs .filter-input {
-    width: 100%;
-    padding: 16px;
-  }
-}
-
-/* Redução de movimento para acessibilidade */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Efeito visual no botão de filtros quando ativo */
-#dashboard-filter-btn.filter-active {
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 0 0 3px rgba(76, 51, 230, 0.3);
-  animation: pulse-filter 2s infinite;
-}
-
-#dashboard-filter-btn.filter-active svg,
-#dashboard-filter-btn.filter-active i {
-  color: white;
-}
-
-@keyframes pulse-filter {
-  0% {
-    box-shadow: 0 0 0 0 rgba(76, 51, 230, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(76, 51, 230, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(76, 51, 230, 0);
-  }
-}
-
-/* Estilo para botão desabilitado */
-#apply-filter-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* Estilo para chips ativos */
-.filter-chip.active {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
+.active-filter-card strong {
+  color: var(--accent-green);
 }
