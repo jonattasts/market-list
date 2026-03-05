@@ -1057,7 +1057,6 @@ window.clearFilter = function () {
   const dynamicSection = document.getElementById("dynamic-filter-section");
   if (dynamicSection) dynamicSection.style.display = "none";
   applyDashboardFilter();
-  toggleFilterModal();
 };
 
 /**
@@ -1090,7 +1089,7 @@ window.applyDashboardFilter = function () {
     const select = document.getElementById("filter-local-select");
     value = select ? select.value : null;
     if (!value) {
-      window.showToast("Selecione um local", "warning");
+      // window.showToast("Selecione um local", "warning");
       return;
     }
   }
