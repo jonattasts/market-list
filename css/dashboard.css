@@ -1,149 +1,385 @@
 /* ==========================================================================
-   TELA: DASHBOARD E ANÁLISE DE DADOS
+   TELA: DASHBOARD E ANÁLISE DE DADOS - VERSÃO FUTURISTA
    ========================================================================== */
 #dashboard-screen {
   width: 100%;
-  display: none; /* JS controla a exibição */
+  display: none;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--bg-page);
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Container de Estado Vazio (Filtro sem resultados) */
+/* Background animado futurista */
+#dashboard-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(76, 51, 230, 0.15) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(36, 150, 137, 0.15) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 40%,
+      rgba(255, 71, 87, 0.1) 0%,
+      transparent 40%
+    );
+  animation: bgPulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bgPulse {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* Grid futurista sutil */
+#dashboard-screen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(76, 51, 230, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 51, 230, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+/* Container de Estado Vazio */
 .dashboard-empty-state {
-  display: none; /* Controlado via JS */
+  display: none;
   flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-empty-state img {
   width: 180px;
   margin-bottom: 20px;
   opacity: 0.8;
+  filter: drop-shadow(0 0 20px rgba(76, 51, 230, 0.5));
 }
 
 .dashboard-empty-state h3 {
-  font-size: 18px;
-  color: var(--text-main);
+  font-size: 20px;
+  color: #ffffff;
   margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .dashboard-empty-state p {
   font-size: 14px;
-  color: var(--text-secondary);
-  max-width: 250px;
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 280px;
+  line-height: 1.6;
 }
 
+/* Conteúdo Principal */
 .dashboard-content {
   flex: 1;
   overflow-y: auto;
-  padding: 15px 16px 30px;
+  padding: 20px 16px 40px;
   display: flex;
   flex-direction: column;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
 }
 
+/* Animação de entrada dos cards */
+@keyframes cardSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(76, 51, 230, 0.6);
+  }
+}
+
+@keyframes borderGlow {
+  0%,
+  100% {
+    border-color: rgba(76, 51, 230, 0.3);
+  }
+  50% {
+    border-color: rgba(76, 51, 230, 0.8);
+  }
+}
+
+/* Títulos de Seção Futuristas */
 .section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 15px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 16px 4px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 3px;
+  position: relative;
+  display: inline-block;
 }
 
-/* ... (resto do seu código CSS anterior permanece inalterado) ... */
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #4c33e6, transparent);
+  border-radius: 2px;
+}
 
-/* ===================================================== */
-/* CARD DE MÉTRICAS SIMPLES (GRID)                       */
-/* ===================================================== */
+/* Seções com animação escalonada */
+.metrics-section {
+  opacity: 0;
+  animation: cardSlideUp 0.6s ease-out forwards;
+}
+
+.metrics-section:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.metrics-section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.metrics-section:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.metrics-section:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* Grid de Métricas */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
+/* Cards de Métricas Futuristas */
 .metric-card-stat {
-  background: var(--bg-card);
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 20px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  border-left: 4px solid var(--primary);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-/* Cores variantes de UX para o card */
+.metric-card-stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent-green));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.metric-card-stat:hover::before {
+  opacity: 1;
+}
+
+.metric-card-stat:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Cores variantes com glow */
 .metric-card-stat.warning {
-  border-left-color: var(--danger);
+  border-left: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 71, 87, 0.1),
+    rgba(255, 71, 87, 0.05)
+  );
 }
-.metric-card-stat.success {
-  border-left-color: var(--accent-green);
-}
-.metric-card-stat.info {
-  border-left-color: #3498db;
+.metric-card-stat.warning::before {
+  background: linear-gradient(90deg, #ff4757, #ff6b81);
+  opacity: 1;
 }
 
+.metric-card-stat.success {
+  border-left: none;
+  background: linear-gradient(
+    135deg,
+    rgba(36, 150, 137, 0.1),
+    rgba(36, 150, 137, 0.05)
+  );
+}
+.metric-card-stat.success::before {
+  background: linear-gradient(90deg, #249689, #2ed573);
+  opacity: 1;
+}
+
+.metric-card-stat.info {
+  border-left: none;
+  background: linear-gradient(
+    135deg,
+    rgba(52, 152, 219, 0.1),
+    rgba(52, 152, 219, 0.05)
+  );
+}
+.metric-card-stat.info::before {
+  background: linear-gradient(90deg, #3498db, #5dade2);
+  opacity: 1;
+}
+
+/* Labels e Valores */
 .stat-label {
-  font-size: 11px;
-  color: var(--text-secondary);
-  font-weight: 600;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 800;
-  color: var(--text-main);
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #ffffff, #e0e0e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .stat-value-text {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--text-main);
+  color: #ffffff;
   word-break: break-word;
 }
 
 .stat-subtext {
   font-size: 11px;
-  color: var(--text-secondary);
-  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 6px;
+  font-weight: 500;
 }
 
-/* ===================================================== */
-/* CARD DE GRÁFICOS E LISTAS (FULL WIDTH)                */
-/* ===================================================== */
+/* Cards de Gráficos Futuristas */
 .chart-card,
 .metric-card-full {
-  background: var(--bg-card);
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  margin-bottom: 15px;
-  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chart-card::before,
+.metric-card-full::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.chart-card:hover::before,
+.metric-card-full:hover::before {
+  opacity: 1;
+}
+
+.chart-card:hover,
+.metric-card-full:hover {
+  border-color: rgba(76, 51, 230, 0.3);
+  transform: translateY(-2px);
 }
 
 .chart-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-main);
-  margin: 0 0 15px 0;
-  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 20px 0;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  padding-left: 12px;
 }
 
-/* Ajuste do tamanho do canvas do Chart.js */
+.chart-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(180deg, #4c33e6, #249689);
+  border-radius: 2px;
+}
+
+/* Canvas dos gráficos */
 .chart-card canvas {
   max-height: 220px;
   width: 100% !important;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
 }
 
-/* Lista Simples dentro do Dashboard */
+/* Listas de dados */
 .simple-data-list,
 .cpi-list {
   display: flex;
@@ -156,86 +392,167 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background: var(--bg-page);
-  border-radius: 8px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 13px;
+  transition: all 0.2s ease;
+  animation: slideInRight 0.4s ease-out backwards;
+}
+
+.data-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.data-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.data-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.data-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.data-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.data-item:hover,
+.cpi-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(76, 51, 230, 0.3);
+  transform: translateX(4px);
 }
 
 .cpi-item.up {
-  border-right: 3px solid var(--danger);
+  border-right: 3px solid #ff4757;
+  background: linear-gradient(90deg, rgba(255, 71, 87, 0.05), transparent);
 }
+
 .cpi-item.down {
-  border-right: 3px solid var(--accent-green);
+  border-right: 3px solid #249689;
+  background: linear-gradient(90deg, rgba(36, 150, 137, 0.05), transparent);
 }
 
 .item-main-text {
   font-weight: 600;
-  color: var(--text-main);
+  color: #ffffff;
+  font-size: 14px;
 }
+
 .item-sub-text {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+  display: block;
 }
 
 .empty-state-minor {
   text-align: center;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.4);
   font-style: italic;
-  font-size: 12px;
-  padding: 15px;
+  font-size: 13px;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-/* Sazonalidade Card */
+/* Card Sazonalidade */
 .sazonalidade-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-  border: 1px solid var(--border-color);
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 15px;
-}
-.sazonalidade-card ion-icon {
-  font-size: 24px;
-  color: var(--accent-green);
-}
-.sazonalidade-card p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.4;
+  gap: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(36, 150, 137, 0.1),
+    rgba(36, 150, 137, 0.05)
+  );
+  border: 1px solid rgba(36, 150, 137, 0.2);
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
 }
 
-/* ===================================================== */
-/* INDICADOR DE FILTRO ATIVO                             */
-/* ===================================================== */
+.sazonalidade-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #249689, #2ed573);
+}
+
+.sazonalidade-card ion-icon {
+  font-size: 28px;
+  color: #249689;
+  filter: drop-shadow(0 0 10px rgba(36, 150, 137, 0.5));
+  animation: leafFloat 3s ease-in-out infinite;
+}
+
+@keyframes leafFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(5deg);
+  }
+}
+
+.sazonalidade-card p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Indicador de Filtro Ativo */
 .active-filter-card {
-  background: var(--primary);
+  background: linear-gradient(
+    135deg,
+    rgba(76, 51, 230, 0.2),
+    rgba(76, 51, 230, 0.1)
+  );
   color: white;
-  padding: 10px 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  margin-bottom: 24px;
   font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(76, 51, 230, 0.15);
+  gap: 10px;
+  border: 1px solid rgba(76, 51, 230, 0.3);
+  backdrop-filter: blur(10px);
+  animation: glowPulse 2s ease-in-out infinite;
 }
 
 .active-filter-card span {
-  opacity: 0.8;
+  opacity: 0.7;
+  font-weight: 500;
 }
+
 .active-filter-card strong {
-  font-weight: 600;
+  font-weight: 700;
+  color: #ffffff;
 }
 
-/* ===================================================== */
-/* MODAL DE FILTROS */
-/* ===================================================== */
-
-/* Container Principal do Modal */
+/* Modal de Filtros - Versão Futurista */
 #filter-modal {
   position: fixed;
   top: 0;
@@ -263,40 +580,57 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 12, 41, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 10000;
+  animation: fadeIn 0.3s ease;
 }
 
-/* Card Principal do Filtro */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .filter-card {
   position: relative;
   width: 100%;
-  max-width: 360px;
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 24px;
+  max-width: 380px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  padding: 28px;
   z-index: 10002;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 100px rgba(76, 51, 230, 0.2) inset;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  animation: filterSlideUp 0.3s ease-out;
+  gap: 24px;
+  animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes filterSlideUp {
-  from {
+@keyframes modalSlideUp {
+  0% {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
+    transform: translateY(50px) scale(0.9);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
-/* Header */
 .filter-header {
   display: flex;
   justify-content: space-between;
@@ -305,155 +639,207 @@
 
 .filter-header h3 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .filter-close-btn {
-  background: none;
-  border: none;
-  padding: 8px;
-  margin: -8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  margin: -10px;
   cursor: pointer;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
 }
 
 .filter-close-btn:hover {
-  background: #f1f3f5;
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
 }
 
 .filter-close-btn ion-icon {
   font-size: 24px;
-  color: #666;
+  color: #ffffff;
 }
 
 .filter-body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .filter-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .filter-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 2px;
 }
 
+/* Chips futuristas */
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .filter-chip {
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: 1.5px solid #e0e3e7;
-  background: #ffffff;
-  color: #57636c;
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-chip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.filter-chip:hover::before {
+  left: 100%;
 }
 
 .filter-chip:hover {
-  border-color: #4c33e6;
-  color: #4c33e6;
+  border-color: rgba(76, 51, 230, 0.5);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(76, 51, 230, 0.3);
 }
 
 .filter-chip.active {
-  background: #4c33e6;
-  border-color: #4c33e6;
+  background: linear-gradient(135deg, #4c33e6, #6b5ce7);
+  border-color: transparent;
   color: #ffffff;
+  box-shadow: 0 5px 25px rgba(76, 51, 230, 0.5);
+  animation: chipPulse 2s ease-in-out infinite;
 }
 
-/* Inputs Dinâmicos */
+@keyframes chipPulse {
+  0%,
+  100% {
+    box-shadow: 0 5px 25px rgba(76, 51, 230, 0.5);
+  }
+  50% {
+    box-shadow: 0 5px 35px rgba(76, 51, 230, 0.8);
+  }
+}
+
+/* Inputs dinâmicos */
 #dynamic-filter-inputs {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .filter-input {
   width: 100%;
-  padding: 14px 16px;
-  border: 1.5px solid #e0e3e7;
-  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
   font-size: 15px;
-  color: #1a1a1a;
-  background: #f8f9fa;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.2);
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 
 .filter-input:focus {
   border-color: #4c33e6;
-  background: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
+}
+
+.filter-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .filter-select {
   width: 100%;
-  padding: 14px 16px;
-  border: 1.5px solid #e0e3e7;
-  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
   font-size: 15px;
-  color: #1a1a1a;
-  background: #f8f9fa;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.2);
   outline: none;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2357636c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg ' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 16px center;
-  padding-right: 40px;
+  padding-right: 45px;
+}
+
+.filter-select:focus {
+  border-color: #4c33e6;
+  box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
 }
 
 .date-range-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* Footer */
+/* Footer do modal */
 .filter-footer {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 12px;
-  margin-top: 10px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e3e7;
+  margin-top: 8px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-filter-clear {
-  padding: 14px 20px;
-  border-radius: 12px;
-  border: 1.5px solid #e0e3e7;
-  background: #ffffff;
-  color: #57636c;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 
 .btn-filter-clear:hover {
-  background: #f1f3f5;
-  border-color: #d0d5dd;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 .btn-filter-clear:active {
@@ -461,24 +847,244 @@
 }
 
 .btn-filter-apply {
-  padding: 14px 20px;
-  border-radius: 12px;
+  padding: 16px;
+  border-radius: 16px;
   border: none;
-  background: #4c33e6;
+  background: linear-gradient(135deg, #4c33e6, #6b5ce7);
   color: #ffffff;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(76, 51, 230, 0.3);
+  transition: all 0.3s;
+  box-shadow: 0 5px 25px rgba(76, 51, 230, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-filter-apply::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.btn-filter-apply:hover::before {
+  left: 100%;
 }
 
 .btn-filter-apply:hover {
-  background: #3d29b8;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(76, 51, 230, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 35px rgba(76, 51, 230, 0.6);
 }
 
 .btn-filter-apply:active {
   transform: scale(0.98);
+}
+
+/* Animação de contador para números */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação de brilho para elementos ativos */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Animação de pulso suave */
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* Animação de flutuação */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Animação de rotação lenta */
+@keyframes slowRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animação de entrada escalonada para gráficos */
+@keyframes chartFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* Aplicar animação aos gráficos */
+.chart-card canvas {
+  animation: chartFadeIn 0.8s ease-out backwards;
+}
+
+/* Animação de brilho nas bordas */
+@keyframes borderShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Efeito de vidro com borda brilhante */
+.glass-effect {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-effect::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2),
+    transparent,
+    rgba(76, 51, 230, 0.3)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Scrollbar personalizada futurista */
+.dashboard-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.dashboard-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4c33e6, #249689);
+  border-radius: 3px;
+}
+
+.dashboard-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #5d44f7, #35a79a);
+}
+
+/* Animação de entrada para o indicador de filtro */
+@keyframes filterIndicatorSlide {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.active-filter-card {
+  animation:
+    filterIndicatorSlide 0.5s ease-out,
+    glowPulse 2s ease-in-out infinite 0.5s;
+}
+
+/* Efeito de partículas sutis no background */
+@keyframes particleFloat {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(50px);
+    opacity: 0;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 380px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-card {
+    padding: 20px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+}
+
+/* Redução de movimento para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
