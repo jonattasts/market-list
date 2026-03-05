@@ -1236,7 +1236,7 @@ function updateFilterIndicator() {
 
   let text = "";
   if (activeFilter.type === "geral") {
-    text = "Geral (Tudo)";
+    text = "Geral";
     indicator.style.display = "none";
   } else {
     indicator.style.display = "flex";
