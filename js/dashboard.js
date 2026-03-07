@@ -177,7 +177,7 @@ function processDashboardData(allLists) {
 
 /**
  * Métrica 1.D: Inflação Pessoal (CPI)
- * Agora compara o período filtrado com o período imediatamente anterior
+ * Compara o período filtrado com o período imediatamente anterior
  */
 function calculateCPI(filteredLists, allLists) {
   const container = document.getElementById("cpi-container");
@@ -228,7 +228,6 @@ function calculateCPI(filteredLists, allLists) {
       (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
     );
     const midPoint = Math.floor(sortedAll.length / 2);
-    const filteredIds = new Set(filteredLists.map((l) => l.id));
 
     // Se está na segunda metade, compara com primeira metade
     const isSecondHalf = filteredLists.some((l) => {
@@ -607,7 +606,7 @@ function calculatePriceVariability(filteredLists) {
 
 /**
  * Métrica 4.A: Ratio Ultraprocessados vs In Natura
- * Usa classificação inteligente baseada em padrões de categoria
+ * Classificação baseado em padrões de categoria
  */
 function calculateHealthRatio(categoryTotals) {
   // Sistema de classificação hierárquico
