@@ -387,6 +387,13 @@
   gap: 10px;
 }
 
+/* Wrapper para listas paginadas */
+.paginated-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .data-item,
 .cpi-item {
   display: flex;
@@ -672,4 +679,36 @@
 
 .active-filter-card strong {
   color: var(--accent-green);
+}
+
+/* Controles de Paginação */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pagination-btn {
+  background: rgba(76, 51, 230, 0.4);
+  border: 1px solid rgba(76, 51, 230, 0.5);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 18px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: scale(1.05);
 }

@@ -3,7 +3,7 @@
    ========================================================================= */
 
 // Utilitário local para formatação de moeda
-const formatBRL = (val) =>
+const formatCurrencyBRL = (val) =>
   val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 // Estado dos Gráficos (para destruí-los antes de recriar)
@@ -13,6 +13,23 @@ let chartPerfilSaude = null;
 
 // Filtro Ativo Padrão (Geral)
 let activeFilter = { type: "geral", value: null };
+
+/* ==========================================================================
+   ESTADO DE PAGINAÇÃO DAS LISTAS
+   ========================================================================== */
+const paginationState = {
+  cpi: { currentPage: 1, itemsPerPage: 5 },
+  recorrencia: { currentPage: 1, itemsPerPage: 5 },
+  reposicao: { currentPage: 1, itemsPerPage: 5 },
+};
+
+// Cache dos dados calculados para evitar re-processamento desnecessário
+let cachedDashboardData = {
+  cpiItems: null,
+  recorrenciaItems: null,
+  reposicaoItems: null,
+  lastFilter: null,
+};
 
 /* ==========================================================================
    UTILITÁRIO: Parse de Data Local
@@ -57,10 +74,28 @@ window.initDashboardAnalisys = function () {
   const dynamicSection = document.getElementById("dynamic-filter-section");
   if (dynamicSection) dynamicSection.style.display = "none";
 
+  resetPagination();
+  clearCache();
+
   updateFilterIndicator();
   updateFilterButtonVisualState();
   processDashboardData(data);
 };
+
+function resetPagination() {
+  paginationState.cpi.currentPage = 1;
+  paginationState.recorrencia.currentPage = 1;
+  paginationState.reposicao.currentPage = 1;
+}
+
+function clearCache() {
+  cachedDashboardData = {
+    cpiItems: null,
+    recorrenciaItems: null,
+    reposicaoItems: null,
+    lastFilter: null,
+  };
+}
 
 /* ==========================================================================
    PROCESSAMENTO DE DADOS E CÁLCULO DE MÉTRICAS
@@ -122,11 +157,12 @@ function processDashboardData(allLists) {
   // A. Ticket Médio por Lista
   const ticketMedio = totalSpentInPeriod / filteredLists.length;
   document.getElementById("metric-ticket-medio").innerText =
-    formatBRL(ticketMedio);
+    formatCurrencyBRL(ticketMedio);
 
   // B. Economia Potencial (Desejado - Comprado)
   const economia = forecastTotal - totalSpentInPeriod;
-  document.getElementById("metric-economia").innerText = formatBRL(economia);
+  document.getElementById("metric-economia").innerText =
+    formatCurrencyBRL(economia);
 
   // C. Gasto por Categoria (Gráfico Pizza)
   renderShareWalletChart(categoryTotals);
@@ -181,6 +217,30 @@ function processDashboardData(allLists) {
  */
 function calculateCPI(filteredLists, allLists) {
   const container = document.getElementById("cpi-container");
+
+  // Verifica se já temos dados em cache para este filtro
+  const currentFilterKey = JSON.stringify(activeFilter);
+  if (
+    cachedDashboardData.cpiItems &&
+    cachedDashboardData.lastFilter === currentFilterKey
+  ) {
+    renderPaginatedList(
+      container,
+      cachedDashboardData.cpiItems,
+      "cpi",
+      (item) => `
+        <div class="item-main-text">${item.name}</div>
+        <span class="item-sub-text">Ant: ${formatCurrencyBRL(item.avgPrev)} → Atual: ${formatCurrencyBRL(item.avgCurrent)}</span>
+      `,
+      (item) => `
+        <strong style="color: ${item.color}">
+          ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
+        </strong>
+      `,
+    );
+    return;
+  }
+
   container.innerHTML = "";
 
   if (filteredLists.length === 0) {
@@ -291,18 +351,14 @@ function calculateCPI(filteredLists, allLists) {
   });
 
   // Compara e renderiza
-  let hasComparison = false;
+  const cpiItems = [];
   Object.keys(currentPrices).forEach((name) => {
     if (previousPrices[name]) {
-      hasComparison = true;
       const avgCurrent = currentPrices[name].total / currentPrices[name].count;
       const avgPrev = previousPrices[name].total / previousPrices[name].count;
       const diff = ((avgCurrent - avgPrev) / avgPrev) * 100;
 
       // Renderiza mesmo se a diferença for 0, conforme a imagem do usuário
-      const itemDiv = document.createElement("div");
-      itemDiv.className = `cpi-item ${diff > 0 ? "up" : "down"}`;
-
       // Define o emoji e a cor baseada na variação
       let emoji = "📉";
       let color = "var(--accent-green)";
@@ -315,22 +371,40 @@ function calculateCPI(filteredLists, allLists) {
         color = "var(--accent-green)";
       }
 
-      itemDiv.innerHTML = `
-        <div>
-          <span class="item-main-text">${window.capitalize(currentPrices[name].name)}</span>
-          <span class="item-sub-text">Ant: ${formatBRL(avgPrev)} → Atual: ${formatBRL(avgCurrent)}</span>
-        </div>
-        <strong style="color: ${color}">
-          ${emoji} ${Math.abs(diff).toFixed(1)}%
-        </strong>
-      `;
-      container.appendChild(itemDiv);
+      cpiItems.push({
+        name: window.capitalize(currentPrices[name].name),
+        avgPrev,
+        avgCurrent,
+        diff,
+        emoji,
+        color,
+      });
     }
   });
 
-  if (!hasComparison) {
+  if (cpiItems.length === 0) {
     container.innerHTML = `<div class="empty-state-minor">Itens recorrentes não encontrados para comparação.</div>`;
+    return;
   }
+
+  // Armazena em cache
+  cachedDashboardData.cpiItems = cpiItems;
+  cachedDashboardData.lastFilter = currentFilterKey;
+
+  renderPaginatedList(
+    container,
+    cpiItems,
+    "cpi",
+    (item) => `
+      <div class="item-main-text">${item.name}</div>
+      <span class="item-sub-text">Ant: ${formatCurrencyBRL(item.avgPrev)} → Atual: ${formatCurrencyBRL(item.avgCurrent)}</span>
+    `,
+    (item) => `
+      <strong style="color: ${item.color}">
+        ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
+      </strong>
+    `,
+  );
 }
 
 /**
@@ -393,65 +467,159 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
   const recorrenciaContainer = document.getElementById(
     "recorrencia-itens-list",
   );
+
+  // Verifica cache
+  const currentFilterKey = JSON.stringify(activeFilter);
+
   if (recorrenciaContainer) {
-    recorrenciaContainer.innerHTML = "";
-
-    const itensRecorrentes = [];
-
-    Object.keys(itemMap).forEach((name) => {
-      const dates = [...new Set(itemMap[name].dates)].sort();
-      if (dates.length >= 2) {
-        const intervalos = [];
-        for (let i = 1; i < dates.length; i++) {
-          const diffTime =
-            parseDateLocal(dates[i]) - parseDateLocal(dates[i - 1]);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays > 0 && diffDays < 365) intervalos.push(diffDays);
-        }
-
-        if (intervalos.length > 0) {
-          const mediaDias =
-            intervalos.reduce((a, b) => a + b, 0) / intervalos.length;
-          let frequenciaTexto = "";
-
-          if (mediaDias <= 8) frequenciaTexto = "Semanal";
-          else if (mediaDias <= 16) frequenciaTexto = "Quinzenal";
-          else if (mediaDias <= 35) frequenciaTexto = "Mensal";
-          else frequenciaTexto = `A cada ${Math.round(mediaDias)} dias`;
-
-          itensRecorrentes.push({
-            name: window.capitalize(itemMap[name].name),
-            media: Math.round(mediaDias),
-            texto: frequenciaTexto,
-            compras: dates.length,
-          });
-        }
-      }
-    });
-
-    itensRecorrentes.sort((a, b) => b.compras - a.compras);
-
-    if (itensRecorrentes.length === 0) {
-      recorrenciaContainer.innerHTML = `<div class="empty-state-minor">Gere mais listas para ver a frequência.</div>`;
-    } else {
-      itensRecorrentes.slice(0, 5).forEach((item) => {
-        const div = document.createElement("div");
-        div.className = "data-item";
-        div.innerHTML = `
+    // Verifica se já temos dados em cache
+    if (
+      cachedDashboardData.recorrenciaItems &&
+      cachedDashboardData.lastFilter === currentFilterKey
+    ) {
+      renderPaginatedList(
+        recorrenciaContainer,
+        cachedDashboardData.recorrenciaItems,
+        "recorrencia",
+        (item) => `
           <div>
             <span class="item-main-text">${item.name}</span>
             <span class="item-sub-text">Média: ${item.media} dias | ${item.compras} compras</span>
           </div>
+        `,
+        (item) => `
           <strong style="color: var(--primary-light)">
             ${item.texto}
           </strong>
-        `;
-        recorrenciaContainer.appendChild(div);
+        `,
+      );
+    } else {
+      recorrenciaContainer.innerHTML = "";
+
+      const itensRecorrentes = [];
+
+      Object.keys(itemMap).forEach((name) => {
+        const dates = [...new Set(itemMap[name].dates)].sort();
+        if (dates.length >= 2) {
+          const intervalos = [];
+          for (let i = 1; i < dates.length; i++) {
+            const diffTime =
+              parseDateLocal(dates[i]) - parseDateLocal(dates[i - 1]);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 0 && diffDays < 365) intervalos.push(diffDays);
+          }
+
+          if (intervalos.length > 0) {
+            const mediaDias =
+              intervalos.reduce((a, b) => a + b, 0) / intervalos.length;
+            let frequenciaTexto = "";
+
+            if (mediaDias <= 8) frequenciaTexto = "Semanal";
+            else if (mediaDias <= 16) frequenciaTexto = "Quinzenal";
+            else if (mediaDias <= 35) frequenciaTexto = "Mensal";
+            else frequenciaTexto = `A cada ${Math.round(mediaDias)} dias`;
+
+            itensRecorrentes.push({
+              name: window.capitalize(itemMap[name].name),
+              media: Math.round(mediaDias),
+              texto: frequenciaTexto,
+              compras: dates.length,
+            });
+          }
+        }
       });
+
+      itensRecorrentes.sort((a, b) => b.compras - a.compras);
+
+      if (itensRecorrentes.length === 0) {
+        recorrenciaContainer.innerHTML = `<div class="empty-state-minor">Gere mais listas para ver a frequência.</div>`;
+      } else {
+        // Armazena em cache
+        cachedDashboardData.recorrenciaItems = itensRecorrentes;
+        cachedDashboardData.lastFilter = currentFilterKey;
+
+        renderPaginatedList(
+          recorrenciaContainer,
+          itensRecorrentes,
+          "recorrencia",
+          (item) => `
+            <div>
+              <span class="item-main-text">${item.name}</span>
+              <span class="item-sub-text">Média: ${item.media} dias | ${item.compras} compras</span>
+            </div>
+          `,
+          (item) => `
+            <strong style="color: var(--primary-light)">
+              ${item.texto}
+            </strong>
+          `,
+        );
+      }
     }
   }
 
   const repoContainer = document.getElementById("reposicao-list");
+
+  // Verifica cache para reposição
+  if (
+    cachedDashboardData.reposicaoItems &&
+    cachedDashboardData.lastFilter === currentFilterKey
+  ) {
+    renderPaginatedList(
+      repoContainer,
+      cachedDashboardData.reposicaoItems,
+      "reposicao",
+      (item) => {
+        let statusText = "";
+        let statusColor = "var(--bg-card-light)";
+
+        if (item.diasRestantes < 0) {
+          statusText = `Atraso ${Math.abs(item.diasRestantes)}d`;
+          statusColor = "var(--danger)";
+        } else if (item.diasRestantes === 0) {
+          statusText = "Hoje";
+          statusColor = "var(--accent-green)";
+        } else if (item.diasRestantes <= 3) {
+          statusText = `Em ${item.diasRestantes}d`;
+          statusColor = "var(--primary-light)";
+        } else {
+          statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+        }
+
+        return `
+          <div>
+            <span class="item-main-text">${item.name}</span>
+            <span class="item-sub-text">Ciclo: ${item.ciclo}d | Última: ${item.lastDateStr}</span>
+          </div>
+        `;
+      },
+      (item) => {
+        let statusText = "";
+        let statusColor = "var(--bg-card-light)";
+
+        if (item.diasRestantes < 0) {
+          statusText = `Atraso ${Math.abs(item.diasRestantes)}d`;
+          statusColor = "var(--danger)";
+        } else if (item.diasRestantes === 0) {
+          statusText = "Hoje";
+          statusColor = "var(--accent-green)";
+        } else if (item.diasRestantes <= 3) {
+          statusText = `Em ${item.diasRestantes}d`;
+          statusColor = "var(--primary-light)";
+        } else {
+          statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+        }
+
+        return `
+          <strong style="color: ${statusColor}">
+            ${statusText}
+          </strong>
+        `;
+      },
+    );
+    return;
+  }
+
   repoContainer.innerHTML = "";
 
   if (listCount < 3) {
@@ -508,37 +676,218 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
     return;
   }
 
-  previsoes.slice(0, 5).forEach((prev) => {
+  // Armazena em cache
+  cachedDashboardData.reposicaoItems = previsoes;
+  cachedDashboardData.lastFilter = currentFilterKey;
+
+  renderPaginatedList(
+    repoContainer,
+    previsoes,
+    "reposicao",
+    (item) => {
+      let statusText = "";
+      let statusColor = "var(--bg-card-light)";
+
+      if (item.diasRestantes < 0) {
+        statusText = `Atraso ${Math.abs(item.diasRestantes)}d`;
+        statusColor = "var(--danger)";
+      } else if (item.diasRestantes === 0) {
+        statusText = "Hoje";
+        statusColor = "var(--accent-green)";
+      } else if (item.diasRestantes <= 3) {
+        statusText = `Em ${item.diasRestantes}d`;
+        statusColor = "var(--primary-light)";
+      } else {
+        statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+      }
+
+      return `
+        <div>
+          <span class="item-main-text">${item.name}</span>
+          <span class="item-sub-text">Ciclo: ${item.ciclo}d | Última: ${item.lastDateStr}</span>
+        </div>
+      `;
+    },
+    (item) => {
+      let statusText = "";
+      let statusColor = "var(--bg-card-light)";
+
+      if (item.diasRestantes < 0) {
+        statusText = `Atraso ${Math.abs(item.diasRestantes)}d`;
+        statusColor = "var(--danger)";
+      } else if (item.diasRestantes === 0) {
+        statusText = "Hoje";
+        statusColor = "var(--accent-green)";
+      } else if (item.diasRestantes <= 3) {
+        statusText = `Em ${item.diasRestantes}d`;
+        statusColor = "var(--primary-light)";
+      } else {
+        statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+      }
+
+      return `
+        <strong style="color: ${statusColor}">
+          ${statusText}
+        </strong>
+      `;
+    },
+  );
+}
+
+/* ==========================================================================
+   LÓGICA DE PAGINAÇÃO
+   ========================================================================== */
+/**
+ * @param {HTMLElement} container - Elemento container onde a lista será renderizada
+ * @param {Array} items - Array de itens a serem renderizados
+ * @param {string} paginationKey - Chave do estado de paginação ('cpi', 'recorrencia', 'reposicao')
+ * @param {Function} renderLeftContent - Função que retorna HTML do conteúdo esquerdo (recebe item)
+ * @param {Function} renderRightContent - Função que retorna HTML do conteúdo direito (recebe item)
+ */
+function renderPaginatedList(
+  container,
+  items,
+  paginationKey,
+  renderLeftContent,
+  renderRightContent,
+) {
+  const state = paginationState[paginationKey];
+  const totalPages = Math.ceil(items.length / state.itemsPerPage);
+
+  // Garante que a página atual é válida
+  if (state.currentPage > totalPages) {
+    state.currentPage = totalPages || 1;
+  }
+
+  const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+  const endIndex = startIndex + state.itemsPerPage;
+  const paginatedItems = items.slice(startIndex, endIndex);
+
+  // Cria wrapper para a lista
+  const listWrapper = document.createElement("div");
+  listWrapper.className = "paginated-list-wrapper";
+
+  // Renderiza os itens da página atual com margem inferior para espaçamento
+  paginatedItems.forEach((item, index) => {
     const div = document.createElement("div");
     div.className = "data-item";
-
-    let statusText = "";
-    let statusColor = "var(--bg-card-light)";
-
-    if (prev.diasRestantes < 0) {
-      statusText = `Atraso ${Math.abs(prev.diasRestantes)}d`;
-      statusColor = "var(--danger)";
-    } else if (prev.diasRestantes === 0) {
-      statusText = "Hoje";
-      statusColor = "var(--accent-green)";
-    } else if (prev.diasRestantes <= 3) {
-      statusText = `Em ${prev.diasRestantes}d`;
-      statusColor = "var(--primary-light)";
-    } else {
-      statusText = `📅 ${formatDateBRL(prev.nextDate.toISOString().split("T")[0])}`;
-    }
-
-    div.innerHTML = `
-      <div>
-        <span class="item-main-text">${prev.name}</span>
-        <span class="item-sub-text">Ciclo: ${prev.ciclo}d | Última: ${prev.lastDateStr}</span>
-      </div>
-      <strong style="color: ${statusColor}">
-        ${statusText}
-      </strong>
+    div.style.cssText = `
+      animation-delay: ${index * 0.1}s;
     `;
-    repoContainer.appendChild(div);
+    div.innerHTML = `
+      <div>${renderLeftContent(item)}</div>
+      ${renderRightContent(item)}
+    `;
+    listWrapper.appendChild(div);
   });
+
+  // Remove margem do último item para evitar espaço extra antes da paginação
+  const lastItem = listWrapper.lastElementChild;
+  if (lastItem) {
+    lastItem.style.marginBottom = "0";
+  }
+
+  container.appendChild(listWrapper);
+
+  // Renderiza controles de paginação
+  if (totalPages > 1) {
+    const paginationControls = createPaginationControls(
+      state.currentPage,
+      totalPages,
+      paginationKey,
+      items, // Passa os items para re-renderização direta sem recalcular tudo
+      renderLeftContent,
+      renderRightContent,
+    );
+    container.appendChild(paginationControls);
+  }
+}
+
+function createPaginationControls(
+  currentPage,
+  totalPages,
+  paginationKey,
+  items,
+  renderLeftContent,
+  renderRightContent,
+) {
+  const controls = document.createElement("div");
+  controls.className = "pagination-controls";
+  controls.style.cssText = `
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  `;
+
+  const prevBtn = document.createElement("button");
+  prevBtn.innerHTML = '<ion-icon name="chevron-back-outline"></ion-icon>';
+  prevBtn.className = "pagination-btn";
+  prevBtn.disabled = currentPage === 1;
+
+  if (!prevBtn.disabled) {
+    prevBtn.onclick = () => {
+      paginationState[paginationKey].currentPage--;
+      // Re-renderiza apenas esta lista específica
+      const container = controls.parentElement;
+      container.innerHTML = "";
+      renderPaginatedList(
+        container,
+        items,
+        paginationKey,
+        renderLeftContent,
+        renderRightContent,
+      );
+    };
+  } else {
+    prevBtn.style.opacity = "0.3";
+    prevBtn.style.cursor = "not-allowed";
+  }
+
+  const pageIndicator = document.createElement("span");
+  pageIndicator.innerText = `${currentPage} / ${totalPages}`;
+  pageIndicator.style.cssText = `
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    min-width: 50px;
+    text-align: center;
+  `;
+
+  const nextBtn = document.createElement("button");
+  nextBtn.innerHTML = '<ion-icon name="chevron-forward-outline"></ion-icon>';
+  nextBtn.className = "pagination-btn";
+  nextBtn.disabled = currentPage === totalPages;
+
+  if (!nextBtn.disabled) {
+    nextBtn.onclick = () => {
+      paginationState[paginationKey].currentPage++;
+      // Re-renderiza apenas esta lista específica
+      const container = controls.parentElement;
+      container.innerHTML = "";
+      renderPaginatedList(
+        container,
+        items,
+        paginationKey,
+        renderLeftContent,
+        renderRightContent,
+      );
+    };
+  } else {
+    nextBtn.style.opacity = "0.3";
+    nextBtn.style.cursor = "not-allowed";
+  }
+
+  controls.appendChild(prevBtn);
+  controls.appendChild(pageIndicator);
+  controls.appendChild(nextBtn);
+
+  return controls;
 }
 
 /**
@@ -968,6 +1317,9 @@ window.applyDashboardFilter = function () {
     activeFilter.value = document.getElementById("filter-local-select").value;
   }
 
+  resetPagination();
+  clearCache();
+
   updateFilterIndicator();
   updateFilterButtonVisualState();
   processDashboardData(window.marketListData);
@@ -978,6 +1330,10 @@ window.clearFilter = function () {
   activeFilter = { type: "geral", value: null };
   updateFilterChipsUI();
   document.getElementById("dynamic-filter-section").style.display = "none";
+
+  resetPagination();
+  clearCache();
+
   applyDashboardFilter();
 };
 
