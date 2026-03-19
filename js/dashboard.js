@@ -1,6 +1,6 @@
-// ==========================================================================
-// DASHBOARD & DATA ANALYTICS MODULE
-// ========================================================================= */
+/* ==========================================================================
+   DASHBOARD & DATA ANALYTICS MODULE
+   ========================================================================= */
 
 // Utilitário local para formatação de moeda
 const formatCurrencyBRL = (val) =>
@@ -136,10 +136,13 @@ function extrairDadosRecorrencia(lists) {
         }
 
         itemsData[normalizedName].listIds.add(list.id);
+
         itemsData[normalizedName].prices.push({
           price: item.price,
           date: list.date,
+          listId: list.id,
         });
+
         itemsData[normalizedName].dates.push(list.date);
 
         const itemDate = parseDateLocal(list.date);
@@ -269,7 +272,7 @@ function processDashboardData(allLists) {
   renderShareWalletChart(categoryTotals);
 
   // D. Inflação Pessoal (CPI) - Com critérios de recorrência
-  calculateCPI(filteredLists, allLists);
+  calculateCPI(filteredLists);
 
   // ---------------------------------------------------------
   // 2. MÉTRICAS DE COMPORTAMENTO E HÁBITO
@@ -314,11 +317,12 @@ function processDashboardData(allLists) {
 
 /**
  * Métrica 1.D: Inflação Pessoal (CPI)
- * Compara o período filtrado com o período imediatamente anterior
  *
- * REGRA DE RECORRÊNCIA: Exibe apenas itens que atendem aos critérios em RECORRENCIA_CONFIG
+ * Busca em TODAS as listas (até 3 meses atrás) e exibe o item
+ * quando encontrar pelo menos 2 ocorrências em listas diferentes.
+ * Compara sempre a última ocorrência com a penúltima ocorrência do item.
  */
-function calculateCPI(filteredLists, allLists) {
+function calculateCPI(filteredLists) {
   const container = document.getElementById("cpi-container");
 
   // Verifica se já temos dados em cache para este filtro
@@ -351,108 +355,42 @@ function calculateCPI(filteredLists, allLists) {
     return;
   }
 
-  // Encontra o período anterior baseado no tipo de filtro
-  let previousLists = [];
+  const itemsData = extrairDadosRecorrencia(filteredLists);
 
-  if (activeFilter.type === "mes") {
-    // Se filtrou por mês específico, pega o mês anterior
-    const [year, month] = activeFilter.value.split("-");
-    const currentDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-    const prevMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() - 1,
-      1,
-    );
-    const prevYearStr = prevMonth.getFullYear();
-    const prevMonthStr = prevMonth.getMonth() + 1;
-
-    previousLists = allLists.filter((list) => {
-      const listDate = getYearMonth(list.date);
-      return listDate.year === prevYearStr && listDate.month === prevMonthStr;
-    });
-  } else if (activeFilter.type === "periodo") {
-    // Se filtrou por período, pega período de mesma duração imediatamente anterior
-    const start = parseDateLocal(activeFilter.value.start);
-    const end = parseDateLocal(activeFilter.value.end);
-    const duration = end - start;
-
-    const prevEnd = new Date(start);
-    prevEnd.setDate(prevEnd.getDate() - 1);
-    const prevStart = new Date(prevEnd);
-    prevStart.setTime(prevStart.getTime() - duration);
-
-    previousLists = allLists.filter((list) => {
-      const listDate = parseDateLocal(list.date);
-      return listDate >= prevStart && listDate <= prevEnd;
-    });
-  } else {
-    // Para "geral" ou "local", compara com metade anterior do histórico
-    const sortedAll = [...allLists].sort(
-      (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
-    );
-    const midPoint = Math.floor(sortedAll.length / 2);
-
-    // Se está na segunda metade, compara com primeira metade
-    const isSecondHalf = filteredLists.some((l) => {
-      const idx = sortedAll.findIndex((sl) => sl.id === l.id);
-      return idx >= midPoint;
-    });
-
-    if (isSecondHalf) {
-      previousLists = sortedAll.slice(0, midPoint);
-    } else {
-      container.innerHTML = `<div class="empty-state-minor">Período anterior insuficiente para comparação.</div>`;
-      return;
-    }
-  }
-
-  if (previousLists.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Período anterior insuficiente para comparação.</div>`;
-    return;
-  }
-
-  // Extrai dados de recorrência do período atual usando função utilitária
-  const currentItemsData = extrairDadosRecorrencia(filteredLists);
-
-  // Calcula preços médios no período anterior
-  const previousPrices = {};
-  previousLists.forEach((list) => {
-    (list.categories || []).forEach((cat) => {
-      cat.items.forEach((item) => {
-        if (!item.checked) return;
-        const normalizedName = window.normalizeString(item.name);
-        if (!previousPrices[normalizedName]) {
-          previousPrices[normalizedName] = { total: 0, count: 0 };
-        }
-        const valorUnitario = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-        previousPrices[normalizedName].total += valorUnitario;
-        previousPrices[normalizedName].count++;
-      });
-    });
-  });
-
-  // Compara e renderiza aplicando os filtros de recorrência
   const cpiItems = [];
-  Object.keys(currentItemsData).forEach((name) => {
-    const itemData = currentItemsData[name];
 
-    // APLICA FILTRO DE RECORRÊNCIA
-    if (!atendeCriteriosRecorrencia(itemData)) return;
+  Object.keys(itemsData).forEach((name) => {
+    const itemData = itemsData[name];
 
-    // Verifica se existe comparação com período anterior
-    if (!previousPrices[name]) return;
+    // Verifica se o item aparece em pelo menos 2 listas diferentes
+    if (itemData.listIds.size < 2) return;
 
-    const avgCurrent =
-      itemData.prices.reduce((sum, p) => {
-        return sum + parseFloat(p.price.replace(/\./g, "").replace(",", "."));
-      }, 0) / itemData.prices.length;
+    // Verifica se a última compra está dentro dos últimos 3 meses
+    const dataLimite = getDataLimiteRecencia();
+    if (!itemData.lastPurchaseDate || itemData.lastPurchaseDate < dataLimite)
+      return;
 
-    const avgPrev = previousPrices[name].total / previousPrices[name].count;
+    // Ordena as ocorrências por data (mais recente primeiro)
+    const ocorrenciasOrdenadas = itemData.prices
+      .map((o) => ({
+        ...o,
+        dateObj: parseDateLocal(o.date),
+        valorNumerico: parseFloat(o.price.replace(/\./g, "").replace(",", ".")),
+      }))
+      .sort((a, b) => b.dateObj - a.dateObj);
 
-    // CORREÇÃO: Tratamento de precisão de ponto flutuante
-    // Usa toFixed(10) para arredondar e evitar erros de precisão como 1.17173933997378e-14
+    // Pega a última e a penúltima ocorrência (de listas diferentes)
+    const ultimaOcorrencia = ocorrenciasOrdenadas[0];
+    const penultimaOcorrencia = ocorrenciasOrdenadas.find(
+      (o) => o.listId !== ultimaOcorrencia.listId,
+    );
+
+    // Se não encontrou penúltima ocorrência em lista diferente, ignora
+    if (!penultimaOcorrencia) return;
+
+    const avgCurrent = ultimaOcorrencia.valorNumerico;
+    const avgPrev = penultimaOcorrencia.valorNumerico;
+
     let diff = parseFloat(
       (((avgCurrent - avgPrev) / avgPrev) * 100).toFixed(10),
     );
