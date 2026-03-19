@@ -568,7 +568,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
       );
 
       if (recurringItems.length === 0) {
-        recurrenceContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECURRENCE_CONFIG.mesesLimite} meses.</div>`;
+        recurrenceContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
       } else {
         // Armazena em cache
         cachedDashboardData.recurrenceItems = recurringItems;
@@ -712,7 +712,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
   predictionsRestocking.sort((a, b) => a.nextDate - b.nextDate);
 
   if (predictionsRestocking.length === 0) {
-    restockContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECURRENCE_CONFIG.mesesLimite} meses.</div>`;
+    restockContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
     return;
   }
 
