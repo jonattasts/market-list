@@ -18,9 +18,9 @@ let activeFilter = { type: "geral", value: null };
    ESTADO DE PAGINAÇÃO DAS LISTAS
    ========================================================================== */
 const paginationState = {
-  cpi: { currentPage: 1, itemsPerPage: 5 },
-  recorrencia: { currentPage: 1, itemsPerPage: 5 },
-  reposicao: { currentPage: 1, itemsPerPage: 5 },
+  cpi: { currentPage: 1, itemsPerPage: 4 },
+  recorrencia: { currentPage: 1, itemsPerPage: 4 },
+  reposicao: { currentPage: 1, itemsPerPage: 4 },
 };
 
 // Cache dos dados calculados para evitar re-processamento desnecessário
