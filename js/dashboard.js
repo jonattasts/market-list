@@ -1,6 +1,6 @@
-/* ==========================================================================
-   DASHBOARD & DATA ANALYTICS MODULE
-   ========================================================================= */
+// ==========================================================================
+// DASHBOARD & DATA ANALYTICS MODULE
+// ========================================================================= */
 
 // Utilitário local para formatação de moeda
 const formatCurrencyBRL = (val) =>
@@ -450,9 +450,13 @@ function calculateCPI(filteredLists, allLists) {
       }, 0) / itemData.prices.length;
 
     const avgPrev = previousPrices[name].total / previousPrices[name].count;
-    const diff = ((avgCurrent - avgPrev) / avgPrev) * 100;
 
-    // Renderiza mesmo se a diferença for 0, conforme a imagem do usuário
+    // CORREÇÃO: Tratamento de precisão de ponto flutuante
+    // Usa toFixed(10) para arredondar e evitar erros de precisão como 1.17173933997378e-14
+    let diff = parseFloat(
+      (((avgCurrent - avgPrev) / avgPrev) * 100).toFixed(10),
+    );
+
     // Define o emoji e a cor baseada na variação
     let emoji = "📉";
     let color = "var(--accent-green)";
