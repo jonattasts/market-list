@@ -78,14 +78,14 @@
 }
 
 /* Estado de loading no botão */
-.btn-start.is-loading {
+.button-start.is-loading {
   color: transparent !important;
   position: relative;
   pointer-events: none;
   opacity: 0.8;
 }
 
-.btn-start.is-loading::after {
+.button-start.is-loading::after {
   content: "";
   position: absolute;
   width: 20px;

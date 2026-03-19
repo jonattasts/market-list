@@ -568,7 +568,7 @@
   font-weight: 700;
 }
 
-.filter-close-btn {
+.filter-close-button {
   background: rgba(255, 255, 255, 0.1);
   border: none;
   color: #ffffff;
@@ -641,7 +641,7 @@
   margin-top: 12px;
 }
 
-.btn-filter-clear {
+.button-filter-clear {
   flex: 1;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -652,7 +652,7 @@
   cursor: pointer;
 }
 
-.btn-filter-apply {
+.button-filter-apply {
   flex: 2;
   background: var(--primary);
   border: none;
@@ -694,7 +694,7 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.pagination-btn {
+.pagination-button {
   background: rgba(76, 51, 230, 0.4);
   border: 1px solid rgba(76, 51, 230, 0.5);
   color: white;
@@ -709,6 +709,6 @@
   font-size: 18px;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.pagination-button:hover:not(:disabled) {
   transform: scale(1.05);
 }

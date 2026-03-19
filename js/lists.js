@@ -44,7 +44,7 @@ window.copyList = function (event, index) {
 
   const originalList = window.marketListData[index];
   document.getElementById("form-title").innerText = "Copiar Lista";
-  document.getElementById("btn-save-list").innerText = "Confirmar Cópia";
+  document.getElementById("button-save-list").innerText = "Confirmar Cópia";
   document.getElementById("new-list-name").value = originalList.listName;
   document.getElementById("new-list-location").value =
     originalList.location || "";

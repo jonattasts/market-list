@@ -158,7 +158,7 @@ async function runSetupAnimation(userName) {
    ========================================================================== */
 window.handleUserIdentification = async function () {
   const nameInput = document.getElementById("user-name-input");
-  const btnStart = document.querySelector(".btn-start");
+  const buttonStart = document.querySelector(".button-start");
   const onboardingScreen = document.getElementById("onboarding-screen");
 
   const name = window.capitalize(nameInput.value);
@@ -169,7 +169,7 @@ window.handleUserIdentification = async function () {
     return;
   }
 
-  if (btnStart) btnStart.classList.add("is-loading");
+  if (buttonStart) buttonStart.classList.add("is-loading");
 
   try {
     const userRef = doc(firestore, "users", userId);
@@ -178,7 +178,7 @@ window.handleUserIdentification = async function () {
     if (userSnap.exists()) {
       const savedLocalName = localStorage.getItem("marketUserName");
       if (savedLocalName !== name) {
-        if (btnStart) btnStart.classList.remove("is-loading");
+        if (buttonStart) buttonStart.classList.remove("is-loading");
         window.showToast("Este nome já está em uso!", "danger");
         return;
       }
@@ -203,7 +203,7 @@ window.handleUserIdentification = async function () {
       initFirebaseListener(name);
     }, 100);
   } catch (error) {
-    if (btnStart) btnStart.classList.remove("is-loading");
+    if (buttonStart) buttonStart.classList.remove("is-loading");
     console.error("Erro identificação:", error);
     window.showToast("Erro de conexão", "danger");
   }
@@ -302,13 +302,13 @@ window.handlePopoverAction = function (action) {
 // Listener global para fechar ao clicar fora
 document.addEventListener("click", function (event) {
   const popover = document.getElementById("options-popover");
-  const btn = document.getElementById("btn-options-list");
+  const button = document.getElementById("button-options-list");
 
   if (
     popover &&
     !popover.contains(event.target) &&
-    btn &&
-    !btn.contains(event.target)
+    button &&
+    !button.contains(event.target)
   ) {
     window.closePopover();
   }

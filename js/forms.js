@@ -12,7 +12,7 @@ window.openNewListForm = function () {
   window.isEditingListMode = false;
   window.isCopyingListMode = false;
   document.getElementById("form-title").innerText = "Nova Lista";
-  document.getElementById("btn-save-list").innerText = "Salvar";
+  document.getElementById("button-save-list").innerText = "Salvar";
   document.getElementById("new-list-name").value = "";
   document.getElementById("new-list-location").value = "";
   const now = new Date();
@@ -28,7 +28,7 @@ window.openEditListForm = function () {
   window.isCopyingListMode = false;
   const list = window.marketListData[window.currentListIndex];
   document.getElementById("form-title").innerText = "Editar Lista";
-  document.getElementById("btn-save-list").innerText = "Atualizar";
+  document.getElementById("button-save-list").innerText = "Atualizar";
   document.getElementById("new-list-name").value = list.listName;
   document.getElementById("new-list-location").value = list.location || "";
   document.getElementById("new-list-date").value = list.date;
@@ -126,7 +126,7 @@ window.handleSaveNewList = async function () {
 window.openNewCategoryForm = function () {
   window.editingCategoryIndex = null;
   document.getElementById("category-form-title").innerText = "Nova Categoria";
-  document.getElementById("btn-save-category").innerText = "Salvar";
+  document.getElementById("button-save-category").innerText = "Salvar";
   document.getElementById("new-category-name").value = "";
   window.showScreen("new-category-screen");
 };
@@ -136,7 +136,7 @@ window.openEditCategoryForm = function (catIdx) {
   const category =
     window.marketListData[window.currentListIndex].categories[catIdx];
   document.getElementById("category-form-title").innerText = "Editar Categoria";
-  document.getElementById("btn-save-category").innerText = "Atualizar";
+  document.getElementById("button-save-category").innerText = "Atualizar";
   document.getElementById("new-category-name").value = category.name;
   window.showScreen("new-category-screen");
 };

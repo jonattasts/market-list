@@ -43,7 +43,7 @@
   margin-bottom: 20px;
 }
 
-.btn-start {
+.button-start {
   margin-top: 25px;
   padding: 16px 32px;
   background: var(--primary);
@@ -54,7 +54,7 @@
   width: 100%;
 }
 
-.btn-view-lists {
+.button-view-lists {
   margin-top: 10px;
   background: transparent;
   color: var(--primary);

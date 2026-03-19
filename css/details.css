@@ -152,7 +152,7 @@
   width: 100%;
 }
 
-.action-btn-secondary {
+.action-button-secondary {
   background: var(--bg-card);
   border: 1px dashed var(--primary);
   color: var(--primary);
@@ -167,7 +167,7 @@
   gap: 5px;
 }
 
-.action-btn-primary {
+.action-button-primary {
   background: var(--primary);
   border: none;
   color: white;

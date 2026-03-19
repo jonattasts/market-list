@@ -67,7 +67,7 @@
           <input type="text" id="user-name-input" placeholder="Digite seu nome aqui..." />
         </div>
 
-        <button class="btn-start" onclick="handleUserIdentification()">
+        <button class="button-start" onclick="handleUserIdentification()">
           Começar a usar
         </button>
       </div>
@@ -94,12 +94,12 @@
           <p>Organize suas listas e controle seus gastos de forma simples.</p>
 
           <!-- Ação Primária -->
-          <button class="btn-start" onclick="openNewListForm()">
+          <button class="button-start" onclick="openNewListForm()">
             Criar nova lista
           </button>
 
           <!-- Ação Secundária -->
-          <button class="btn-secondary btn-view-lists" onclick="showScreen('market-lists-screen')">
+          <button class="button-secondary button-view-lists" onclick="showScreen('market-lists-screen')">
             Ver minhas listas
           </button>
 
@@ -123,7 +123,7 @@
         <h1 class="header-title">Listas de Compras</h1>
 
         <!-- Botão opções -->
-        <div class="header-action" id="btn-options-list" onclick="toggleMenuOptions(event)">
+        <div class="header-action" id="button-options-list" onclick="toggleMenuOptions(event)">
           <ion-icon name="ellipsis-horizontal-outline" class="icon-options-list"></ion-icon>
         </div>
 
@@ -199,7 +199,7 @@
           </div>
 
           <!-- Botão Salvar -->
-          <button id="btn-save-list" class="btn-start mt-30" onclick="handleSaveNewList()">
+          <button id="button-save-list" class="button-start mt-30" onclick="handleSaveNewList()">
             Salvar
           </button>
 
@@ -237,7 +237,7 @@
           </div>
 
           <!-- Salvar Categoria -->
-          <button id="btn-save-category" class="btn-start mt-30" onclick="handleSaveCategory()">
+          <button id="button-save-category" class="button-start mt-30" onclick="handleSaveCategory()">
             Salvar
           </button>
 
@@ -298,7 +298,7 @@
           </div>
 
           <!-- Salvar Item -->
-          <button class="btn-start mt-30" onclick="handleSaveItem()">
+          <button class="button-start mt-30" onclick="handleSaveItem()">
             Salvar
           </button>
 
@@ -366,12 +366,12 @@
         <!-- Botões Primários -->
         <div class="action-buttons-group">
 
-          <button class="btn-add-cat action-btn-secondary" onclick="openNewCategoryForm()">
+          <button class="button-add-cat action-button-secondary" onclick="openNewCategoryForm()">
             <ion-icon name="add-circle-outline" class="icon-primary-small"></ion-icon>
             Nova Categoria
           </button>
 
-          <button class="btn-add-item action-btn-primary" onclick="openNewItemForm()">
+          <button class="button-add-item action-button-primary" onclick="openNewItemForm()">
             <ion-icon name="cart-outline" class="icon-white-small"></ion-icon>
             Adicionar Item
           </button>
@@ -427,7 +427,7 @@
 
             <div class="metric-card-stat warning">
               <span class="stat-label">Economia Potencial</span>
-              <span id="metric-economia" class="stat-value">R$ 0,00</span>
+              <span id="metric-economy" class="stat-value">R$ 0,00</span>
               <span class="stat-subtext">Itens desejados vs. comprados</span>
             </div>
           </div>
@@ -457,7 +457,7 @@
 
             <div class="metric-card-stat">
               <span class="stat-label">Itens Essenciais</span>
-              <span id="metric-essenciais-count" class="stat-value">0</span>
+              <span id="metric-essentials-count" class="stat-value">0</span>
               <span class="stat-subtext">Em 100% das listas</span>
             </div>
           </div>
@@ -465,14 +465,14 @@
           <!-- RECORRÊNCIA DE ITENS -->
           <div class="metric-card-full">
             <h3 class="chart-title">Recorrência de Itens (Frequência)</h3>
-            <div id="recorrencia-itens-list" class="simple-data-list">
+            <div id="recurrence-itens-list" class="simple-data-list">
               <div class="empty-state-minor">Gere mais listas para ver a frequência.</div>
             </div>
           </div>
 
           <div class="chart-card">
             <h3 class="chart-title">Previsão de Reposição (Próximos Itens)</h3>
-            <div id="reposicao-list" class="simple-data-list">
+            <div id="restock-list" class="simple-data-list">
               <div class="empty-state-minor">Sem histórico suficiente</div>
             </div>
           </div>
@@ -495,7 +495,7 @@
 
             <div class="metric-card-stat info">
               <span class="stat-label">Alerta de Preço</span>
-              <span id="metric-alerta-preco" class="stat-value-text">Ok</span>
+              <span id="metric-alert-price" class="stat-value-text">Ok</span>
               <span class="stat-subtext">Variação significativa detectada</span>
             </div>
           </div>
@@ -511,7 +511,7 @@
 
           <div class="metric-card-full sazonalidade-card">
             <ion-icon name="leaf-outline"></ion-icon>
-            <p id="metric-sazonalidade-text">Inicie suas compras para gerar histórico de sazonalidade.</p>
+            <p id="metric-seasonality-text">Inicie suas compras para gerar histórico de sazonalidade.</p>
           </div>
         </div>
 
@@ -527,7 +527,7 @@
           <!-- Header -->
           <div class="filter-header">
             <h3>Filtrar Análise</h3>
-            <button class="filter-close-btn" onclick="toggleFilterModal()">
+            <button class="filter-close-button" onclick="toggleFilterModal()">
               <ion-icon name="close-outline"></ion-icon>
             </button>
           </div>
@@ -564,10 +564,10 @@
 
           <!-- Footer: Ações -->
           <div class="filter-footer">
-            <button class="btn-filter-clear" onclick="clearFilter()">
+            <button class="button-filter-clear" onclick="clearFilter()">
               Limpar
             </button>
-            <button id="apply-filter-btn" class="btn-filter-apply" onclick="applyDashboardFilter()">
+            <button id="apply-filter-button" class="button-filter-apply" onclick="applyDashboardFilter()">
               Aplicar Filtro
             </button>
           </div>
