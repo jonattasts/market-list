@@ -32,6 +32,14 @@ let cachedDashboardData = {
 };
 
 /* ==========================================================================
+   CONSTANTES DE REGRA DE NEGÓCIO
+   ========================================================================== */
+const RECORRENCIA_CONFIG = {
+  minListas: 2, // Mínimo de listas diferentes
+  mesesLimite: 3, // Meses máximos sem comprar
+};
+
+/* ==========================================================================
    UTILITÁRIO: Parse de Data Local
    ========================================================================== */
 /**
@@ -53,6 +61,99 @@ function getYearMonth(dateStr) {
   if (!dateStr) return { year: 0, month: 0 };
   const [year, month] = dateStr.split("-").map(Number);
   return { year, month };
+}
+
+/**
+ * Calcula a diferença em meses entre duas datas
+ */
+function getMonthsDifference(date1, date2) {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  const months =
+    (d2.getFullYear() - d1.getFullYear()) * 12 +
+    (d2.getMonth() - d1.getMonth());
+  return months;
+}
+
+/**
+ * Obtém a data limite de recência (N meses atrás)
+ */
+function getDataLimiteRecencia() {
+  const hoje = new Date();
+  return new Date(
+    hoje.getFullYear(),
+    hoje.getMonth() - RECORRENCIA_CONFIG.mesesLimite,
+    hoje.getDate(),
+  );
+}
+
+/* ==========================================================================
+   UTILITÁRIO: FILTRO DE RECORRÊNCIA
+   ========================================================================== */
+/**
+ * Filtra itens baseado nos critérios de recorrência:
+ * 1. Apareceu em pelo menos N listas diferentes
+ * 2. Última compra dentro do limite de meses configurado
+ *
+ * @param {Object} itemData - Objeto com dados do item (deve ter listIds e lastPurchaseDate)
+ * @returns {Boolean} - true se o item atende aos critérios de recorrência
+ */
+function atendeCriteriosRecorrencia(itemData) {
+  // FILTRO 1: Item deve aparecer em pelo menos N listas diferentes
+  const listCount = itemData.listIds ? itemData.listIds.size : 0;
+  if (listCount < RECORRENCIA_CONFIG.minListas) return false;
+
+  // FILTRO 2: Item deve ter sido comprado nos últimos N meses
+  const lastPurchase = itemData.lastPurchaseDate;
+  const dataLimite = getDataLimiteRecencia();
+  if (!lastPurchase || lastPurchase < dataLimite) return false;
+
+  return true;
+}
+
+/**
+ * Extrai dados de recorrência de uma lista de compras
+ * Retorna mapa de itens com suas listIds e lastPurchaseDate
+ */
+function extrairDadosRecorrencia(lists) {
+  const itemsData = {};
+
+  lists.forEach((list) => {
+    (list.categories || []).forEach((cat) => {
+      cat.items.forEach((item) => {
+        if (!item.checked) return;
+
+        const normalizedName = window.normalizeString(item.name);
+
+        if (!itemsData[normalizedName]) {
+          itemsData[normalizedName] = {
+            name: item.name,
+            listIds: new Set(),
+            lastPurchaseDate: null,
+            prices: [],
+            dates: [],
+          };
+        }
+
+        itemsData[normalizedName].listIds.add(list.id);
+        itemsData[normalizedName].prices.push({
+          price: item.price,
+          date: list.date,
+        });
+        itemsData[normalizedName].dates.push(list.date);
+
+        const itemDate = parseDateLocal(list.date);
+        if (
+          !itemsData[normalizedName].lastPurchaseDate ||
+          itemDate > itemsData[normalizedName].lastPurchaseDate
+        ) {
+          itemsData[normalizedName].lastPurchaseDate = itemDate;
+        }
+      });
+    });
+  });
+
+  return itemsData;
 }
 
 /* ==========================================================================
@@ -167,7 +268,7 @@ function processDashboardData(allLists) {
   // C. Gasto por Categoria (Gráfico Pizza)
   renderShareWalletChart(categoryTotals);
 
-  // D. Inflação Pessoal (CPI) - CORRIGIDO: Compara com período anterior
+  // D. Inflação Pessoal (CPI) - Com critérios de recorrência
   calculateCPI(filteredLists, allLists);
 
   // ---------------------------------------------------------
@@ -177,7 +278,7 @@ function processDashboardData(allLists) {
   // A. Índice de Fidelidade de Local
   calculateLocationFidelity(filteredLists);
 
-  // B. Recorrência de Itens e Ciclo de Reposição
+  // B. Recorrência de Itens e Ciclo de Reposição - Com critérios de recorrência
   calculateItemRecurrenceAndRepo(filteredLists);
 
   // ---------------------------------------------------------
@@ -200,7 +301,7 @@ function processDashboardData(allLists) {
   // 4. INSIGHTS DE SAÚDE E NUTRIÇÃO
   // ---------------------------------------------------------
 
-  // A. Ratio Ultraprocessados vs In Natura (Gráfico Pizza) - CORRIGIDO
+  // A. Ratio Ultraprocessados vs In Natura (Gráfico Pizza)
   calculateHealthRatio(categoryTotals);
 
   // B. Sazonalidade de Consumo
@@ -214,6 +315,8 @@ function processDashboardData(allLists) {
 /**
  * Métrica 1.D: Inflação Pessoal (CPI)
  * Compara o período filtrado com o período imediatamente anterior
+ *
+ * REGRA DE RECORRÊNCIA: Exibe apenas itens que atendem aos critérios em RECORRENCIA_CONFIG
  */
 function calculateCPI(filteredLists, allLists) {
   const container = document.getElementById("cpi-container");
@@ -308,28 +411,8 @@ function calculateCPI(filteredLists, allLists) {
     return;
   }
 
-  // Calcula preços médios no período atual (filtrado)
-  const currentPrices = {};
-  filteredLists.forEach((list) => {
-    (list.categories || []).forEach((cat) => {
-      cat.items.forEach((item) => {
-        if (!item.checked) return;
-        const normalizedName = window.normalizeString(item.name);
-        if (!currentPrices[normalizedName]) {
-          currentPrices[normalizedName] = {
-            total: 0,
-            count: 0,
-            name: item.name,
-          };
-        }
-        const valorUnitario = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-        currentPrices[normalizedName].total += valorUnitario;
-        currentPrices[normalizedName].count++;
-      });
-    });
-  });
+  // Extrai dados de recorrência do período atual usando função utilitária
+  const currentItemsData = extrairDadosRecorrencia(filteredLists);
 
   // Calcula preços médios no período anterior
   const previousPrices = {};
@@ -350,40 +433,52 @@ function calculateCPI(filteredLists, allLists) {
     });
   });
 
-  // Compara e renderiza
+  // Compara e renderiza aplicando os filtros de recorrência
   const cpiItems = [];
-  Object.keys(currentPrices).forEach((name) => {
-    if (previousPrices[name]) {
-      const avgCurrent = currentPrices[name].total / currentPrices[name].count;
-      const avgPrev = previousPrices[name].total / previousPrices[name].count;
-      const diff = ((avgCurrent - avgPrev) / avgPrev) * 100;
+  Object.keys(currentItemsData).forEach((name) => {
+    const itemData = currentItemsData[name];
 
-      // Renderiza mesmo se a diferença for 0, conforme a imagem do usuário
-      // Define o emoji e a cor baseada na variação
-      let emoji = "📉";
-      let color = "var(--accent-green)";
+    // APLICA FILTRO DE RECORRÊNCIA
+    if (!atendeCriteriosRecorrencia(itemData)) return;
 
-      if (diff > 0) {
-        emoji = "📈";
-        color = "var(--danger)";
-      } else if (diff === 0) {
-        emoji = "📉"; // Mantém o padrão da imagem para 0.0%
-        color = "var(--accent-green)";
-      }
+    // Verifica se existe comparação com período anterior
+    if (!previousPrices[name]) return;
 
-      cpiItems.push({
-        name: window.capitalize(currentPrices[name].name),
-        avgPrev,
-        avgCurrent,
-        diff,
-        emoji,
-        color,
-      });
+    const avgCurrent =
+      itemData.prices.reduce((sum, p) => {
+        return sum + parseFloat(p.price.replace(/\./g, "").replace(",", "."));
+      }, 0) / itemData.prices.length;
+
+    const avgPrev = previousPrices[name].total / previousPrices[name].count;
+    const diff = ((avgCurrent - avgPrev) / avgPrev) * 100;
+
+    // Renderiza mesmo se a diferença for 0, conforme a imagem do usuário
+    // Define o emoji e a cor baseada na variação
+    let emoji = "📉";
+    let color = "var(--accent-green)";
+
+    if (diff > 0) {
+      emoji = "📈";
+      color = "var(--danger)";
+    } else if (diff === 0) {
+      emoji = "📉"; // Mantém o padrão da imagem para 0.0%
+      color = "var(--accent-green)";
     }
+
+    cpiItems.push({
+      name: window.capitalize(itemData.name),
+      avgPrev,
+      avgCurrent,
+      diff,
+      emoji,
+      color,
+      listCount: itemData.listIds.size,
+      lastPurchaseDate: itemData.lastPurchaseDate,
+    });
   });
 
   if (cpiItems.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Itens recorrentes não encontrados para comparação.</div>`;
+    container.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECORRENCIA_CONFIG.mesesLimite} meses.</div>`;
     return;
   }
 
@@ -433,32 +528,26 @@ function calculateLocationFidelity(filteredLists) {
 
 /**
  * Métrica 2.A e 2.B: Recorrência de Itens e Ciclo de Reposição
+ *
+ * REGRA DE RECORRÊNCIA: Exibe apenas itens que atendem aos critérios em RECORRENCIA_CONFIG
  */
 function calculateItemRecurrenceAndRepo(filteredLists) {
   const listCount = filteredLists.length;
-  const itemMap = {};
 
-  // Ordena listas por data para cálculo correto do ciclo
-  const sortedLists = [...filteredLists].sort(
-    (a, b) => parseDateLocal(a.date) - parseDateLocal(b.date),
-  );
+  // Extrai dados de recorrência usando função utilitária
+  const itemsData = extrairDadosRecorrencia(filteredLists);
 
-  sortedLists.forEach((list) => {
-    (list.categories || []).forEach((cat) => {
-      cat.items.forEach((item) => {
-        if (!item.checked) return;
-        const normalizedName = window.normalizeString(item.name);
-        if (!itemMap[normalizedName])
-          itemMap[normalizedName] = { dates: [], name: item.name };
-        itemMap[normalizedName].dates.push(list.date);
-      });
-    });
+  // Filtra apenas itens que atendem aos critérios de recorrência
+  const recorrentesData = {};
+  Object.keys(itemsData).forEach((name) => {
+    if (atendeCriteriosRecorrencia(itemsData[name])) {
+      recorrentesData[name] = itemsData[name];
+    }
   });
 
   // Itens Essenciais: aparecem em 100% das listas
-  const essenciais = Object.keys(itemMap).filter((name) => {
-    const uniqueDates = new Set(itemMap[name].dates);
-    return uniqueDates.size === listCount;
+  const essenciais = Object.keys(recorrentesData).filter((name) => {
+    return recorrentesData[name].listIds.size === listCount;
   });
   document.getElementById("metric-essenciais-count").innerText =
     essenciais.length;
@@ -498,8 +587,10 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
 
       const itensRecorrentes = [];
 
-      Object.keys(itemMap).forEach((name) => {
-        const dates = [...new Set(itemMap[name].dates)].sort();
+      Object.keys(recorrentesData).forEach((name) => {
+        const itemData = recorrentesData[name];
+        const dates = [...new Set(itemData.dates)].sort();
+
         if (dates.length >= 2) {
           const intervalos = [];
           for (let i = 1; i < dates.length; i++) {
@@ -520,7 +611,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
             else frequenciaTexto = `A cada ${Math.round(mediaDias)} dias`;
 
             itensRecorrentes.push({
-              name: window.capitalize(itemMap[name].name),
+              name: window.capitalize(itemData.name),
               media: Math.round(mediaDias),
               texto: frequenciaTexto,
               compras: dates.length,
@@ -532,7 +623,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
       itensRecorrentes.sort((a, b) => b.compras - a.compras);
 
       if (itensRecorrentes.length === 0) {
-        recorrenciaContainer.innerHTML = `<div class="empty-state-minor">Gere mais listas para ver a frequência.</div>`;
+        recorrenciaContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECORRENCIA_CONFIG.mesesLimite} meses.</div>`;
       } else {
         // Armazena em cache
         cachedDashboardData.recorrenciaItems = itensRecorrentes;
@@ -558,6 +649,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
     }
   }
 
+  // PREVISÃO DE REPOSIÇÃO ---
   const repoContainer = document.getElementById("reposicao-list");
 
   // Verifica cache para reposição
@@ -629,15 +721,18 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
 
   const previsoes = [];
 
-  Object.keys(itemMap).forEach((name) => {
-    const dates = [...new Set(itemMap[name].dates)].sort(); // Remove duplicatas e ordena
+  // Usa apenas dados de itens que atendem aos critérios de recorrência
+  Object.keys(recorrentesData).forEach((name) => {
+    const itemData = recorrentesData[name];
+    const dates = [...new Set(itemData.dates)].sort();
+
     if (dates.length >= 2) {
       const intervalos = [];
       for (let i = 1; i < dates.length; i++) {
         const diffTime =
           parseDateLocal(dates[i]) - parseDateLocal(dates[i - 1]);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 0 && diffDays < 365) intervalos.push(diffDays); // Ignora intervalos absurdos
+        if (diffDays > 0 && diffDays < 365) intervalos.push(diffDays);
       }
 
       if (intervalos.length > 0) {
@@ -658,7 +753,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
         if (diasAteCompra >= -7) {
           // Mostra se já passou até 7 dias (atraso) ou está no futuro
           previsoes.push({
-            name: window.capitalize(itemMap[name].name),
+            name: window.capitalize(itemData.name),
             ciclo: Math.round(mediaDias),
             nextDate: nextDate,
             lastDateStr: formatDateBRL(dates[dates.length - 1]),
@@ -672,7 +767,7 @@ function calculateItemRecurrenceAndRepo(filteredLists) {
   previsoes.sort((a, b) => a.nextDate - b.nextDate);
 
   if (previsoes.length === 0) {
-    repoContainer.innerHTML = `<div class="empty-state-minor">Padrão de compra não identificado.</div>`;
+    repoContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${RECORRENCIA_CONFIG.mesesLimite} meses.</div>`;
     return;
   }
 
@@ -795,7 +890,7 @@ function renderPaginatedList(
       state.currentPage,
       totalPages,
       paginationKey,
-      items, // Passa os items para re-renderização direta sem recalcular tudo
+      items,
       renderLeftContent,
       renderRightContent,
     );
