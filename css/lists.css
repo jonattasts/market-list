@@ -5,24 +5,26 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
-.header-action {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+/* Header fixo com padding ajustado para acomodar a search sobreposta */
+#market-lists-screen header.small {
+  padding-bottom: 50px; /* Aumentado para criar espaço visual para a search */
+  position: relative;
+  z-index: 1;
 }
 
+/* Search section posicionada sobre o header (efeito de overlap) */
 .search-section {
   padding: 0 16px;
   margin-top: -25px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   position: relative;
-  z-index: 5;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .search-group {
@@ -54,10 +56,34 @@
   opacity: 0.6;
 }
 
+/* Wrapper para conteúdo com scroll - abaixo da search fixa */
+.lists-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.header-action {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .empty-state {
   padding: 60px 20px;
   text-align: center;
   color: var(--text-secondary);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .empty-emoji {
@@ -104,12 +130,14 @@
   transition: width 0.4s ease;
 }
 
+/* Container de listas - ajustado para scroll no wrapper */
 .list-container {
-  overflow-y: auto;
+  flex: 1;
+  overflow-y: visible;
 }
 
 .list-container.master-list {
-  padding: 0px 20px;
+  padding: 0px 20px 20px;
 }
 
 /* ==========================================================================

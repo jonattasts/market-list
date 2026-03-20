@@ -5,7 +5,16 @@
   width: 100%;
   display: none;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header fixo com padding ajustado para acomodar o dashboard sobreposto */
+#market-list-screen-details header.small {
+  padding-bottom: 45px; /* Espaço para o dashboard sobrepor */
+  position: relative;
+  z-index: 1;
 }
 
 .header-details-container {
@@ -21,35 +30,15 @@
   padding: 0;
 }
 
-.category-section {
-  margin-bottom: 25px;
-}
-
-.category-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 16px 8px;
-  margin-bottom: 10px;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.category-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
+/* Dashboard sobreposto ao header (similar à search na Lists) */
 .dashboard {
   background: var(--bg-card);
-  margin: -25px 16px 16px;
+  margin: -30px 16px 16px;
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   position: relative;
-  z-index: 5;
+  z-index: 10; /* Acima do header */
   flex-shrink: 0;
 }
 
@@ -86,7 +75,7 @@
 .progress-container {
   margin-top: 15px;
   background: var(--border-color);
-  height: 10px;
+  height: 6px;
   border-radius: 5px;
 }
 
@@ -130,13 +119,22 @@
   color: var(--danger);
 }
 
+/* Wrapper para conteúdo com scroll - categorias e itens */
+.details-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+  padding: 0 16px 20px;
+}
+
 /* Seção de botões de ação na tela de detalhes */
 .category-actions {
-  padding: 0 16px 15px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow-y: auto;
 }
 
 .item-search-inline {
@@ -150,6 +148,7 @@
   display: flex;
   gap: 10px;
   width: 100%;
+  margin-bottom: 10px;
 }
 
 .action-button-secondary {
@@ -192,6 +191,28 @@
   font-size: 16px;
 }
 
+/* Seção de categoria */
+.category-section {
+  margin-bottom: 25px;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.category-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .category-items-list {
   display: flex;
   flex-direction: column;
@@ -207,6 +228,7 @@
   overflow: hidden;
   border-radius: 12px;
   isolation: isolate;
+  margin-bottom: 8px;
 }
 
 .item-card {

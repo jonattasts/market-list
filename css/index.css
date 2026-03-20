@@ -15,6 +15,11 @@
   --danger: #ff4757;
   --success: #2ed573;
   --toast-bg: #2f3542;
+
+  /* Header size tokens para padronização */
+  --header-padding-large: 35px 16px 30px;
+  --header-padding-medium: 30px 16px 25px;
+  --header-padding-small: 20px 16px 15px;
 }
 
 * {
@@ -43,14 +48,25 @@ body {
   position: relative;
 }
 
+/* Header base - tamanho grande (padrão para telas que não especificam) */
 header {
   background-color: var(--primary);
   color: white;
-  padding: 50px 16px 40px;
+  padding: var(--header-padding-large);
   display: flex;
   justify-content: space-around;
   align-items: center;
   flex-shrink: 0;
+}
+
+/* Header médio - para Home */
+header.medium {
+  padding: var(--header-padding-medium);
+}
+
+/* Header pequeno - para Lists, Forms, Details, Dashboard */
+header.small {
+  padding: var(--header-padding-small);
 }
 
 header h1,
@@ -65,10 +81,6 @@ header h1,
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: anywhere;
-}
-
-header.small {
-  padding: 20px 16px 30px;
 }
 
 .screen-hidden {

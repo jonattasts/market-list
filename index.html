@@ -1,580 +1,640 @@
 <!doctype html>
 <html lang="pt-br">
 
-<head>
-  <!-- ===================== META & CONFIGURAÇÕES GLOBAIS ===================== -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <!-- ===================== META & CONFIGURAÇÕES GLOBAIS ===================== -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Market List</title>
+    <title>Market List</title>
 
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet" />
 
-  <link rel="stylesheet" href="css/index.css" />
-  <link rel="stylesheet" href="css/toast.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/home.css" />
-  <link rel="stylesheet" href="css/lists.css" />
-  <link rel="stylesheet" href="css/details.css" />
-  <link rel="stylesheet" href="css/onboarding.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
-</head>
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/toast.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/lists.css" />
+    <link rel="stylesheet" href="css/details.css" />
+    <link rel="stylesheet" href="css/onboarding.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
 
-<body>
+  <body>
+    <!-- ===================== APP CONTAINER ===================== -->
+    <div class="app-container">
+      <!-- ============================================================= -->
+      <!-- ===================== OVERLAY DE SINCRONIZAÇÃO ===================== -->
+      <!-- ============================================================= -->
+      <div id="sync-overlay" class="sync-overlay">
+        <div class="sync-visual">
+          <span class="icon-local">📱</span>
+          <span class="sync-arrow">⬆️</span>
+          <span class="icon-cloud">☁️</span>
+        </div>
 
-  <!-- ===================== CONTAINER PRINCIPAL DO APP ===================== -->
-  <div class="app-container">
-    <!-- ============================================================= -->
-    <!-- ===================== OVERLAY DE SINCRONIZAÇÃO ===================== -->
-    <!-- ============================================================= -->
-    <div id="sync-overlay" class="sync-overlay">
-      <div class="sync-visual">
-        <span class="icon-local">📱</span>
-        <span class="sync-arrow">⬆️</span>
-        <span class="icon-cloud">☁️</span>
-      </div>
-
-      <div class="sync-text">Sincronizando suas listas...</div>
+        <div class="sync-text">Sincronizando suas listas...</div>
 
         <p class="sync-subtext">Estamos movendo seus dados locais com segurança
           para a nuvem.</p>
 
         <div class="sync-progress-bar-container">
           <div id="sync-progress-bar" class="sync-progress-bar"></div>
-      </div>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== TOAST ===================== -->
-    <!-- ============================================================= -->
-    <div id="toast" class="toast">
-      <ion-icon id="toast-icon" name="alert-circle-outline"></ion-icon>
-      <span id="toast-message"></span>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== TELA DE ONBOARDING ===================== -->
-    <!-- ============================================================= -->
-    <div id="onboarding-screen" class="screen-hidden">
-      <div class="onboarding-card">
-        <span class="emoji-main">👋</span>
-        <h1 class="onboarding-title">Olá!</h1>
-        <p class="onboarding-subtitle">Para organizar suas compras, como gostaria de ser chamado?</p>
-
-        <div class="onboarding-input-group">
-          <label>Seu nome</label>
-          <input type="text" id="user-name-input" placeholder="Digite seu nome aqui..." />
         </div>
-
-        <button class="button-start" onclick="handleUserIdentification()">
-          Começar a usar
-        </button>
-      </div>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== HOME SCREEN =========================== -->
-    <!-- ============================================================= -->
-    <div id="home-screen" class="screen-hidden">
-
-      <!-- Header Principal -->
-      <header>
-        <h1>Market List</h1>
-      </header>
-
-      <!-- Conteúdo Central -->
-      <div class="home-content">
-        <div class="welcome-card">
-
-          <!-- Ícone ilustrativo -->
-          <span class="emoji-main">🛒</span>
-
-          <h2>Boas compras!</h2>
-          <p>Organize suas listas e controle seus gastos de forma simples.</p>
-
-          <!-- Ação Primária -->
-          <button class="button-start" onclick="openNewListForm()">
-            Criar nova lista
-          </button>
-
-          <!-- Ação Secundária -->
-          <button class="button-secondary button-view-lists" onclick="showScreen('market-lists-screen')">
-            Ver minhas listas
-          </button>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== LISTAGEM DE LISTAS ==================== -->
-    <!-- ============================================================= -->
-    <div id="market-lists-screen" class="screen-hidden">
-
-      <!-- Header Secundário -->
-      <header class="small">
-
-        <!-- Botão Voltar -->
-        <div class="header-action" onclick="showScreen('home-screen')">
-          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-        </div>
-
-        <h1 class="header-title">Listas de Compras</h1>
-
-        <!-- Botão opções -->
-        <div class="header-action" id="button-options-list" onclick="toggleMenuOptions(event)">
-          <ion-icon name="ellipsis-horizontal-outline" class="icon-options-list"></ion-icon>
-        </div>
-
-      </header>
-
-      <!-- Campo de Busca -->
-      <div class="search-section">
-        <div class="search-group">
-          <ion-icon name="search-outline"></ion-icon>
-          <input type="text" id="search-input" placeholder="Buscar por nome, data ou local..."
-            oninput="renderMarketLists()" />
-        </div>
-      </div>
-
-      <!-- Container Dinâmico das Listas -->
-      <div class="list-container master-list" id="lists-master-container"></div>
-
-      <div id="options-popover" class="popover-hidden" popover="manual">
-        <div class="popover-content">
-          <div class="popover-item" onclick="handlePopoverAction('new-list')">
-            <ion-icon name="add-circle-outline"></ion-icon>
-            <span>Nova Lista</span>
-          </div>
-          <div class="popover-divider"></div>
-          <div class="popover-item" onclick="handlePopoverAction('dashboard')">
-            <ion-icon name="bar-chart-outline"></ion-icon>
-            <span>Dashboard (Análise)</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== FORMULÁRIO NOVA LISTA ================= -->
-    <!-- ============================================================= -->
-    <div id="new-list-screen" class="screen-hidden">
-
-      <header class="small">
-
-        <!-- Voltar -->
-        <div class="header-action" onclick="handleBackFromForm()">
-          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-        </div>
-
-        <h1 id="form-title" class="header-title header-title-left">
-          Nova Lista
-        </h1>
-
-      </header>
-
-      <div class="form-section">
-        <div class="form-card dashboard">
-
-          <span class="emoji-main emoji-form">📋</span>
-
-          <!-- Nome da Lista -->
-          <div class="input-field">
-            <label>Nome da Lista<span class="required-mark">*</span></label>
-            <input type="text" id="new-list-name" placeholder="Ex: Compras do Mês" />
-          </div>
-
-          <!-- Local -->
-          <div class="input-field mt-20">
-            <label>Local da Compra</label>
-            <input type="text" id="new-list-location" placeholder="Ex: Assaí Atacadista" />
-          </div>
-
-          <!-- Data -->
-          <div class="input-field mt-20">
-            <label>Data da Compra<span class="required-mark">*</span></label>
-            <input type="date" id="new-list-date" />
-          </div>
-
-          <!-- Botão Salvar -->
-          <button id="button-save-list" class="button-start mt-30" onclick="handleSaveNewList()">
-            Salvar
-          </button>
-
-        </div>
-      </div>
-    </div>
-
-
-    <!-- ============================================================= -->
-    <!-- ===================== FORMULÁRIO NOVA CATEGORIA ============= -->
-    <!-- ============================================================= -->
-    <div id="new-category-screen" class="screen-hidden">
-
-      <header class="small">
-
-        <div class="header-action" onclick="showScreen('market-list-screen-details')">
-          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-        </div>
-
-        <h1 id="category-form-title" class="header-title header-title-left">
-          Nova Categoria
-        </h1>
-
-      </header>
-
-      <div class="form-section">
-        <div class="form-card dashboard">
-
-          <span class="emoji-main emoji-form">📁</span>
-
-          <!-- Nome da Categoria -->
-          <div class="input-field">
-            <label>Nome da Categoria<span class="required-mark">*</span></label>
-            <input type="text" id="new-category-name" placeholder="Ex: Higiene, Bebidas, Carnes..." />
-          </div>
-
-          <!-- Salvar Categoria -->
-          <button id="button-save-category" class="button-start mt-30" onclick="handleSaveCategory()">
-            Salvar
-          </button>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== FORMULÁRIO NOVO ITEM ================== -->
-    <!-- ============================================================= -->
-    <div id="new-item-screen" class="screen-hidden">
-
-      <header class="small">
-
-        <div class="header-action" onclick="showScreen('market-list-screen-details')">
-          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-        </div>
-
-        <h1 id="item-form-title" class="header-title header-title-left">
-          Novo Item
-        </h1>
-
-      </header>
-
-      <div class="form-section">
-        <div class="form-card dashboard">
-
-          <span class="emoji-main emoji-form">🛍️</span>
-
-          <!-- Nome Produto -->
-          <div class="input-field">
-            <label>Nome do Produto<span class="required-mark">*</span></label>
-            <input type="text" id="item-name-input" placeholder="Ex: Arroz Integral" />
-          </div>
-
-          <!-- Tipo -->
-          <div class="input-field mt-20">
-            <label>Tipo</label>
-            <input type="text" id="item-desc-input" placeholder="Ex: kg | 500ml | caixa" />
-          </div>
-
-          <!-- Preço -->
-          <div class="input-field mt-20">
-            <label>Preço Unitário (R$)</label>
-            <input type="text" id="item-price-input" placeholder="0,00" oninput="formatCurrencyInput(this)" />
-          </div>
-
-          <!-- Quantidade -->
-          <div class="input-field mt-20">
-            <label>Quantidade<span class="required-mark">*</span></label>
-            <input type="number" id="item-quantity-input" placeholder="1" min="1" />
-          </div>
-
-          <!-- Categoria -->
-          <div class="input-field mt-20">
-            <label>Categoria</label>
-            <select id="item-category-select" class="category-select-input"></select>
-          </div>
-
-          <!-- Salvar Item -->
-          <button class="button-start mt-30" onclick="handleSaveItem()">
-            Salvar
-          </button>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ===================== DETALHES DA LISTA ===================== -->
-    <!-- ============================================================= -->
-    <div id="market-list-screen-details" class="screen-hidden">
-
-      <header class="small">
-
-        <!-- Voltar -->
-        <div class="header-action" onclick="exitDetailsScreen()">
-          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-        </div>
-
-        <!-- Título da Lista -->
-        <div class="header-details-container">
-          <h1 id="main-list-title" class="header-title header-title-details">
-            Detalhes
-          </h1>
-        </div>
-
-        <div class="header-action"></div>
-      </header>
-
-      <!-- ================= DASHBOARD DE RESUMO ================= -->
-      <div class="dashboard">
-
-        <div class="dashboard-header">
-          <h2 class="items-label">Resumo:</h2>
-          <span class="item-count" id="total-qty">0 itens</span>
-        </div>
-
-        <div class="status-text">
-          <span id="checked-count">0 comprado(s)</span>
-        </div>
-
-        <!-- Barra de Progresso -->
-        <div class="progress-container">
-          <div class="progress-bar" id="progress-bar"></div>
-        </div>
-
-        <!-- Resumo Financeiro -->
-        <div class="dashboard-finance">
-          <div class="finance-col">
-            <span class="finance-label">Previsão</span>
-            <span id="subtotal-all" class="finance-value-subtotal">R$ 0,00</span>
-          </div>
-
-          <div class="finance-col text-right">
-            <span class="finance-label">Total Marcado</span>
-            <span id="total-checked" class="finance-value-total">R$ 0,00</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ================= AÇÕES DE CATEGORIA & ITENS ================= -->
-      <div class="category-actions">
-
-        <!-- Botões Primários -->
-        <div class="action-buttons-group">
-
-          <button class="button-add-cat action-button-secondary" onclick="openNewCategoryForm()">
-            <ion-icon name="add-circle-outline" class="icon-primary-small"></ion-icon>
-            Nova Categoria
-          </button>
-
-          <button class="button-add-item action-button-primary" onclick="openNewItemForm()">
-            <ion-icon name="cart-outline" class="icon-white-small"></ion-icon>
-            Adicionar Item
-          </button>
-
-        </div>
-
-        <!-- Busca de Itens -->
-        <div class="search-group item-search-inline">
-          <ion-icon name="search-outline"></ion-icon>
-          <input type="text" id="item-search-input" placeholder="Buscar item..." />
-        </div>
-
-        <!-- Container Dinâmico de Itens -->
-        <div class="list-container" id="list-items-container"></div>
-
-      </div>
-    </div>
-
-    <!-- ============================================================= -->
-    <!-- ======================= DASHBOARD ======================= -->
-    <!-- ============================================================= -->
-    <div id="dashboard-screen" class="screen-hidden">
-
-      <header class="small">
-        <div class="header-action" onclick="showScreen('market-lists-screen')">
-          <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
-        </div>
-
-        <h1 class="header-title">Análise de Consumo</h1>
-
-        <div class="header-action" onclick="toggleFilterModal()">
-          <ion-icon name="options-outline" class="icon-filter"></ion-icon>
-        </div>
-      </header>
-
-      <div id="dashboard-empty-state" class="dashboard-empty-state"></div>
-
-      <div class="dashboard-content">
-        <div id="active-filter-indicator" class="active-filter-card screen-hidden">
-          <span>Filtrado por:</span>
-          <strong id="filter-text-display">Geral</strong>
-        </div>
-
-        <div class="metrics-section">
-          <h2 class="section-title">Performance Financeira</h2>
-
-          <div class="metrics-grid">
-            <div class="metric-card-stat">
-              <span class="stat-label">Ticket Médio (Lista)</span>
-              <span id="metric-ticket-medio" class="stat-value">R$ 0,00</span>
-              <span class="stat-subtext">No período selecionado</span>
-            </div>
-
-            <div class="metric-card-stat warning">
-              <span class="stat-label">Economia Potencial</span>
-              <span id="metric-economy" class="stat-value">R$ 0,00</span>
-              <span class="stat-subtext">Itens desejados vs. comprados</span>
-            </div>
-          </div>
-
-          <div class="chart-card">
-            <h3 class="chart-title">Gasto por Categoria</h3>
-            <canvas id="chart-share-wallet"></canvas>
-          </div>
-
-          <div class="metric-card-full cpi-card">
-            <h3 class="chart-title">Inflação Pessoal (Recorrentes)</h3>
-            <div id="cpi-container" class="cpi-list">
-              <div class="empty-state-minor">Sem dados comparativos</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="metrics-section mt-30">
-          <h2 class="section-title">Comportamento e Hábito</h2>
-
-          <div class="metrics-grid">
-            <div class="metric-card-stat">
-              <span class="stat-label">Top Local de Compra</span>
-              <span id="metric-top-local" class="stat-value-text">--</span>
-              <span id="metric-local-freq" class="stat-subtext">0 compras</span>
-            </div>
-
-            <div class="metric-card-stat">
-              <span class="stat-label">Itens Essenciais</span>
-              <span id="metric-essentials-count" class="stat-value">0</span>
-              <span class="stat-subtext">Em 100% das listas</span>
-            </div>
-          </div>
-
-          <!-- RECORRÊNCIA DE ITENS -->
-          <div class="metric-card-full">
-            <h3 class="chart-title">Recorrência de Itens (Frequência)</h3>
-            <div id="recurrence-itens-list" class="simple-data-list">
-              <div class="empty-state-minor">Gere mais listas para ver a frequência.</div>
-            </div>
-          </div>
-
-          <div class="chart-card">
-            <h3 class="chart-title">Previsão de Reposição (Próximos Itens)</h3>
-            <div id="restock-list" class="simple-data-list">
-              <div class="empty-state-minor">Sem histórico suficiente</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="metrics-section mt-30">
-          <h2 class="section-title">Eficiência da Compra</h2>
-
-          <div class="chart-card">
-            <h3 class="chart-title">Volume de Itens por Compra</h3>
-            <canvas id="chart-volume-itens"></canvas>
-          </div>
-
-          <div class="metrics-grid">
-            <div class="metric-card-stat success">
-              <span class="stat-label">Taxa de Conversão</span>
-              <span id="metric-conversao" class="stat-value">0%</span>
-              <span class="stat-subtext">Planejado vs. Comprado</span>
-            </div>
-
-            <div class="metric-card-stat info">
-              <span class="stat-label">Alerta de Preço</span>
-              <span id="metric-alert-price" class="stat-value-text">Ok</span>
-              <span class="stat-subtext">Variação significativa detectada</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="metrics-section mt-30 pb-30">
-          <h2 class="section-title">Insights de Saúde</h2>
-
-          <div class="chart-card">
-            <h3 class="chart-title">Perfil de Compra (Ratio)</h3>
-            <canvas id="chart-perfil-saude"></canvas>
-          </div>
-
-          <div class="metric-card-full sazonalidade-card">
-            <ion-icon name="leaf-outline"></ion-icon>
-            <p id="metric-seasonality-text">Inicie suas compras para gerar histórico de sazonalidade.</p>
-          </div>
-        </div>
-
       </div>
 
       <!-- ============================================================= -->
-      <!-- ===================== MODAL DE FILTROS ===================== -->
+      <!-- ===================== TOAST ===================== -->
       <!-- ============================================================= -->
-      <div id="filter-modal" class="modal-hidden">
-        <div class="modal-backdrop"></div>
+      <div id="toast" class="toast">
+        <ion-icon id="toast-icon" name="alert-circle-outline"></ion-icon>
+        <span id="toast-message"></span>
+      </div>
 
-        <div class="filter-card">
-          <!-- Header -->
-          <div class="filter-header">
-            <h3>Filtrar Análise</h3>
-            <button class="filter-close-button" onclick="toggleFilterModal()">
-              <ion-icon name="close-outline"></ion-icon>
+      <!-- ============================================================= -->
+      <!-- ===================== TELA DE ONBOARDING ===================== -->
+      <!-- ============================================================= -->
+      <div id="onboarding-screen" class="screen-hidden">
+        <div class="onboarding-card">
+          <span class="emoji-main">👋</span>
+          <h1 class="onboarding-title">Olá!</h1>
+          <p class="onboarding-subtitle">Para organizar suas compras, como
+            gostaria de ser chamado?</p>
+
+          <div class="onboarding-input-group">
+            <label>Seu nome</label>
+            <input type="text" id="user-name-input"
+              placeholder="Digite seu nome aqui..." />
+          </div>
+
+          <button class="button-start" onclick="handleUserIdentification()">
+            Começar a usar
+          </button>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== HOME SCREEN =========================== -->
+      <!-- ============================================================= -->
+      <div id="home-screen" class="screen-hidden">
+
+        <!-- Header Principal - Tamanho Médio -->
+        <header class="medium">
+          <h1>Market List</h1>
+        </header>
+
+        <!-- Conteúdo Central -->
+        <div class="home-content">
+          <div class="welcome-card">
+
+            <!-- Ícone ilustrativo -->
+            <span class="emoji-main">🛒</span>
+
+            <h2>Boas compras!</h2>
+            <p>Organize suas listas e controle seus gastos de forma simples.</p>
+
+            <!-- Ação Primária -->
+            <button class="button-start" onclick="openNewListForm()">
+              Criar nova lista
             </button>
+
+            <!-- Ação Secundária -->
+            <button class="button-secondary button-view-lists"
+              onclick="showScreen('market-lists-screen')">
+              Ver minhas listas
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== LISTS SCREEN ==================== -->
+      <!-- ============================================================= -->
+      <div id="market-lists-screen" class="screen-hidden">
+
+        <!-- Header Secundário - Tamanho Pequeno Fixo -->
+        <header class="small">
+
+          <!-- Botão Voltar -->
+          <div class="header-action" onclick="showScreen('home-screen')">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
 
-          <!-- Conteúdo dos Filtros -->
-          <div class="filter-body">
+          <h1 class="header-title">Listas de Compras</h1>
 
-            <!-- Seção: Tipo de Agrupamento (Chips) -->
-            <div class="filter-section">
-              <label class="filter-label">Tipo de Agrupamento</label>
-              <div class="filter-chips" id="filter-type-chips">
-                <button class="filter-chip active" data-value="geral" onclick="selectFilterType('geral')">
-                  Geral
-                </button>
-                <button class="filter-chip" data-value="mes" onclick="selectFilterType('mes')">
-                  Por Mês
-                </button>
-                <button class="filter-chip" data-value="periodo" onclick="selectFilterType('periodo')">
-                  Período
-                </button>
-                <button class="filter-chip" data-value="local" onclick="selectFilterType('local')">
-                  Por Local
-                </button>
+          <!-- Botão opções -->
+          <div class="header-action" id="button-options-list"
+            onclick="toggleMenuOptions(event)">
+            <ion-icon name="ellipsis-horizontal-outline"
+              class="icon-options-list"></ion-icon>
+          </div>
+
+        </header>
+
+        <!-- Campo de Busca - FORA do wrapper, fixo sobre o header -->
+        <div class="search-section">
+          <div class="search-group">
+            <ion-icon name="search-outline"></ion-icon>
+            <input type="text" id="search-input"
+              placeholder="Buscar por nome, data ou local..."
+              oninput="renderMarketLists()" />
+          </div>
+        </div>
+
+        <!-- Wrapper para conteúdo com scroll (apenas as listas) -->
+        <div class="lists-content-wrapper">
+
+          <!-- Container Dinâmico das Listas -->
+          <div class="list-container master-list"
+            id="lists-master-container"></div>
+
+        </div>
+
+        <div id="options-popover" class="popover-hidden" popover="manual">
+          <div class="popover-content">
+            <div class="popover-item" onclick="handlePopoverAction('new-list')">
+              <ion-icon name="add-circle-outline"></ion-icon>
+              <span>Nova Lista</span>
+            </div>
+            <div class="popover-divider"></div>
+            <div class="popover-item"
+              onclick="handlePopoverAction('dashboard')">
+              <ion-icon name="bar-chart-outline"></ion-icon>
+              <span>Dashboard (Análise)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== NEW LIST SCREEN ================= -->
+      <!-- ============================================================= -->
+      <div id="new-list-screen" class="screen-hidden">
+        <header class="small">
+          <!-- Voltar -->
+          <div class="header-action" onclick="handleBackFromForm()">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <h1 id="form-title" class="header-title header-title-left">
+            Nova Lista
+          </h1>
+
+        </header>
+
+        <div class="form-section">
+          <div class="form-card dashboard">
+            <span class="emoji-main emoji-form">📋</span>
+
+            <!-- Nome da Lista -->
+            <div class="input-field">
+              <label>Nome da Lista<span class="required-mark">*</span></label>
+              <input type="text" id="new-list-name"
+                placeholder="Ex: Compras do Mês" />
+            </div>
+
+            <!-- Local -->
+            <div class="input-field mt-20">
+              <label>Local da Compra</label>
+              <input type="text" id="new-list-location"
+                placeholder="Ex: Assaí Atacadista" />
+            </div>
+
+            <!-- Data -->
+            <div class="input-field mt-20">
+              <label>Data da Compra<span class="required-mark">*</span></label>
+              <input type="date" id="new-list-date" />
+            </div>
+
+            <!-- Botão Salvar -->
+            <button id="button-save-list" class="button-start mt-30"
+              onclick="handleSaveNewList()">
+              Salvar
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== NEW CATEGORY SCREEN ============= -->
+      <!-- ============================================================= -->
+      <div id="new-category-screen" class="screen-hidden">
+
+        <header class="small">
+
+          <div class="header-action"
+            onclick="showScreen('market-list-screen-details')">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <h1 id="category-form-title" class="header-title header-title-left">
+            Nova Categoria
+          </h1>
+
+        </header>
+
+        <div class="form-section">
+          <div class="form-card dashboard">
+
+            <span class="emoji-main emoji-form">📁</span>
+
+            <!-- Nome da Categoria -->
+            <div class="input-field">
+              <label>Nome da Categoria<span
+                  class="required-mark">*</span></label>
+              <input type="text" id="new-category-name"
+                placeholder="Ex: Higiene, Bebidas, Carnes..." />
+            </div>
+
+            <!-- Salvar Categoria -->
+            <button id="button-save-category" class="button-start mt-30"
+              onclick="handleSaveCategory()">
+              Salvar
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== NEW ITEM SCREEN ================== -->
+      <!-- ============================================================= -->
+      <div id="new-item-screen" class="screen-hidden">
+
+        <header class="small">
+
+          <div class="header-action"
+            onclick="showScreen('market-list-screen-details')">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <h1 id="item-form-title" class="header-title header-title-left">
+            Novo Item
+          </h1>
+
+        </header>
+
+        <div class="form-section">
+          <div class="form-card dashboard">
+
+            <span class="emoji-main emoji-form">🛍️</span>
+
+            <!-- Nome Produto -->
+            <div class="input-field">
+              <label>Nome do Produto<span class="required-mark">*</span></label>
+              <input type="text" id="item-name-input"
+                placeholder="Ex: Arroz Integral" />
+            </div>
+
+            <!-- Tipo -->
+            <div class="input-field mt-20">
+              <label>Tipo</label>
+              <input type="text" id="item-desc-input"
+                placeholder="Ex: kg | 500ml | caixa" />
+            </div>
+
+            <!-- Preço -->
+            <div class="input-field mt-20">
+              <label>Preço Unitário (R$)</label>
+              <input type="text" id="item-price-input" placeholder="0,00"
+                oninput="formatCurrencyInput(this)" />
+            </div>
+
+            <!-- Quantidade -->
+            <div class="input-field mt-20">
+              <label>Quantidade<span class="required-mark">*</span></label>
+              <input type="number" id="item-quantity-input" placeholder="1"
+                min="1" />
+            </div>
+
+            <!-- Categoria -->
+            <div class="input-field mt-20">
+              <label>Categoria</label>
+              <select id="item-category-select"
+                class="category-select-input"></select>
+            </div>
+
+            <!-- Salvar Item -->
+            <button class="button-start mt-30" onclick="handleSaveItem()">
+              Salvar
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== DETAILS LIST SCREEN ===================== -->
+      <!-- ============================================================= -->
+      <div id="market-list-screen-details" class="screen-hidden">
+
+        <!-- Header Pequeno Fixo -->
+        <header class="small">
+          <!-- Voltar -->
+          <div class="header-action" onclick="exitDetailsScreen()">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <!-- Título da Lista -->
+          <div class="header-details-container">
+            <h1 id="main-list-title" class="header-title header-title-details">
+              Detalhes
+            </h1>
+          </div>
+
+          <div class="header-action"></div>
+        </header>
+
+        <!-- ================= CARD DO RESUMO (fixo, sobrepondo header) ================= -->
+        <div class="dashboard">
+
+          <div class="dashboard-header">
+            <h2 class="items-label">Resumo:</h2>
+            <span class="item-count" id="total-qty">0 itens</span>
+          </div>
+
+          <div class="status-text">
+            <span id="checked-count">0 comprado(s)</span>
+          </div>
+
+          <!-- Barra de Progresso -->
+          <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+
+          <!-- Resumo Financeiro -->
+          <div class="dashboard-finance">
+            <div class="finance-col">
+              <span class="finance-label">Previsão</span>
+              <span id="subtotal-all" class="finance-value-subtotal">R$
+                0,00</span>
+            </div>
+
+            <div class="finance-col text-right">
+              <span class="finance-label">Total Marcado</span>
+              <span id="total-checked" class="finance-value-total">R$
+                0,00</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Wrapper para conteúdo com scroll (categorias e itens) -->
+        <div class="details-content-wrapper">
+
+          <!-- ================= AÇÕES DE CATEGORIA & ITENS ================= -->
+          <div class="category-actions">
+
+            <!-- Botões Primários -->
+            <div class="action-buttons-group">
+
+              <button class="button-add-cat action-button-secondary"
+                onclick="openNewCategoryForm()">
+                <ion-icon name="add-circle-outline"
+                  class="icon-primary-small"></ion-icon>
+                Nova Categoria
+              </button>
+
+              <button class="button-add-item action-button-primary"
+                onclick="openNewItemForm()">
+                <ion-icon name="cart-outline"
+                  class="icon-white-small"></ion-icon>
+                Adicionar Item
+              </button>
+
+            </div>
+
+            <!-- Busca de Itens -->
+            <div class="search-group item-search-inline">
+              <ion-icon name="search-outline"></ion-icon>
+              <input type="text" id="item-search-input"
+                placeholder="Buscar item..." />
+            </div>
+
+            <!-- Container Dinâmico de Itens -->
+            <div class="list-container" id="list-items-container"></div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ======================= DASHBOARD SCREEN ======================= -->
+      <!-- ============================================================= -->
+      <div id="dashboard-screen" class="screen-hidden">
+
+        <!-- Header Pequeno Fixo -->
+        <header class="small">
+          <div class="header-action"
+            onclick="showScreen('market-lists-screen')">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <h1 class="header-title">Análise de Consumo</h1>
+
+          <div class="header-action" onclick="toggleFilterModal()">
+            <ion-icon name="options-outline" class="icon-filter"></ion-icon>
+          </div>
+        </header>
+
+        <!-- Wrapper para conteúdo com scroll (header fixo) -->
+        <div class="dashboard-content-wrapper">
+
+          <div id="dashboard-empty-state" class="dashboard-empty-state"></div>
+
+          <div class="dashboard-content">
+            <div id="active-filter-indicator"
+              class="active-filter-card screen-hidden">
+              <span>Filtrado por:</span>
+              <strong id="filter-text-display">Geral</strong>
+            </div>
+
+            <!-- Performance Financeira -->
+            <div class="metrics-section ">
+              <h2 class="section-title">Performance Financeira</h2>
+
+              <div class="metrics-grid">
+                <div class="metric-card-stat info">
+                  <span class="stat-label">Ticket Médio (Lista)</span>
+                  <span id="metric-ticket-medio" class="stat-value">R$
+                    0,00</span>
+                  <span class="stat-subtext">No período selecionado</span>
+                </div>
+
+                <div class="metric-card-stat warning">
+                  <span class="stat-label">Economia Potencial</span>
+                  <span id="metric-economy" class="stat-value">R$ 0,00</span>
+                  <span class="stat-subtext">Itens desejados vs.
+                    comprados</span>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <h3 class="chart-title">Gasto por Categoria</h3>
+                <canvas id="chart-share-wallet"></canvas>
+              </div>
+
+              <div class="metric-card-full cpi-card">
+                <h3 class="chart-title">Inflação Pessoal (Recorrentes)</h3>
+                <div id="cpi-container" class="cpi-list">
+                  <div class="empty-state-minor">Sem dados comparativos</div>
+                </div>
               </div>
             </div>
 
-            <!-- Seção Dinâmica: Inputs específicos do filtro selecionado -->
-            <div class="filter-section" id="dynamic-filter-section" style="display: none;">
-              <label class="filter-label" id="dynamic-filter-label"></label>
-              <div id="dynamic-filter-inputs"></div>
+            <!-- Comportamento e Hábito -->
+            <div class="metrics-section mt-30">
+              <h2 class="section-title">Comportamento e Hábito</h2>
+
+              <div class="metrics-grid">
+                <div class="metric-card-stat">
+                  <span class="stat-label">Top Local de Compra</span>
+                  <span id="metric-top-local" class="stat-value-text">--</span>
+                  <span id="metric-local-freq" class="stat-subtext">0
+                    compras</span>
+                </div>
+
+                <div class="metric-card-stat">
+                  <span class="stat-label">Itens Essenciais</span>
+                  <span id="metric-essentials-count" class="stat-value">0</span>
+                  <span class="stat-subtext">Em 100% das listas</span>
+                </div>
+              </div>
+
+              <!-- RECORRÊNCIA DE ITENS -->
+              <div class="metric-card-full">
+                <h3 class="chart-title">Recorrência de Itens (Frequência)</h3>
+                <div id="recurrence-itens-list" class="simple-data-list">
+                  <div class="empty-state-minor">Gere mais listas para ver a
+                    frequência.</div>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <h3 class="chart-title">Previsão de Reposição (Próximos
+                  Itens)</h3>
+                <div id="restock-list" class="simple-data-list">
+                  <div class="empty-state-minor">Sem histórico suficiente</div>
+                </div>
+              </div>
             </div>
 
-          </div>
+            <!-- Eficiência da Compra mt-30-->
+            <div class="metrics-section">
+              <h2 class="section-title">Eficiência da Compra</h2>
 
-          <!-- Footer: Ações -->
-          <div class="filter-footer">
-            <button class="button-filter-clear" onclick="clearFilter()">
-              Limpar
-            </button>
-            <button id="apply-filter-button" class="button-filter-apply" onclick="applyDashboardFilter()">
-              Aplicar Filtro
-            </button>
+              <div class="metrics-grid">
+                <div class="metric-card-stat success">
+                  <span class="stat-label">Taxa de Conversão</span>
+                  <span id="metric-conversao" class="stat-value">0%</span>
+                  <span class="stat-subtext">Planejado vs. Comprado</span>
+                </div>
+
+                <div class="metric-card-stat info">
+                  <span class="stat-label">Alerta de Preço</span>
+                  <span id="metric-alert-price"
+                    class="stat-value-text">Ok</span>
+                  <span class="stat-subtext">Variação significativa
+                    detectada</span>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <h3 class="chart-title">Volume de Itens por Compra</h3>
+                <canvas id="chart-volume-itens"></canvas>
+              </div>
+            </div>
+
+            <!-- Insights de Saúde -->
+            <div class="metrics-section mt-30 pb-30">
+              <h2 class="section-title">Insights de Saúde</h2>
+
+              <div class="chart-card">
+                <h3 class="chart-title">Perfil de Compra (Ratio)</h3>
+                <canvas id="chart-perfil-saude"></canvas>
+              </div>
+
+              <div class="metric-card-full sazonalidade-card">
+                <ion-icon name="leaf-outline"></ion-icon>
+                <p id="metric-seasonality-text">Inicie suas compras para gerar
+                  histórico de sazonalidade.</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
+        <!-- ============================================================= -->
+        <!-- ===================== MODAL DE FILTROS ===================== -->
+        <!-- ============================================================= -->
+        <div id="filter-modal" class="modal-hidden">
+          <div class="modal-backdrop"></div>
+
+          <div class="filter-card">
+            <!-- Header -->
+            <div class="filter-header">
+              <h3>Filtrar Análise</h3>
+              <button class="filter-close-button" onclick="toggleFilterModal()">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+            </div>
+
+            <!-- Conteúdo dos Filtros -->
+            <div class="filter-body">
+
+              <!-- Seção: Tipo de Agrupamento (Chips) -->
+              <div class="filter-section">
+                <label class="filter-label">Tipo de Agrupamento</label>
+                <div class="filter-chips" id="filter-type-chips">
+                  <button class="filter-chip active" data-value="geral"
+                    onclick="selectFilterType('geral')">
+                    Geral
+                  </button>
+                  <button class="filter-chip" data-value="mes"
+                    onclick="selectFilterType('mes')">
+                    Por Mês
+                  </button>
+                  <button class="filter-chip" data-value="periodo"
+                    onclick="selectFilterType('periodo')">
+                    Período
+                  </button>
+                  <button class="filter-chip" data-value="local"
+                    onclick="selectFilterType('local')">
+                    Por Local
+                  </button>
+                </div>
+              </div>
+
+              <!-- Seção Dinâmica: Inputs específicos do filtro selecionado -->
+              <div class="filter-section" id="dynamic-filter-section"
+                style="display: none;">
+                <label class="filter-label" id="dynamic-filter-label"></label>
+                <div id="dynamic-filter-inputs"></div>
+              </div>
+
+            </div>
+
+            <!-- Footer: Ações -->
+            <div class="filter-footer">
+              <button class="button-filter-clear" onclick="clearFilter()">
+                Limpar
+              </button>
+              <button id="apply-filter-button" class="button-filter-apply"
+                onclick="applyDashboardFilter()">
+                Aplicar Filtro
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -585,9 +645,10 @@
     <script type="module" src="js/details.js"></script>
     <script type="module" src="js/dashboard.js"></script>
 
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-
-</body>
+    <script type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  </body>
 
 </html>
