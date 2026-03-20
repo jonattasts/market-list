@@ -123,7 +123,7 @@ window.saveAndSync = async function () {
 /* --- LÓGICA DE CONFIGURAÇÃO COM UI DE ANIMAÇÃO --- */
 async function runSetupAnimation(userName) {
   const overlay = document.getElementById("sync-overlay");
-  const progressBar = document.getElementById("sync-progress");
+  const progressBar = document.getElementById("sync-progress-bar");
   const syncText = document.querySelector(".sync-text");
   const syncSubtext = document.querySelector(".sync-subtext"); // Ativa a Overlay Visual
 
