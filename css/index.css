@@ -26,12 +26,20 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   font-family: "Inter", sans-serif;
   margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
-  background-color: #e0e3e7; /* Cor de fundo externa para destaque do container */
+  background-color: #e0e3e7;
+  /* Previne scroll no body/html */
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  touch-action: none; /* Previne scroll de toque no body */
 }
 
 /* ==========================================================================
@@ -45,10 +53,14 @@ body {
   flex-direction: column;
   overflow: hidden;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height para mobile */
   position: relative;
+  /* Garante que o container capture todos os eventos de toque */
+  touch-action: pan-y;
+  overscroll-behavior: none;
 }
 
-/* Header base - tamanho grande (padrão para telas que não especificam) */
+/* Header base - fixo no topo */
 header {
   background-color: var(--primary);
   color: white;
@@ -57,7 +69,14 @@ header {
   justify-content: space-around;
   align-items: center;
   flex-shrink: 0;
-  overflow: hidden;
+  /* Fixo no topo - nunca move com scroll */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Previne que o header seja arrastado */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Header médio - para Home */

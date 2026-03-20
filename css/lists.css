@@ -5,26 +5,32 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   position: relative;
   overflow: hidden;
 }
 
-/* Header fixo com padding ajustado para acomodar a search sobreposta */
+/* Header fixo */
 #market-lists-screen header.small {
-  padding-bottom: 50px; /* Aumentado para criar espaço visual para a search */
-  position: relative;
-  z-index: 1;
+  padding-bottom: 50px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  /* Previne interação de scroll no header */
+  touch-action: none;
 }
 
-/* Search section posicionada sobre o header (efeito de overlap) */
+/* Search section fixa sobre o header */
 .search-section {
   padding: 0 16px;
   margin-top: -25px;
   margin-bottom: 15px;
   position: relative;
-  z-index: 10;
+  z-index: 20;
   flex-shrink: 0;
+  /* Previne scroll na search */
+  touch-action: none;
 }
 
 .search-group {
@@ -56,14 +62,20 @@
   opacity: 0.6;
 }
 
-/* Wrapper para conteúdo com scroll - abaixo da search fixa */
+/* Wrapper para conteúdo com scroll */
 .lists-content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   z-index: 1;
+  /* Garante scroll suave e contido */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* Previne que o scroll "vaze" para o body */
+  touch-action: pan-y;
 }
 
 .header-action {
@@ -73,6 +85,8 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  /* Previne scroll ao tocar nos botões */
+  touch-action: none;
 }
 
 .empty-state {
@@ -130,10 +144,9 @@
   transition: width 0.4s ease;
 }
 
-/* Container de listas - ajustado para scroll no wrapper */
+/* Container de listas */
 .list-container {
   flex: 1;
-  overflow-y: visible;
 }
 
 .list-container.master-list {
@@ -162,13 +175,11 @@
   height: auto;
 }
 
-/* Estado Escondido */
 .popover-hidden {
   display: none !important;
   opacity: 0;
 }
 
-/* Estado Visível com animação suave */
 .popover-visible {
   display: block !important;
   opacity: 1;

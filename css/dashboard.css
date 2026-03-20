@@ -5,7 +5,7 @@
   width: 100%;
   display: none;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
   position: relative;
   overflow: hidden;
@@ -77,7 +77,6 @@
   text-align: center;
   position: relative;
   z-index: 1;
-  overflow-y: auto;
 }
 
 .dashboard-empty-state img {
@@ -101,14 +100,19 @@
   line-height: 1.6;
 }
 
-/* Wrapper para conteúdo com scroll - header fixo */
+/* Wrapper para conteúdo com scroll - ÚNICA área scrollável */
 .dashboard-content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   z-index: 1;
+  /* Garante scroll suave e contido */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 /* Conteúdo Principal */
