@@ -57,6 +57,7 @@ header {
   justify-content: space-around;
   align-items: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 /* Header médio - para Home */
