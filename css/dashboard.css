@@ -728,7 +728,7 @@
 }
 
 /* ==========================================================================
-   ESTILOS ESPECÍFICOS PARA ITENS ESSENCIAIS
+   ITENS ESSENCIAIS
    ========================================================================== */
 
 /* Container da lista de itens essenciais */
@@ -831,4 +831,65 @@
   margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   TOP LOCAIS MAIS VISITADOS
+   ========================================================================== */
+
+/* Container da lista de top locais */
+.top-locations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Informações do local (lado esquerdo) */
+.location-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Container do contador (lado direito) */
+.location-count-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Badge de contagem com cor dinâmica baseada na posição */
+.count-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Destaque para o primeiro lugar */
+.count-badge.first-place {
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.5);
+  animation: pulseBadge 2s ease-in-out infinite;
+}
+
+/* Card específico para top locais */
+.top-locations-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 51, 230, 0.2);
+}
+
+.top-locations-card::before {
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 1;
 }

@@ -22,6 +22,7 @@ const paginationState = {
   recurrence: { currentPage: 1, itemsPerPage: 4 },
   restock: { currentPage: 1, itemsPerPage: 4 },
   essentials: { currentPage: 1, itemsPerPage: 4 },
+  topLocations: { currentPage: 1, itemsPerPage: 4 },
 };
 
 // Cache dos dados calculados para evitar re-processamento desnecessário
@@ -30,6 +31,7 @@ let cachedDashboardData = {
   recurrenceItems: null,
   restockItems: null,
   essentialsItems: null,
+  topLocationsItems: null,
   lastFilter: null,
 };
 
@@ -216,6 +218,7 @@ function resetPagination() {
   paginationState.recurrence.currentPage = 1;
   paginationState.restock.currentPage = 1;
   paginationState.essentials.currentPage = 1;
+  paginationState.topLocations.currentPage = 1;
 }
 
 function clearCache() {
@@ -224,6 +227,7 @@ function clearCache() {
     recurrenceItems: null,
     restockItems: null,
     essentialsItems: null,
+    topLocationsItems: null,
     lastFilter: null,
   };
 }
@@ -305,7 +309,7 @@ function processDashboardData(allLists) {
   // 2. MÉTRICAS DE COMPORTAMENTO E HÁBITO
   // ---------------------------------------------------------
 
-  // A. Índice de Fidelidade de Local
+  // A. Índice de Fidelidade de Local - Card pequeno + Lista dos 3 mais visitados
   calculateLocationFidelity(filteredLists);
 
   // B. Recorrência de Itens e Ciclo de Reposição - Com critérios de recorrência
@@ -476,26 +480,140 @@ function calculateCPI(filteredLists) {
 
 /**
  * Métrica 2.A: Índice de Fidelidade de Local
+ *
+ * Atualizado para exibir:
+ * - Card pequeno: TOP local e quantidade de compras
+ * - Lista completa: Top 3 locais mais visitados com última data de compra
  */
 function calculateLocationFidelity(filteredLists) {
-  const locationsVisited = {};
+  const locationsData = {};
+
+  // Agrega dados por local
   filteredLists.forEach((filteredList) => {
     const location = filteredList.location || "Não Informado";
-    locationsVisited[location] = (locationsVisited[location] || 0) + 1;
+    const listDate = parseDateLocal(filteredList.date);
+
+    if (!locationsData[location]) {
+      locationsData[location] = {
+        name: location,
+        count: 0,
+        lastPurchaseDate: null,
+      };
+    }
+
+    locationsData[location].count += 1;
+
+    // Atualiza a última data de compra se for mais recente
+    if (
+      !locationsData[location].lastPurchaseDate ||
+      listDate > locationsData[location].lastPurchaseDate
+    ) {
+      locationsData[location].lastPurchaseDate = listDate;
+    }
   });
 
-  let topLocation = "--";
-  let maxFreq = 0;
+  // Converte para array e ordena por quantidade de compras (decrescente)
+  const sortedLocations = Object.values(locationsData).sort(
+    (locationA, locationB) => locationB.count - locationA.count,
+  );
 
-  for (const locationVisited in locationsVisited) {
-    if (locationsVisited[locationVisited] > maxFreq) {
-      maxFreq = locationsVisited[locationVisited];
-      topLocation = locationVisited;
-    }
+  // Atualiza o card pequeno com o TOP local
+  const topLocation = sortedLocations.length > 0 ? sortedLocations[0] : null;
+  document.getElementById("metric-top-local").innerText = topLocation
+    ? topLocation.name
+    : "--";
+  document.getElementById("metric-local-freq").innerText = topLocation
+    ? `${topLocation.count} compras`
+    : "0 compras";
+
+  // Renderiza a lista dos top 3 locais mais visitados
+  const topLocationsContainer = document.getElementById(
+    "top-locations-container",
+  );
+
+  // Verifica cache
+  const currentFilterKey = JSON.stringify(activeFilter);
+  if (
+    cachedDashboardData.topLocationsItems &&
+    cachedDashboardData.lastFilter === currentFilterKey
+  ) {
+    renderPaginatedList(
+      topLocationsContainer,
+      cachedDashboardData.topLocationsItems,
+      "topLocations",
+      (item) => `
+        <div class="location-item-info">
+          <div class="item-main-text">${item.name}</div>
+          <span class="item-sub-text">Última compra: ${item.lastPurchaseDateFormatted}</span>
+        </div>
+      `,
+      (item) => `
+        <div class="location-count-badge">
+          <div class="count-badge" style="background: ${item.badgeColor}">
+            ${item.count}
+          </div>
+          <span class="item-sub-text">${item.count > 1 ? "compras" : "compra"}</span>
+        </div>
+      `,
+    );
+    return;
   }
 
-  document.getElementById("metric-top-local").innerText = topLocation;
-  document.getElementById("metric-local-freq").innerText = `${maxFreq} compras`;
+  topLocationsContainer.innerHTML = "";
+
+  if (sortedLocations.length === 0) {
+    topLocationsContainer.innerHTML = `<div class="empty-state-minor">Nenhum local de compra registrado.</div>`;
+    return;
+  }
+
+  // Pega apenas os 3 primeiros locais
+  const topThreeLocations = sortedLocations.slice(0, 3);
+
+  const topLocationsItems = topThreeLocations.map((location, index) => {
+    // Define cor do badge baseado na posição
+    let badgeColor = "rgba(36, 150, 137, 0.5)"; // Verde para 1º
+
+    if (index === 1) {
+      badgeColor = "rgba(52, 152, 219, 0.4)"; // Azul para 2º
+    } else if (index === 2) {
+      badgeColor = "rgba(235, 156, 29, 0.6)"; // Laranja para 3º
+    }
+
+    return {
+      name: location.name,
+      count: location.count,
+      lastPurchaseDate: location.lastPurchaseDate,
+      lastPurchaseDateFormatted: formatDateBRL(
+        location.lastPurchaseDate.toISOString().split("T")[0],
+      ),
+      badgeColor: badgeColor,
+      position: index + 1,
+    };
+  });
+
+  // Armazena em cache
+  cachedDashboardData.topLocationsItems = topLocationsItems;
+  cachedDashboardData.lastFilter = currentFilterKey;
+
+  renderPaginatedList(
+    topLocationsContainer,
+    topLocationsItems,
+    "topLocations",
+    (item) => `
+      <div class="location-item-info">
+        <div class="item-main-text">${item.name}</div>
+        <span class="item-sub-text">Última compra: ${item.lastPurchaseDateFormatted}</span>
+      </div>
+    `,
+    (item) => `
+      <div class="location-count-badge">
+        <div class="count-badge" style="background: ${item.badgeColor}">
+          ${item.count}
+        </div>
+        <span class="item-sub-text">${item.count > 1 ? "compras" : "compra"}</span>
+      </div>
+    `,
+  );
 }
 
 /**
