@@ -208,6 +208,14 @@
   margin-bottom: 16px;
 }
 
+.metrics-grid.single-column {
+  grid-template-columns: 1fr;
+}
+
+.metric-card-stat.full-width {
+  grid-column: 1 / -1;
+}
+
 /* Cards de Métricas Futuristas */
 .metric-card-stat {
   background: rgba(255, 255, 255, 0.05);

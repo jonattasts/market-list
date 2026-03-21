@@ -331,9 +331,6 @@ function processDashboardData(allLists) {
   document.getElementById("metric-conversao").innerText =
     `${conversionRate.toFixed(0)}%`;
 
-  // C. Variabilidade de Preço por Local
-  calculatePriceVariability(filteredLists);
-
   // ---------------------------------------------------------
   // 4. INSIGHTS DE SAÚDE E NUTRIÇÃO
   // ---------------------------------------------------------
@@ -1212,70 +1209,6 @@ function createPaginationControls(
   controls.appendChild(nextBtn);
 
   return controls;
-}
-
-/**
- * Métrica 3.C: Variabilidade de Preço por Local
- */
-function calculatePriceVariability(filteredLists) {
-  const itemPricesByLocal = {};
-
-  filteredLists.forEach((filteredList) => {
-    const local = filteredList.location || "Não Informado";
-    (filteredList.categories || []).forEach((category) => {
-      category.items.forEach((item) => {
-        if (!item.checked) return;
-        const normalizedName = window.normalizeString(item.name);
-        if (!itemPricesByLocal[normalizedName])
-          itemPricesByLocal[normalizedName] = {};
-
-        const unitValue = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-
-        // Mantém o menor preço encontrado em cada local
-        if (
-          !itemPricesByLocal[normalizedName][local] ||
-          unitValue < itemPricesByLocal[normalizedName][local]
-        ) {
-          itemPricesByLocal[normalizedName][local] = unitValue;
-        }
-      });
-    });
-  });
-
-  let variationDetected = false;
-  let totalVariations = 0;
-  let biggestVariation = 0;
-
-  Object.keys(itemPricesByLocal).forEach((name) => {
-    const locations = itemPricesByLocal[name];
-    const prices = Object.values(locations);
-
-    if (prices.length >= 2) {
-      const maxPrice = Math.max(...prices);
-      const minPrice = Math.min(...prices);
-
-      if (minPrice > 0) {
-        const variationPercent = ((maxPrice - minPrice) / minPrice) * 100;
-        if (variationPercent > 15) {
-          variationDetected = true;
-          totalVariations++;
-          if (variationPercent > biggestVariation)
-            biggestVariation = variationPercent;
-        }
-      }
-    }
-  });
-
-  const metricAlertPrice = document.getElementById("metric-alert-price");
-  if (variationDetected) {
-    metricAlertPrice.innerText = `${totalVariations} itens`;
-    metricAlertPrice.style.color = "var(--danger)";
-  } else {
-    metricAlertPrice.innerText = `Ok`;
-    metricAlertPrice.style.color = "var(--accent-green)";
-  }
 }
 
 /**
