@@ -21,6 +21,7 @@ const paginationState = {
   cpi: { currentPage: 1, itemsPerPage: 4 },
   recurrence: { currentPage: 1, itemsPerPage: 4 },
   restock: { currentPage: 1, itemsPerPage: 4 },
+  essentials: { currentPage: 1, itemsPerPage: 4 },
 };
 
 // Cache dos dados calculados para evitar re-processamento desnecessário
@@ -28,6 +29,7 @@ let cachedDashboardData = {
   cpiItems: null,
   recurrenceItems: null,
   restockItems: null,
+  essentialsItems: null,
   lastFilter: null,
 };
 
@@ -37,6 +39,11 @@ let cachedDashboardData = {
 const RECURRENCE_CONFIG = {
   minLists: 2, // Mínimo de listas diferentes
   monthsLimit: 3, // Meses máximos sem comprar
+};
+
+const ESSENTIALS_CONFIG = {
+  minPercentage: 50, // Porcentagem mínima de aparição (50%)
+  monthsLimit: 3, // Considerar apenas últimos 3 meses
 };
 
 /* ==========================================================================
@@ -82,9 +89,23 @@ function getRecencyLimitDate() {
   const today = new Date();
   return new Date(
     today.getFullYear(),
-    today.getMonth() - RECURRENCE_CONFIG.monthsLimit,
+    today.getMonth() - ESSENTIALS_CONFIG.monthsLimit,
     today.getDate(),
   );
+}
+
+/**
+ * Verifica se a data está dentro do limite de meses configurado
+ */
+function isWithinMonthsLimit(dateStr, monthsLimit) {
+  const itemDate = parseDateLocal(dateStr);
+  const today = new Date();
+  const limitDate = new Date(
+    today.getFullYear(),
+    today.getMonth() - monthsLimit,
+    today.getDate(),
+  );
+  return itemDate >= limitDate;
 }
 
 /* ==========================================================================
@@ -132,6 +153,7 @@ function extractRecurringData(lists) {
             lastPurchaseDate: null,
             prices: [],
             dates: [],
+            totalQuantity: 0,
           };
         }
 
@@ -144,6 +166,9 @@ function extractRecurringData(lists) {
         });
 
         itemsData[normalizedName].dates.push(list.date);
+
+        // Acumula a quantidade total comprada
+        itemsData[normalizedName].totalQuantity += item.quantity || 1;
 
         const itemDate = parseDateLocal(list.date);
         if (
@@ -190,6 +215,7 @@ function resetPagination() {
   paginationState.cpi.currentPage = 1;
   paginationState.recurrence.currentPage = 1;
   paginationState.restock.currentPage = 1;
+  paginationState.essentials.currentPage = 1;
 }
 
 function clearCache() {
@@ -197,6 +223,7 @@ function clearCache() {
     cpiItems: null,
     recurrenceItems: null,
     restockItems: null,
+    essentialsItems: null,
     lastFilter: null,
   };
 }
@@ -283,6 +310,9 @@ function processDashboardData(allLists) {
 
   // B. Recorrência de Itens e Ciclo de Reposição - Com critérios de recorrência
   calculateItemRecurrenceAndRestock(filteredLists);
+
+  // C. Itens Essenciais - Baseado em TODAS as listas dos últimos 3 meses (50% de aparição)
+  calculateEssentialItems(allLists);
 
   // ---------------------------------------------------------
   // 3. MÉTRICAS DE EFICIÊNCIA DA COMPRA
@@ -469,6 +499,151 @@ function calculateLocationFidelity(filteredLists) {
 }
 
 /**
+ * Métrica 2.C: Itens Essenciais
+ *
+ * Considera TODAS as listas dos últimos 3 meses.
+ * Item é essencial se aparecer em pelo menos 50% das listas.
+ * Exibe: nome do item, porcentagem de aparição e quantidade total comprada.
+ */
+function calculateEssentialItems(allLists) {
+  const container = document.getElementById("essentials-container");
+
+  if (!container) return;
+
+  // Verifica cache
+  const currentFilterKey = JSON.stringify(activeFilter);
+  if (
+    cachedDashboardData.essentialsItems &&
+    cachedDashboardData.lastFilter === currentFilterKey
+  ) {
+    renderPaginatedList(
+      container,
+      cachedDashboardData.essentialsItems,
+      "essentials",
+      (item) => `
+        <div class="essential-item-info">
+          <div class="item-main-text">${item.name}</div>
+          <span class="item-sub-text">Qtd. total comprada: ${item.totalQuantity} unid.</span>
+        </div>
+      `,
+      (item) => `
+        <div class="essential-percentage">
+          <div class="percentage-badge" style="background: ${item.percentageColor}">
+            ${item.appearancePercentage.toFixed(0)}%
+          </div>
+          <span class="item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
+        </div>
+      `,
+    );
+    return;
+  }
+
+  container.innerHTML = "";
+
+  // Filtra apenas listas dos últimos 3 meses
+  const recentLists = allLists.filter((list) =>
+    isWithinMonthsLimit(list.date, ESSENTIALS_CONFIG.monthsLimit),
+  );
+
+  if (recentLists.length === 0) {
+    container.innerHTML = `<div class="empty-state-minor">Nenhuma lista nos últimos ${ESSENTIALS_CONFIG.monthsLimit} meses.</div>`;
+    return;
+  }
+
+  // Extrai dados de todos os itens das listas recentes
+  const itemsData = {};
+
+  recentLists.forEach((list) => {
+    (list.categories || []).forEach((category) => {
+      category.items.forEach((item) => {
+        if (!item.checked) return;
+
+        const normalizedName = window.normalizeString(item.name);
+
+        if (!itemsData[normalizedName]) {
+          itemsData[normalizedName] = {
+            name: item.name,
+            listIds: new Set(),
+            totalQuantity: 0,
+          };
+        }
+
+        itemsData[normalizedName].listIds.add(list.id);
+        itemsData[normalizedName].totalQuantity += item.quantity || 1;
+      });
+    });
+  });
+
+  const totalListsCount = recentLists.length;
+
+  const essentialItems = [];
+
+  Object.keys(itemsData).forEach((name) => {
+    const itemData = itemsData[name];
+    const listsCount = itemData.listIds.size;
+    const appearancePercentage = (listsCount / totalListsCount) * 100;
+
+    // Item é essencial se aparece em pelo menos 50% das listas
+    if (appearancePercentage >= ESSENTIALS_CONFIG.minPercentage) {
+      let percentageColor = "rgba(36, 150, 137, 0.6)"; // Verde forte para 90%+
+
+      if (appearancePercentage <= 89 && appearancePercentage >= 70) {
+        percentageColor = "rgba(76, 51, 230, 0.5)"; // Roxo para 70-89%
+      } else if (appearancePercentage <= 69) {
+        percentageColor = "rgba(52, 152, 219, 0.4)"; // Azul para 50-69%
+      }
+
+      essentialItems.push({
+        name: window.capitalize(itemData.name),
+        appearancePercentage: appearancePercentage,
+        listsCount: listsCount,
+        totalListsCount: totalListsCount,
+        totalQuantity: itemData.totalQuantity,
+        percentageColor: percentageColor,
+      });
+    }
+  });
+
+  // Ordena por porcentagem de aparição (maior primeiro)
+  essentialItems.sort(
+    (a, b) => b.appearancePercentage - a.appearancePercentage,
+  );
+
+  if (essentialItems.length === 0) {
+    container.innerHTML = `<div class="empty-state-minor">Nenhum item essencial encontrado (aparece em menos de ${ESSENTIALS_CONFIG.minPercentage}% das listas).</div>`;
+    return;
+  }
+
+  // Atualiza o contador no card superior
+  document.getElementById("metric-essentials-count").innerText =
+    essentialItems.length;
+
+  // Armazena em cache
+  cachedDashboardData.essentialsItems = essentialItems;
+  cachedDashboardData.lastFilter = currentFilterKey;
+
+  renderPaginatedList(
+    container,
+    essentialItems,
+    "essentials",
+    (item) => `
+      <div class="essential-item-info">
+        <div class="item-main-text">${item.name}</div>
+        <span class="item-sub-text">Qtd. total comprada: ${item.totalQuantity} unid.</span>
+      </div>
+    `,
+    (item) => `
+      <div class="essential-percentage">
+        <div class="percentage-badge" style="background: ${item.percentageColor}">
+          ${item.appearancePercentage.toFixed(0)}%
+        </div>
+        <span class="item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
+      </div>
+    `,
+  );
+}
+
+/**
  * Métrica 2.A e 2.B: Recorrência de Itens e Ciclo de Reposição
  *
  * REGRA DE RECORRÊNCIA: Exibe apenas itens que atendem aos critérios em RECURRENCE_CONFIG
@@ -487,17 +662,8 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
     }
   });
 
-  // Itens Essenciais: aparecem em 100% das listas
-  const essentials = Object.keys(recurringData).filter((name) => {
-    return recurringData[name].listIds.size === listCount;
-  });
-  document.getElementById("metric-essentials-count").innerText =
-    essentials.length;
-
   // EXIBIÇÃO DE RECORRÊNCIA (FREQUÊNCIA) ---
-  const recurrenceContainer = document.getElementById(
-    "recurrence-itens-list",
-  );
+  const recurrenceContainer = document.getElementById("recurrence-itens-list");
 
   // Verifica cache
   const currentFilterKey = JSON.stringify(activeFilter);
@@ -780,7 +946,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
 /**
  * @param {HTMLElement} container - Elemento container onde a lista será renderizada
  * @param {Array} items - Array de itens a serem renderizados
- * @param {string} paginationKey - Chave do estado de paginação ('cpi', 'recurrence', 'restock')
+ * @param {string} paginationKey - Chave do estado de paginação ('cpi', 'recurrence', 'restock', 'essentials')
  * @param {Function} renderLeftContent - Função que retorna HTML do conteúdo esquerdo (recebe item)
  * @param {Function} renderRightContent - Função que retorna HTML do conteúdo direito (recebe item)
  */
