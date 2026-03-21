@@ -867,3 +867,79 @@
   );
   opacity: 1;
 }
+
+/* ==========================================================================
+   TAXA DE CONVERSÃO DOS ÚLTIMOS 3 MESES
+   ========================================================================== */
+
+/* Container da lista de taxa de conversão */
+.conversion-rate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card específico para taxa de conversão */
+.conversion-rate-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 51, 230, 0.2);
+}
+
+.conversion-rate-card::before {
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 1;
+}
+
+/* Informações do mês (lado esquerdo) */
+.conversion-month-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Container da taxa (lado direito) */
+.conversion-rate-badge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Badge de taxa de conversão com cor dinâmica */
+.conversion-rate-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Cores baseadas na performance da taxa de conversão */
+.conversion-rate-badge.excellent {
+  background: rgba(36, 150, 137, 0.6);
+  box-shadow: 0 0 10px rgba(36, 150, 137, 0.3);
+}
+
+.conversion-rate-badge.good {
+  background: rgba(76, 51, 230, 0.5);
+  box-shadow: 0 0 10px rgba(76, 51, 230, 0.3);
+}
+
+.conversion-rate-badge.average {
+  background: rgba(235, 156, 29, 0.6);
+  box-shadow: 0 0 10px rgba(235, 156, 29, 0.3);
+}
+
+.conversion-rate-badge.low {
+  background: rgba(255, 71, 87, 0.5);
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+}

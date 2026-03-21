@@ -23,6 +23,7 @@ const paginationState = {
   restock: { currentPage: 1, itemsPerPage: 4 },
   essentials: { currentPage: 1, itemsPerPage: 4 },
   topLocations: { currentPage: 1, itemsPerPage: 4 },
+  conversionRate: { currentPage: 1, itemsPerPage: 3 },
 };
 
 // Cache dos dados calculados para evitar re-processamento desnecessário
@@ -32,6 +33,7 @@ let cachedDashboardData = {
   restockItems: null,
   essentialsItems: null,
   topLocationsItems: null,
+  conversionRateItems: null,
   lastFilter: null,
 };
 
@@ -46,6 +48,10 @@ const RECURRENCE_CONFIG = {
 const ESSENTIALS_CONFIG = {
   minPercentage: 50, // Porcentagem mínima de aparição (50%)
   monthsLimit: 3, // Considerar apenas últimos 3 meses
+};
+
+const CONVERSION_RATE_CONFIG = {
+  monthsToShow: 3, // Quantidade de meses a exibir na taxa de conversão
 };
 
 /* ==========================================================================
@@ -108,6 +114,35 @@ function isWithinMonthsLimit(dateStr, monthsLimit) {
     today.getDate(),
   );
   return itemDate >= limitDate;
+}
+
+/**
+ * Obtém o nome do mês em português
+ */
+function getMonthName(monthIndex) {
+  const monthNames = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+  return monthNames[monthIndex];
+}
+
+/**
+ * Formata o período do mês para exibição (ex: "Março/2024")
+ */
+function formatMonthPeriod(year, month) {
+  const monthName = getMonthName(month - 1);
+  return `${monthName}`;
 }
 
 /* ==========================================================================
@@ -219,6 +254,7 @@ function resetPagination() {
   paginationState.restock.currentPage = 1;
   paginationState.essentials.currentPage = 1;
   paginationState.topLocations.currentPage = 1;
+  paginationState.conversionRate.currentPage = 1;
 }
 
 function clearCache() {
@@ -228,6 +264,7 @@ function clearCache() {
     restockItems: null,
     essentialsItems: null,
     topLocationsItems: null,
+    conversionRateItems: null,
     lastFilter: null,
   };
 }
@@ -325,11 +362,8 @@ function processDashboardData(allLists) {
   // A. Volume de Itens por Lista (Gráfico Coluna)
   renderVolumeItemsChart(filteredLists);
 
-  // B. Taxa de Conversão da Lista
-  const conversionRate =
-    totalItemsAdded > 0 ? (totalItemsChecked / totalItemsAdded) * 100 : 0;
-  document.getElementById("metric-conversao").innerText =
-    `${conversionRate.toFixed(0)}%`;
+  // B. Taxa de Conversão dos Últimos 3 Meses - NOVA IMPLEMENTAÇÃO
+  calculateMonthlyConversionRate(allLists);
 
   // ---------------------------------------------------------
   // 4. INSIGHTS DE SAÚDE E NUTRIÇÃO
@@ -345,6 +379,149 @@ function processDashboardData(allLists) {
 /* ==========================================================================
    CÁLCULOS ESPECÍFICOS E LÓGICA DE DADOS
    ========================================================================== */
+
+/**
+ * Métrica 3.B: Taxa de Conversão dos Últimos 3 Meses
+ *
+ * Calcula a taxa de conversão (itens comprados / itens adicionados)
+ * para cada um dos últimos 3 meses e exibe em formato de lista.
+ *
+ * @param {Array} allLists - Todas as listas de compras
+ */
+function calculateMonthlyConversionRate(allLists) {
+  const container = document.getElementById("conversion-rate-container");
+
+  if (!container) return;
+
+  const currentFilterKey = JSON.stringify(activeFilter);
+  if (
+    cachedDashboardData.conversionRateItems &&
+    cachedDashboardData.lastFilter === currentFilterKey
+  ) {
+    renderPaginatedList(
+      container,
+      cachedDashboardData.conversionRateItems,
+      "conversionRate",
+      (item) => `
+        <div class="conversion-month-info">
+          <div class="item-main-text">${item.monthPeriod}</div>
+          <span class="item-sub-text">${item.totalLists} lista(s) | ${item.totalItemsAdded} item(ns)</span>
+        </div>
+      `,
+      (item) => `
+        <div class="conversion-rate-badge-container">
+          <div class="conversion-rate-badge ${item.performanceClass}">
+            ${item.conversionRateFormatted}
+          </div>
+          <span class="item-sub-text">${item.totalItemsChecked} de ${item.totalItemsAdded} comprados</span>
+        </div>
+      `,
+    );
+    return;
+  }
+
+  container.innerHTML = "";
+
+  // Agrupa listas por mês/ano
+  const listsByMonth = {};
+
+  allLists.forEach((list) => {
+    const date = parseDateLocal(list.date);
+    const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+    if (!listsByMonth[yearMonth]) {
+      listsByMonth[yearMonth] = {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        lists: [],
+      };
+    }
+
+    listsByMonth[yearMonth].lists.push(list);
+  });
+
+  // Ordena os meses (mais recente primeiro) e pega os últimos 3
+  const sortedMonths = Object.keys(listsByMonth)
+    .sort()
+    .reverse()
+    .slice(0, CONVERSION_RATE_CONFIG.monthsToShow);
+
+  if (sortedMonths.length === 0) {
+    container.innerHTML = `<div class="empty-state-minor">Sem dados suficientes para calcular a taxa de conversão.</div>`;
+    return;
+  }
+
+  const conversionRateItems = [];
+
+  sortedMonths.forEach((yearMonth) => {
+    const monthData = listsByMonth[yearMonth];
+    const monthPeriod = formatMonthPeriod(monthData.year, monthData.month);
+
+    let totalItemsAdded = 0;
+    let totalItemsChecked = 0;
+
+    // Agrega dados de todas as listas do mês
+    monthData.lists.forEach((list) => {
+      (list.categories || []).forEach((category) => {
+        category.items.forEach((item) => {
+          const quantity = item.quantity || 1;
+          totalItemsAdded += quantity;
+
+          if (item.checked) {
+            totalItemsChecked += quantity;
+          }
+        });
+      });
+    });
+
+    const conversionRate =
+      totalItemsAdded > 0 ? (totalItemsChecked / totalItemsAdded) * 100 : 0;
+
+    // Define a classe de performance baseada na taxa
+    let performanceClass = "low";
+    if (conversionRate >= 90) {
+      performanceClass = "excellent";
+    } else if (conversionRate >= 80) {
+      performanceClass = "good";
+    } else if (conversionRate >= 70) {
+      performanceClass = "average";
+    }
+
+    conversionRateItems.push({
+      monthPeriod: monthPeriod,
+      yearMonth: yearMonth,
+      totalLists: monthData.lists.length,
+      totalItemsAdded: totalItemsAdded,
+      totalItemsChecked: totalItemsChecked,
+      conversionRate: conversionRate,
+      conversionRateFormatted: `${conversionRate.toFixed(0)}%`,
+      performanceClass: performanceClass,
+    });
+  });
+
+  cachedDashboardData.conversionRateItems = conversionRateItems;
+  cachedDashboardData.lastFilter = currentFilterKey;
+
+  renderPaginatedList(
+    container,
+    conversionRateItems,
+    "conversionRate",
+    (item) => `
+      <div class="conversion-month-info">
+        <div class="item-main-text">${item.monthPeriod}</div>
+        <span class="item-sub-text">${item.totalLists} lista(s) | ${item.totalItemsAdded} item(ns)</span>
+      </div>
+    `,
+    (item) => `
+      <div class="conversion-rate-badge-container">
+        <div class="conversion-rate-badge ${item.performanceClass}">
+          ${item.conversionRateFormatted}
+        </div>
+        <span class="item-sub-text">${item.totalItemsChecked} de ${item.totalItemsAdded} comprados</span>
+      </div>
+    `,
+  );
+}
 
 /**
  * Métrica 1.D: Inflação Pessoal (CPI)
