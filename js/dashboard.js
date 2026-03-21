@@ -55,6 +55,65 @@ const CONVERSION_RATE_CONFIG = {
 };
 
 /* ==========================================================================
+   UTILITÁRIO: CLASSIFICAÇÃO DE PERFORMANCE POR PERCENTUAL
+   ========================================================================== */
+
+/**
+ * Retorna a classe de performance baseada no percentual
+ * Regras: excellent (>=90%), good (>=80%), average (>=70%), low (<70%)
+ *
+ * @param {number} percentage - Percentual a ser classificado (0-100)
+ * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
+ */
+function getPerformanceClassByPercentage(percentage) {
+  if (percentage >= 90) {
+    return "excellent";
+  } else if (percentage >= 80) {
+    return "good";
+  } else if (percentage >= 70) {
+    return "average";
+  }
+  return "low";
+}
+
+/**
+ * Retorna a classe de performance para variação de preço (CPI)
+ * Regras invertidas: queda é positiva, alta é negativa
+ *
+ * @param {number} diff - Diferença percentual (positivo = alta, negativo = queda)
+ * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
+ */
+function getPerformanceClassForPriceVariation(diff) {
+  // Para variação de preço: negativo (queda) é bom, positivo (alta) é ruim
+  if (diff <= -10) {
+    return "excellent"; // Queda significativa
+  } else if (diff < 0) {
+    return "good"; // Queda leve
+  } else if (diff === 0) {
+    return "average"; // Estável
+  }
+  return "low"; // Alta de preço
+}
+
+/**
+ * Retorna a classe de performance para ranking de top locais
+ * Regras: 1º lugar = excellent, 2º lugar = good, 3º lugar = average, demais = low
+ *
+ * @param {number} position - Posição no ranking (1, 2, 3, etc.)
+ * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
+ */
+function getPerformanceClassForTopLocation(position) {
+  if (position === 1) {
+    return "excellent";
+  } else if (position === 2) {
+    return "good";
+  } else if (position === 3) {
+    return "average";
+  }
+  return "low";
+}
+
+/* ==========================================================================
    UTILITÁRIO: Parse de Data Local
    ========================================================================== */
 /**
@@ -362,7 +421,7 @@ function processDashboardData(allLists) {
   // A. Volume de Itens por Lista (Gráfico Coluna)
   renderVolumeItemsChart(filteredLists);
 
-  // B. Taxa de Conversão dos Últimos 3 Meses - NOVA IMPLEMENTAÇÃO
+  // B. Taxa de Conversão dos Últimos 3 Meses
   calculateMonthlyConversionRate(allLists);
 
   // ---------------------------------------------------------
@@ -477,15 +536,7 @@ function calculateMonthlyConversionRate(allLists) {
     const conversionRate =
       totalItemsAdded > 0 ? (totalItemsChecked / totalItemsAdded) * 100 : 0;
 
-    // Define a classe de performance baseada na taxa
-    let performanceClass = "low";
-    if (conversionRate >= 90) {
-      performanceClass = "excellent";
-    } else if (conversionRate >= 80) {
-      performanceClass = "good";
-    } else if (conversionRate >= 70) {
-      performanceClass = "average";
-    }
+    const performanceClass = getPerformanceClassByPercentage(conversionRate);
 
     conversionRateItems.push({
       monthPeriod: monthPeriod,
@@ -548,9 +599,9 @@ function calculateCPI(filteredLists) {
         <span class="item-sub-text">Anterior: ${formatCurrencyBRL(item.avgPrevious)} → Atual: ${formatCurrencyBRL(item.avgCurrent)}</span>
       `,
       (item) => `
-        <strong style="color: ${item.color}">
+        <div class="cpi-badge ${item.performanceClass}">
           ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
-        </strong>
+        </div>
       `,
     );
     return;
@@ -603,17 +654,13 @@ function calculateCPI(filteredLists) {
       (((avgCurrent - avgPrevious) / avgPrevious) * 100).toFixed(10),
     );
 
-    // Define o emoji e a cor baseada na variação
+    // Define o emoji baseado na variação
     let emoji = "📉";
-    let color = "var(--accent-green)";
-
     if (diff > 0) {
       emoji = "📈";
-      color = "var(--danger)";
-    } else if (diff === 0) {
-      emoji = "📉"; // Mantém o padrão da imagem para 0.0%
-      color = "var(--accent-green)";
     }
+
+    const performanceClass = getPerformanceClassForPriceVariation(diff);
 
     cpiItems.push({
       name: window.capitalize(itemData.name),
@@ -621,7 +668,7 @@ function calculateCPI(filteredLists) {
       avgCurrent,
       diff,
       emoji,
-      color,
+      performanceClass: performanceClass,
       listCount: itemData.listIds.size,
       lastPurchaseDate: itemData.lastPurchaseDate,
     });
@@ -645,9 +692,9 @@ function calculateCPI(filteredLists) {
       <span class="item-sub-text">Anterior: ${formatCurrencyBRL(item.avgPrevious)} → Atual: ${formatCurrencyBRL(item.avgCurrent)}</span>
     `,
     (item) => `
-      <strong style="color: ${item.color}">
+      <div class="cpi-badge ${item.performanceClass}">
         ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
-      </strong>
+      </div>
     `,
   );
 }
@@ -691,6 +738,11 @@ function calculateLocationFidelity(filteredLists) {
     (locationA, locationB) => locationB.count - locationA.count,
   );
 
+  const totalPurchases = sortedLocations.reduce(
+    (sum, location) => sum + location.count,
+    0,
+  );
+
   // Atualiza o card pequeno com o TOP local
   const topLocation = sortedLocations.length > 0 ? sortedLocations[0] : null;
   document.getElementById("metric-top-local").innerText = topLocation
@@ -723,10 +775,10 @@ function calculateLocationFidelity(filteredLists) {
       `,
       (item) => `
         <div class="location-count-badge">
-          <div class="count-badge" style="background: ${item.badgeColor}">
+          <div class="count-badge ${item.performanceClass}">
             ${item.count}
           </div>
-          <span class="item-sub-text">${item.count > 1 ? "compras" : "compra"}</span>
+          <span class="item-sub-text">${item.percentageFormatted} das compras</span>
         </div>
       `,
     );
@@ -744,23 +796,22 @@ function calculateLocationFidelity(filteredLists) {
   const topThreeLocations = sortedLocations.slice(0, 3);
 
   const topLocationsItems = topThreeLocations.map((location, index) => {
-    // Define cor do badge baseado na posição
-    let badgeColor = "rgba(36, 150, 137, 0.5)"; // Verde para 1º
+    const percentage = (location.count / totalPurchases) * 100;
 
-    if (index === 1) {
-      badgeColor = "rgba(52, 152, 219, 0.4)"; // Azul para 2º
-    } else if (index === 2) {
-      badgeColor = "rgba(235, 156, 29, 0.6)"; // Laranja para 3º
-    }
+    // Define a classe de performance baseada na posição (1º, 2º, 3º)
+    // 1º lugar = excellent, 2º lugar = good, 3º lugar = average
+    const performanceClass = getPerformanceClassForTopLocation(index + 1);
 
     return {
       name: location.name,
       count: location.count,
+      percentage: percentage,
+      percentageFormatted: `${percentage.toFixed(0)}%`,
       lastPurchaseDate: location.lastPurchaseDate,
       lastPurchaseDateFormatted: formatDateBRL(
         location.lastPurchaseDate.toISOString().split("T")[0],
       ),
-      badgeColor: badgeColor,
+      performanceClass: performanceClass,
       position: index + 1,
     };
   });
@@ -781,10 +832,10 @@ function calculateLocationFidelity(filteredLists) {
     `,
     (item) => `
       <div class="location-count-badge">
-        <div class="count-badge" style="background: ${item.badgeColor}">
+        <div class="count-badge ${item.performanceClass}">
           ${item.count}
         </div>
-        <span class="item-sub-text">${item.count > 1 ? "compras" : "compra"}</span>
+        <span class="item-sub-text">${item.percentageFormatted} das compras</span>
       </div>
     `,
   );
@@ -820,8 +871,8 @@ function calculateEssentialItems(allLists) {
       `,
       (item) => `
         <div class="essential-percentage">
-          <div class="percentage-badge" style="background: ${item.percentageColor}">
-            ${item.appearancePercentage.toFixed(0)}%
+          <div class="percentage-badge ${item.performanceClass}">
+            ${item.appearancePercentageFormatted}
           </div>
           <span class="item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
         </div>
@@ -877,21 +928,17 @@ function calculateEssentialItems(allLists) {
 
     // Item é essencial se aparece em pelo menos 50% das listas
     if (appearancePercentage >= ESSENTIALS_CONFIG.minPercentage) {
-      let percentageColor = "rgba(36, 150, 137, 0.6)"; // Verde forte para 90%+
-
-      if (appearancePercentage <= 89 && appearancePercentage >= 70) {
-        percentageColor = "rgba(76, 51, 230, 0.5)"; // Roxo para 70-89%
-      } else if (appearancePercentage <= 69) {
-        percentageColor = "rgba(52, 152, 219, 0.4)"; // Azul para 50-69%
-      }
+      const performanceClass =
+        getPerformanceClassByPercentage(appearancePercentage);
 
       essentialItems.push({
         name: window.capitalize(itemData.name),
         appearancePercentage: appearancePercentage,
+        appearancePercentageFormatted: `${appearancePercentage.toFixed(0)}%`,
         listsCount: listsCount,
         totalListsCount: totalListsCount,
         totalQuantity: itemData.totalQuantity,
-        percentageColor: percentageColor,
+        performanceClass: performanceClass,
       });
     }
   });
@@ -926,8 +973,8 @@ function calculateEssentialItems(allLists) {
     `,
     (item) => `
       <div class="essential-percentage">
-        <div class="percentage-badge" style="background: ${item.percentageColor}">
-          ${item.appearancePercentage.toFixed(0)}%
+        <div class="percentage-badge ${item.performanceClass}">
+          ${item.appearancePercentageFormatted}
         </div>
         <span class="item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
       </div>
@@ -1066,19 +1113,20 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
       "restock",
       (item) => {
         let statusText = "";
-        let statusColor = "var(--bg-card-light)";
+        let performanceClass = "average";
 
         if (item.daysRemaining < 0) {
           statusText = `Atraso ${Math.abs(item.daysRemaining)}d`;
-          statusColor = "var(--danger)";
+          performanceClass = "low";
         } else if (item.daysRemaining === 0) {
           statusText = "Hoje";
-          statusColor = "var(--accent-green)";
+          performanceClass = "excellent";
         } else if (item.daysRemaining <= 3) {
           statusText = `Em ${item.daysRemaining}d`;
-          statusColor = "var(--primary-light)";
+          performanceClass = "good";
         } else {
           statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+          performanceClass = "average";
         }
 
         return `
@@ -1090,25 +1138,26 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
       },
       (item) => {
         let statusText = "";
-        let statusColor = "var(--bg-card-light)";
+        let performanceClass = "average";
 
         if (item.daysRemaining < 0) {
           statusText = `Atraso ${Math.abs(item.daysRemaining)}d`;
-          statusColor = "var(--danger)";
+          performanceClass = "low";
         } else if (item.daysRemaining === 0) {
           statusText = "Hoje";
-          statusColor = "var(--accent-green)";
+          performanceClass = "excellent";
         } else if (item.daysRemaining <= 3) {
           statusText = `Em ${item.daysRemaining}d`;
-          statusColor = "var(--primary-light)";
+          performanceClass = "good";
         } else {
           statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+          performanceClass = "average";
         }
 
         return `
-          <strong style="color: ${statusColor}">
+          <div class="restock-badge ${performanceClass}">
             ${statusText}
-          </strong>
+          </div>
         `;
       },
     );
@@ -1184,19 +1233,20 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
     "restock",
     (item) => {
       let statusText = "";
-      let statusColor = "var(--bg-card-light)";
+      let performanceClass = "average";
 
       if (item.daysRemaining < 0) {
         statusText = `Atraso ${Math.abs(item.daysRemaining)}d`;
-        statusColor = "var(--danger)";
+        performanceClass = "low";
       } else if (item.daysRemaining === 0) {
         statusText = "Hoje";
-        statusColor = "var(--accent-green)";
+        performanceClass = "excellent";
       } else if (item.daysRemaining <= 3) {
         statusText = `Em ${item.daysRemaining}d`;
-        statusColor = "var(--primary-light)";
+        performanceClass = "good";
       } else {
         statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+        performanceClass = "average";
       }
 
       return `
@@ -1208,25 +1258,26 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
     },
     (item) => {
       let statusText = "";
-      let statusColor = "var(--bg-card-light)";
+      let performanceClass = "average";
 
       if (item.daysRemaining < 0) {
         statusText = `Atraso ${Math.abs(item.daysRemaining)}d`;
-        statusColor = "var(--danger)";
+        performanceClass = "low";
       } else if (item.daysRemaining === 0) {
         statusText = "Hoje";
-        statusColor = "var(--accent-green)";
+        performanceClass = "excellent";
       } else if (item.daysRemaining <= 3) {
         statusText = `Em ${item.daysRemaining}d`;
-        statusColor = "var(--primary-light)";
+        performanceClass = "good";
       } else {
         statusText = `📅 ${formatDateBRL(item.nextDate.toISOString().split("T")[0])}`;
+        performanceClass = "average";
       }
 
       return `
-        <strong style="color: ${statusColor}">
+        <div class="restock-badge ${performanceClass}">
           ${statusText}
-        </strong>
+        </div>
       `;
     },
   );

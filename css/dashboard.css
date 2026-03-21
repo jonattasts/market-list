@@ -923,23 +923,108 @@
   text-align: center;
 }
 
-/* Cores baseadas na performance da taxa de conversão */
-.conversion-rate-badge.excellent {
-  background: rgba(36, 150, 137, 0.6);
-  box-shadow: 0 0 10px rgba(36, 150, 137, 0.3);
+/* ==========================================================================
+   CLASSES DE PERFORMANCE UNIFICADAS
+   ========================================================================== */
+
+/* Base para todos os badges de performance */
+.performance-badge,
+.cpi-badge,
+.percentage-badge,
+.count-badge,
+.conversion-rate-badge,
+.restock-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 60px;
+  text-align: center;
+  transition: all 0.3s ease;
 }
 
-.conversion-rate-badge.good {
-  background: rgba(76, 51, 230, 0.5);
-  box-shadow: 0 0 10px rgba(76, 51, 230, 0.3);
+/* Excellent (>=90%) - Verde */
+.performance-badge.excellent,
+.cpi-badge.excellent,
+.percentage-badge.excellent,
+.count-badge.excellent,
+.conversion-rate-badge.excellent,
+.restock-badge.excellent {
+  background: rgba(36, 150, 137, 0.7);
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
+  border-color: rgba(36, 150, 137, 0.5);
 }
 
-.conversion-rate-badge.average {
+/* Good (>=80%) - Roxo/Azul */
+.performance-badge.good,
+.cpi-badge.good,
+.percentage-badge.good,
+.count-badge.good,
+.conversion-rate-badge.good,
+.restock-badge.good {
+  background: rgba(76, 51, 230, 0.6);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.4);
+}
+
+/* Average (>=70%) - Laranja/Amarelo */
+.performance-badge.average,
+.cpi-badge.average,
+.percentage-badge.average,
+.count-badge.average,
+.conversion-rate-badge.average,
+.restock-badge.average {
   background: rgba(235, 156, 29, 0.6);
-  box-shadow: 0 0 10px rgba(235, 156, 29, 0.3);
+  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
+  border-color: rgba(235, 156, 29, 0.4);
 }
 
-.conversion-rate-badge.low {
-  background: rgba(255, 71, 87, 0.5);
-  box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+/* Low (<70%) - Vermelho */
+.performance-badge.low,
+.cpi-badge.low,
+.percentage-badge.low,
+.count-badge.low,
+.conversion-rate-badge.low,
+.restock-badge.low {
+  background: rgba(255, 71, 87, 0.6);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+/* Animação de pulsar para excellent */
+.performance-badge.excellent,
+.cpi-badge.excellent,
+.percentage-badge.excellent,
+.count-badge.excellent,
+.conversion-rate-badge.excellent {
+  animation: pulsePerformance 2s ease-in-out infinite;
+}
+
+@keyframes pulsePerformance {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* CPI específico - variação de preço */
+.cpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+/* Restock badge específico */
+.restock-badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-width: 80px;
 }
