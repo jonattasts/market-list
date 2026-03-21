@@ -610,7 +610,7 @@ function calculateEssentialItems(allLists) {
   );
 
   if (essentialItems.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Nenhum item essencial encontrado (aparece em menos de ${ESSENTIALS_CONFIG.minPercentage}% das listas).</div>`;
+    container.innerHTML = `<div class="empty-state-minor">Nenhum item essencial encontrado (aparece em mais de ${ESSENTIALS_CONFIG.minPercentage}% das listas).</div>`;
     return;
   }
 
