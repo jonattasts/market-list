@@ -167,6 +167,7 @@
   background: rgba(36, 150, 137, 0.7);
   box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
   border-color: rgba(36, 150, 137, 0.5);
+  animation: pulsePerformance 2s ease-in-out infinite;
 }
 
 /* Good (>=80%) - Roxo/Azul */
