@@ -21,7 +21,16 @@
     <link rel="stylesheet" href="css/lists.css" />
     <link rel="stylesheet" href="css/details.css" />
     <link rel="stylesheet" href="css/onboarding.css" />
-    <link rel="stylesheet" href="css/dashboard.css" />
+
+    <!-- CSS Base do Dashboard -->
+    <link rel="stylesheet" href="css/dashboard.css">
+
+    <!-- CSS dos módulos do Dashboard -->
+    <link rel="stylesheet" href="css/personal-inflation.css">
+    <link rel="stylesheet" href="css/behavior-habits.css">
+    <link rel="stylesheet" href="css/purchase-efficiency.css">
+    <link rel="stylesheet" href="css/health-insights.css">
+
   </head>
 
   <body>
@@ -445,6 +454,51 @@
           </div>
         </header>
 
+        <!-- ========================================================= -->
+        <!-- SISTEMA DE ABAS SCROLLÁVEIS HORIZONTAIS -->
+        <!-- ========================================================= -->
+        <div class="dashboard-tabs-container">
+          <ul class="dashboard-tabs-list">
+            <!-- Aba 1: Inflação Pessoal -->
+            <li>
+              <button class="dashboard-tab-button active"
+                data-tab="personal-inflation"
+                onclick="activateDashboardTab('personal-inflation')">
+                <ion-icon name="trending-up-outline"></ion-icon>
+                <span>Inflação Pessoal</span>
+              </button>
+            </li>
+
+            <!-- Aba 2: Comportamento e Hábito -->
+            <li>
+              <button class="dashboard-tab-button" data-tab="behavior-habits"
+                onclick="activateDashboardTab('behavior-habits')">
+                <ion-icon name="heart-outline"></ion-icon>
+                <span>Comportamento</span>
+              </button>
+            </li>
+
+            <!-- Aba 3: Eficiência de Compra -->
+            <li>
+              <button class="dashboard-tab-button"
+                data-tab="purchase-efficiency"
+                onclick="activateDashboardTab('purchase-efficiency')">
+                <ion-icon name="checkmark-done-outline"></ion-icon>
+                <span>Eficiência</span>
+              </button>
+            </li>
+
+            <!-- Aba 4: Insights de Saúde -->
+            <li>
+              <button class="dashboard-tab-button" data-tab="health-insights"
+                onclick="activateDashboardTab('health-insights')">
+                <ion-icon name="leaf-outline"></ion-icon>
+                <span>Saúde</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
         <!-- Wrapper para conteúdo com scroll (header fixo) -->
         <div class="dashboard-content-wrapper">
 
@@ -457,127 +511,154 @@
               <strong id="filter-text-display">Geral</strong>
             </div>
 
-            <!-- Performance Financeira -->
-            <div class="metrics-section ">
-              <h2 class="section-title">Performance Financeira</h2>
+            <!-- ========================================================= -->
+            <!-- ABA 1: INFLAÇÃO PESSOAL -->
+            <!-- ========================================================= -->
+            <div id="tab-module-personal-inflation"
+              class="dashboard-tab-module active">
+              <!-- Performance Financeira -->
+              <div class="metrics-section">
+                <h2 class="section-title">Performance Financeira</h2>
 
-              <div class="metrics-grid">
-                <div class="metric-card-stat info">
-                  <span class="stat-label">Ticket Médio (Lista)</span>
-                  <span id="metric-ticket-medio" class="stat-value">R$
-                    0,00</span>
-                  <span class="stat-subtext">No período selecionado</span>
+                <div class="metrics-grid">
+                  <div class="metric-card-stat info">
+                    <span class="stat-label">Ticket Médio (Lista)</span>
+                    <span id="metric-ticket-medio" class="stat-value">R$
+                      0,00</span>
+                    <span class="stat-subtext">No período selecionado</span>
+                  </div>
+
+                  <div class="metric-card-stat success">
+                    <span class="stat-label">Economia Potencial</span>
+                    <span id="metric-economy" class="stat-value">R$ 0,00</span>
+                    <span class="stat-subtext">Itens desejados vs.
+                      comprados</span>
+                  </div>
                 </div>
 
-                <div class="metric-card-stat success">
-                  <span class="stat-label">Economia Potencial</span>
-                  <span id="metric-economy" class="stat-value">R$ 0,00</span>
-                  <span class="stat-subtext">Itens desejados vs.
-                    comprados</span>
-                </div>
-              </div>
-
-              <div class="chart-card">
-                <h3 class="card-title">Gasto por Categoria</h3>
-                <canvas id="chart-share-wallet"></canvas>
-              </div>
-
-              <div class="metric-card-full cpi-card">
-                <h3 class="card-title">Inflação Pessoal (Recorrentes)</h3>
-                <div id="cpi-container" class="cpi-list">
-                  <div class="empty-state-minor">Sem dados comparativos</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Comportamento e Hábito -->
-            <div class="metrics-section mt-30">
-              <h2 class="section-title">Comportamento e Hábito</h2>
-
-              <div class="metrics-grid">
-                <div class="metric-card-stat info">
-                  <span class="stat-label">Top Local de Compra</span>
-                  <span id="metric-top-local" class="stat-value-text">--</span>
-                  <span id="metric-local-freq" class="stat-subtext">0
-                    compras</span>
+                <div class="chart-card">
+                  <h3 class="card-title">Gasto por Categoria</h3>
+                  <canvas id="chart-share-wallet"></canvas>
                 </div>
 
-                <div class="metric-card-stat success">
-                  <span class="stat-label">Itens Essenciais</span>
-                  <span id="metric-essentials-count" class="stat-value">0</span>
-                  <span class="stat-subtext">Em 50%+ das listas (3 meses)</span>
-                </div>
-              </div>
-
-              <!-- LISTA DOS TOP 3 LOCAIS MAIS VISITADOS -->
-              <div class="metric-card-full top-locations-card">
-                <h3 class="card-title">🏪 Locais Mais Visitados</h3>
-                <div id="top-locations-container" class="top-locations-list">
-                  <div class="empty-state-minor">Carregando locais de
-                    compra...</div>
-                </div>
-              </div>
-
-              <!-- LISTA DE ITENS ESSENCIAIS -->
-              <div class="metric-card-full essentials-card">
-                <h3 class="card-title">📋 Itens Essenciais (Top
-                  Recorrência)</h3>
-                <div id="essentials-container" class="essentials-list">
-                  <div class="empty-state-minor">Carregando itens
-                    essenciais...</div>
-                </div>
-              </div>
-
-              <!-- RECORRÊNCIA DE ITENS -->
-              <div class="metric-card-full">
-                <h3 class="card-title">Recorrência de Itens (Frequência)</h3>
-                <div id="recurrence-itens-list" class="simple-data-list">
-                  <div class="empty-state-minor">Gere mais listas para ver a
-                    frequência.</div>
-                </div>
-              </div>
-
-              <div class="chart-card">
-                <h3 class="card-title">Previsão de Reposição (Próximos
-                  Itens)</h3>
-                <div id="restock-list" class="simple-data-list">
-                  <div class="empty-state-minor">Sem histórico suficiente</div>
+                <div class="metric-card-full cpi-card">
+                  <h3 class="card-title">Inflação Pessoal (Recorrentes)</h3>
+                  <div id="cpi-container" class="cpi-list">
+                    <div class="empty-state-minor">Sem dados comparativos</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Eficiência da Compra -->
-            <div class="metrics-section">
-              <h2 class="section-title">Eficiência da Compra</h2>
+            <!-- ========================================================= -->
+            <!-- ABA 2: COMPORTAMENTO E HÁBITO -->
+            <!-- ========================================================= -->
+            <div id="tab-module-behavior-habits" class="dashboard-tab-module">
+              <!-- Comportamento e Hábito -->
+              <div class="metrics-section">
+                <h2 class="section-title">Comportamento e Hábito</h2>
 
-              <!-- Taxa de Conversão dos Últimos 3 Meses -->
-              <div class="metric-card-full conversion-rate-card">
-                <h3 class="card-title">Taxa de Conversão (Últimos 3 Meses)</h3>
-                <div id="conversion-rate-container"
-                  class="conversion-rate-list">
-                  <div class="empty-state-minor">Sem dados suficientes</div>
+                <div class="metrics-grid">
+                  <div class="metric-card-stat info">
+                    <span class="stat-label">Top Local de Compra</span>
+                    <span id="metric-top-local"
+                      class="stat-value-text">--</span>
+                    <span id="metric-local-freq" class="stat-subtext">0
+                      compras</span>
+                  </div>
+
+                  <div class="metric-card-stat success">
+                    <span class="stat-label">Itens Essenciais</span>
+                    <span id="metric-essentials-count"
+                      class="stat-value">0</span>
+                    <span class="stat-subtext">Em 50%+ das listas (3
+                      meses)</span>
+                  </div>
                 </div>
-              </div>
 
-              <div class="chart-card">
-                <h3 class="card-title">Volume de Itens por Compra</h3>
-                <canvas id="chart-volume-itens"></canvas>
+                <!-- LISTA DOS TOP 3 LOCAIS MAIS VISITADOS -->
+                <div class="metric-card-full top-locations-card">
+                  <h3 class="card-title">🏪 Locais Mais Visitados</h3>
+                  <div id="top-locations-container" class="top-locations-list">
+                    <div class="empty-state-minor">Carregando locais de
+                      compra...</div>
+                  </div>
+                </div>
+
+                <!-- LISTA DE ITENS ESSENCIAIS -->
+                <div class="metric-card-full essentials-card">
+                  <h3 class="card-title">📋 Itens Essenciais (Top
+                    Recorrência)</h3>
+                  <div id="essentials-container" class="essentials-list">
+                    <div class="empty-state-minor">Carregando itens
+                      essenciais...</div>
+                  </div>
+                </div>
+
+                <!-- RECORRÊNCIA DE ITENS -->
+                <div class="metric-card-full">
+                  <h3 class="card-title">Recorrência de Itens (Frequência)</h3>
+                  <div id="recurrence-itens-list" class="simple-data-list">
+                    <div class="empty-state-minor">Gere mais listas para ver a
+                      frequência.</div>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <h3 class="card-title">Previsão de Reposição (Próximos
+                    Itens)</h3>
+                  <div id="restock-list" class="simple-data-list">
+                    <div class="empty-state-minor">Sem histórico
+                      suficiente</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Insights de Saúde -->
-            <div class="metrics-section mt-30 pb-30">
-              <h2 class="section-title">Insights de Saúde</h2>
+            <!-- ========================================================= -->
+            <!-- ABA 3: EFICIÊNCIA DE COMPRA -->
+            <!-- ========================================================= -->
+            <div id="tab-module-purchase-efficiency"
+              class="dashboard-tab-module">
+              <!-- Eficiência da Compra -->
+              <div class="metrics-section">
+                <h2 class="section-title">Eficiência da Compra</h2>
 
-              <div class="chart-card">
-                <h3 class="card-title">Perfil de Compra (Ratio)</h3>
-                <canvas id="chart-perfil-saude"></canvas>
+                <!-- Taxa de Conversão dos Últimos 3 Meses -->
+                <div class="metric-card-full conversion-rate-card">
+                  <h3 class="card-title">Taxa de Conversão (Últimos 3
+                    Meses)</h3>
+                  <div id="conversion-rate-container"
+                    class="conversion-rate-list">
+                    <div class="empty-state-minor">Sem dados suficientes</div>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <h3 class="card-title">Volume de Itens por Compra</h3>
+                  <canvas id="chart-volume-itens"></canvas>
+                </div>
               </div>
+            </div>
 
-              <div class="metric-card-full sazonalidade-card">
-                <ion-icon name="leaf-outline"></ion-icon>
-                <p id="metric-seasonality-text">Inicie suas compras para gerar
-                  histórico de sazonalidade.</p>
+            <!-- ========================================================= -->
+            <!-- ABA 4: INSIGHTS DE SAÚDE -->
+            <!-- ========================================================= -->
+            <div id="tab-module-health-insights" class="dashboard-tab-module">
+              <!-- Insights de Saúde -->
+              <div class="metrics-section">
+                <h2 class="section-title">Insights de Saúde</h2>
+
+                <div class="chart-card">
+                  <h3 class="card-title">Perfil de Compra (Ratio)</h3>
+                  <canvas id="chart-perfil-saude"></canvas>
+                </div>
+
+                <div class="metric-card-full sazonalidade-card">
+                  <ion-icon name="leaf-outline"></ion-icon>
+                  <p id="metric-seasonality-text">Inicie suas compras para gerar
+                    histórico de sazonalidade.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -647,6 +728,7 @@
         </div>
 
       </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -655,7 +737,15 @@
     <script type="module" src="js/lists.js"></script>
     <script type="module" src="js/forms.js"></script>
     <script type="module" src="js/details.js"></script>
+
+    <!-- Script base do Dashboard -->
     <script type="module" src="js/dashboard.js"></script>
+
+    <!-- Scripts dos módulos do Dashboard -->
+    <script type="module" src="js/personal-inflation.js"></script>
+    <script type="module" src="js/behavior-habits.js"></script>
+    <script type="module" src="js/purchase-efficiency.js"></script>
+    <script type="module" src="js/health-insights.js"></script>
 
     <script type="module"
       src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>

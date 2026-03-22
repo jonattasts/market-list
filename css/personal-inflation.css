@@ -1,0 +1,169 @@
+/* ==========================================================================
+   MÓDULO: INFLAÇÃO PESSOAL (CPI) - ESTILOS ESPECÍFICOS
+   ========================================================================== */
+
+/* Card de Inflação Pessoal */
+.cpi-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 51, 230, 0.2);
+}
+
+.cpi-card::before {
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 1;
+}
+
+/* Listas de dados CPI */
+.cpi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Item individual de CPI */
+.cpi-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  transition: all 0.2s ease;
+  animation: slideInRight 0.4s ease-out backwards;
+}
+
+.cpi-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.cpi-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.cpi-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.cpi-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.cpi-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.cpi-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(76, 51, 230, 0.3);
+  transform: translateX(4px);
+}
+
+/* Variação de preço - Alta (vermelho) */
+.cpi-item.up {
+  border-right: 3px solid #ff4757;
+  background: linear-gradient(90deg, rgba(255, 71, 87, 0.05), transparent);
+}
+
+/* Variação de preço - Queda (verde) */
+.cpi-item.down {
+  border-right: 3px solid #249689;
+  background: linear-gradient(90deg, rgba(36, 150, 137, 0.05), transparent);
+}
+
+/* Badge de CPI com cores de performance */
+.cpi-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 60px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Excellent (>=90%) - Verde */
+.cpi-badge.excellent {
+  background: rgba(36, 150, 137, 0.7);
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
+  border-color: rgba(36, 150, 137, 0.5);
+}
+
+/* Good (>=80%) - Roxo/Azul */
+.cpi-badge.good {
+  background: rgba(76, 51, 230, 0.6);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.4);
+}
+
+/* Average (>=70%) - Laranja/Amarelo */
+.cpi-badge.average {
+  background: rgba(235, 156, 29, 0.6);
+  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
+  border-color: rgba(235, 156, 29, 0.4);
+}
+
+/* Low (<70%) - Vermelho */
+.cpi-badge.low {
+  background: rgba(255, 71, 87, 0.6);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+/* Animação de pulsar para excellent */
+.cpi-badge.excellent {
+  animation: pulsePerformance 2s ease-in-out infinite;
+}
+
+@keyframes pulsePerformance {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Texto principal do item */
+.item-main-text {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+/* Texto secundário do item */
+.item-sub-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+  display: block;
+}
+
+/* Estado vazio menor */
+.empty-state-minor {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  font-size: 13px;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}

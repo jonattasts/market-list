@@ -1,0 +1,373 @@
+/* ==========================================================================
+   MÓDULO: COMPORTAMENTO E HÁBITO - ESTILOS ESPECÍFICOS
+   ========================================================================== */
+
+/* ==========================================================================
+   ITENS ESSENCIAIS
+   ========================================================================== */
+
+/* Container da lista de itens essenciais */
+.essentials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Informações do item essencial (lado esquerdo) */
+.essential-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Container da porcentagem (lado direito) */
+.essential-percentage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Badge de porcentagem com cor dinâmica */
+.percentage-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Destaque para itens com alta recorrência (90%+) */
+.percentage-badge.high-recurrence {
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.5);
+  animation: pulseBadge 2s ease-in-out infinite;
+}
+
+@keyframes pulseBadge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Excellent (>=90%) - Verde */
+.percentage-badge.excellent {
+  background: rgba(36, 150, 137, 0.7);
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
+  border-color: rgba(36, 150, 137, 0.5);
+}
+
+/* Good (>=80%) - Roxo/Azul */
+.percentage-badge.good {
+  background: rgba(76, 51, 230, 0.6);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.4);
+}
+
+/* Average (>=70%) - Laranja/Amarelo */
+.percentage-badge.average {
+  background: rgba(235, 156, 29, 0.6);
+  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
+  border-color: rgba(235, 156, 29, 0.4);
+}
+
+/* Low (<70%) - Vermelho */
+.percentage-badge.low {
+  background: rgba(255, 71, 87, 0.6);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+/* Animação de pulsar para excellent */
+.percentage-badge.excellent {
+  animation: pulsePerformance 2s ease-in-out infinite;
+}
+
+@keyframes pulsePerformance {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Card específico para itens essenciais */
+.essentials-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 51, 230, 0.2);
+}
+
+.essentials-card::before {
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 1;
+}
+
+/* ==========================================================================
+   TOP LOCAIS MAIS VISITADOS
+   ========================================================================== */
+
+/* Container da lista de top locais */
+.top-locations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Informações do local (lado esquerdo) */
+.location-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Container do contador (lado direito) */
+.location-count-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Badge de contagem com cor dinâmica baseada na posição */
+.count-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Destaque para o primeiro lugar */
+.count-badge.first-place {
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.5);
+  animation: pulseBadge 2s ease-in-out infinite;
+}
+
+/* Excellent (>=90%) - Verde */
+.count-badge.excellent {
+  background: rgba(36, 150, 137, 0.7);
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
+  border-color: rgba(36, 150, 137, 0.5);
+}
+
+/* Good (>=80%) - Roxo/Azul */
+.count-badge.good {
+  background: rgba(76, 51, 230, 0.6);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.4);
+}
+
+/* Average (>=70%) - Laranja/Amarelo */
+.count-badge.average {
+  background: rgba(235, 156, 29, 0.6);
+  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
+  border-color: rgba(235, 156, 29, 0.4);
+}
+
+/* Low (<70%) - Vermelho */
+.count-badge.low {
+  background: rgba(255, 71, 87, 0.6);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+/* Card específico para top locais */
+.top-locations-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 51, 230, 0.2);
+}
+
+.top-locations-card::before {
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 1;
+}
+
+/* ==========================================================================
+   LISTAS DE DADOS GERAIS
+   ========================================================================== */
+
+/* Listas de dados simples */
+.simple-data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Wrapper para listas paginadas */
+.paginated-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Item individual de dados */
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  transition: all 0.2s ease;
+  animation: slideInRight 0.4s ease-out backwards;
+}
+
+.data-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.data-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.data-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.data-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.data-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.data-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(76, 51, 230, 0.3);
+  transform: translateX(4px);
+}
+
+/* Texto principal do item */
+.item-main-text {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+/* Texto secundário do item */
+.item-sub-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+  display: block;
+}
+
+/* Badge de reposição */
+.restock-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 80px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+/* Excellent (>=90%) - Verde */
+.restock-badge.excellent {
+  background: rgba(36, 150, 137, 0.7);
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
+  border-color: rgba(36, 150, 137, 0.5);
+}
+
+/* Good (>=80%) - Roxo/Azul */
+.restock-badge.good {
+  background: rgba(76, 51, 230, 0.6);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.4);
+}
+
+/* Average (>=70%) - Laranja/Amarelo */
+.restock-badge.average {
+  background: rgba(235, 156, 29, 0.6);
+  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
+  border-color: rgba(235, 156, 29, 0.4);
+}
+
+/* Low (<70%) - Vermelho */
+.restock-badge.low {
+  background: rgba(255, 71, 87, 0.6);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+/* Estado vazio menor */
+.empty-state-minor {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  font-size: 13px;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Controles de Paginação */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pagination-button {
+  background: rgba(76, 51, 230, 0.4);
+  border: 1px solid rgba(76, 51, 230, 0.5);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 18px;
+}
+
+.pagination-button:hover:not(:disabled) {
+  transform: scale(1.05);
+}

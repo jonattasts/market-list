@@ -1,6 +1,7 @@
 /* ==========================================================================
-   TELA: DASHBOARD E ANÁLISE DE DADOS
+   DASHBOARD & DATA ANALYTICS - ESTILOS BASE E SISTEMA DE ABAS
    ========================================================================== */
+
 #dashboard-screen {
   width: 100%;
   display: none;
@@ -66,6 +67,93 @@
   pointer-events: none;
 }
 
+/* ========================================================================
+   SISTEMA DE ABAS SCROLLÁVEIS HORIZONTAIS
+   ======================================================================== */
+
+/* Container de abas com scroll horizontal */
+.dashboard-tabs-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 10;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Remove scrollbar padrão */
+.dashboard-tabs-container::-webkit-scrollbar {
+  height: 3px;
+}
+
+.dashboard-tabs-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-tabs-container::-webkit-scrollbar-thumb {
+  background: rgba(76, 51, 230, 0.4);
+  border-radius: 2px;
+}
+
+/* Lista de abas */
+.dashboard-tabs-list {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  min-width: min-content;
+}
+
+/* Botão individual de aba */
+.dashboard-tab-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+
+/* Ícone da aba */
+.dashboard-tab-button ion-icon {
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+/* Estado hover */
+.dashboard-tab-button:hover {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Aba ativa */
+.dashboard-tab-button.active {
+  color: #ffffff;
+  border-bottom-color: var(--primary);
+  background: rgba(76, 51, 230, 0.1);
+}
+
+.dashboard-tab-button.active ion-icon {
+  color: var(--primary);
+  filter: drop-shadow(0 0 8px rgba(76, 51, 230, 0.5));
+}
+
 /* Container de Estado Vazio */
 .dashboard-empty-state {
   display: none;
@@ -126,6 +214,30 @@
   z-index: 1;
 }
 
+/* Módulo de aba (oculto por padrão) */
+.dashboard-tab-module {
+  display: none;
+}
+
+/* Módulo de aba ativo */
+.dashboard-tab-module.active {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeInModule 0.3s ease-out;
+}
+
+@keyframes fadeInModule {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Animação de entrada dos cards */
 @keyframes cardSlideUp {
   0% {
@@ -135,26 +247,6 @@
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes glowPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(76, 51, 230, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(76, 51, 230, 0.6);
-  }
-}
-
-@keyframes borderGlow {
-  0%,
-  100% {
-    border-color: rgba(76, 51, 230, 0.3);
-  }
-  50% {
-    border-color: rgba(76, 51, 230, 0.8);
   }
 }
 
@@ -327,218 +419,6 @@
   font-weight: 500;
 }
 
-/* Cards de Gráficos Futuristas */
-.chart-card,
-.metric-card-full {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  padding: 16px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.chart-card::before,
-.metric-card-full::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.chart-card:hover::before,
-.metric-card-full:hover::before {
-  opacity: 1;
-}
-
-.chart-card:hover,
-.metric-card-full:hover {
-  border-color: rgba(76, 51, 230, 0.3);
-  transform: translateY(-2px);
-}
-
-.card-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 20px 0;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
-  padding-left: 12px;
-}
-
-.card-title::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 16px;
-  background: linear-gradient(180deg, #4c33e6, #249689);
-  border-radius: 2px;
-}
-
-/* Canvas dos gráficos */
-.chart-card canvas {
-  max-height: 220px;
-  width: 100% !important;
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
-}
-
-/* Listas de dados */
-.simple-data-list,
-.cpi-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Wrapper para listas paginadas */
-.paginated-list-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.data-item,
-.cpi-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 13px;
-  transition: all 0.2s ease;
-  animation: slideInRight 0.4s ease-out backwards;
-}
-
-.data-item:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.data-item:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.data-item:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.data-item:nth-child(4) {
-  animation-delay: 0.4s;
-}
-.data-item:nth-child(5) {
-  animation-delay: 0.5s;
-}
-
-@keyframes slideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.data-item:hover,
-.cpi-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(76, 51, 230, 0.3);
-  transform: translateX(4px);
-}
-
-.cpi-item.up {
-  border-right: 3px solid #ff4757;
-  background: linear-gradient(90deg, rgba(255, 71, 87, 0.05), transparent);
-}
-
-.cpi-item.down {
-  border-right: 3px solid #249689;
-  background: linear-gradient(90deg, rgba(36, 150, 137, 0.05), transparent);
-}
-
-.item-main-text {
-  font-weight: 600;
-  color: #ffffff;
-  font-size: 14px;
-}
-
-.item-sub-text {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 4px;
-  display: block;
-}
-
-.empty-state-minor {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.4);
-  font-style: italic;
-  font-size: 13px;
-  padding: 30px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-}
-
-/* Card Sazonalidade */
-.sazonalidade-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: linear-gradient(
-    135deg,
-    rgba(36, 150, 137, 0.1),
-    rgba(36, 150, 137, 0.05)
-  );
-  border: 1px solid rgba(36, 150, 137, 0.2);
-  padding: 20px;
-  border-radius: 20px;
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-}
-
-.sazonalidade-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, #249689, #2ed573);
-}
-
-.sazonalidade-card ion-icon {
-  font-size: 32px;
-  color: #2ed573;
-  filter: drop-shadow(0 0 10px rgba(46, 213, 115, 0.5));
-}
-
-.sazonalidade-card p {
-  font-size: 14px;
-  color: #ffffff;
-  line-height: 1.5;
-  margin: 0;
-}
-
 /* Modal de Filtros */
 .modal-hidden {
   display: none;
@@ -701,321 +581,4 @@
 
 .active-filter-card strong {
   color: var(--accent-green);
-}
-
-/* Controles de Paginação */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.pagination-button {
-  background: rgba(76, 51, 230, 0.4);
-  border: 1px solid rgba(76, 51, 230, 0.5);
-  color: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 18px;
-}
-
-.pagination-button:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-/* ==========================================================================
-   ITENS ESSENCIAIS
-   ========================================================================== */
-
-/* Container da lista de itens essenciais */
-.essentials-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Informações do item essencial (lado esquerdo) */
-.essential-item-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Container da porcentagem (lado direito) */
-.essential-percentage {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-/* Badge de porcentagem com cor dinâmica */
-.percentage-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  min-width: 50px;
-  text-align: center;
-}
-
-/* Destaque para itens com alta recorrência (90%+) */
-.percentage-badge.high-recurrence {
-  box-shadow: 0 0 15px rgba(36, 150, 137, 0.5);
-  animation: pulseBadge 2s ease-in-out infinite;
-}
-
-@keyframes pulseBadge {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-/* Card específico para itens essenciais */
-.essentials-card {
-  background: rgba(255, 255, 255, 0.05);
-
-  border: 1px solid rgba(76, 51, 230, 0.2);
-}
-
-.essentials-card::before {
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 1;
-}
-
-/* ==========================================================================
-   TOP LOCAIS MAIS VISITADOS
-   ========================================================================== */
-
-/* Container da lista de top locais */
-.top-locations-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Informações do local (lado esquerdo) */
-.location-item-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Container do contador (lado direito) */
-.location-count-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-/* Badge de contagem com cor dinâmica baseada na posição */
-.count-badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  min-width: 40px;
-  text-align: center;
-}
-
-/* Destaque para o primeiro lugar */
-.count-badge.first-place {
-  box-shadow: 0 0 15px rgba(76, 51, 230, 0.5);
-  animation: pulseBadge 2s ease-in-out infinite;
-}
-
-/* Card específico para top locais */
-.top-locations-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(76, 51, 230, 0.2);
-}
-
-.top-locations-card::before {
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 1;
-}
-
-/* ==========================================================================
-   TAXA DE CONVERSÃO DOS ÚLTIMOS 3 MESES
-   ========================================================================== */
-
-/* Container da lista de taxa de conversão */
-.conversion-rate-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Card específico para taxa de conversão */
-.conversion-rate-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(76, 51, 230, 0.2);
-}
-
-.conversion-rate-card::before {
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 1;
-}
-
-/* Informações do mês (lado esquerdo) */
-.conversion-month-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Container da taxa (lado direito) */
-.conversion-rate-badge-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-/* Badge de taxa de conversão com cor dinâmica */
-.conversion-rate-badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  min-width: 60px;
-  text-align: center;
-}
-
-/* ==========================================================================
-   CLASSES DE PERFORMANCE UNIFICADAS
-   ========================================================================== */
-
-/* Base para todos os badges de performance */
-.performance-badge,
-.cpi-badge,
-.percentage-badge,
-.count-badge,
-.conversion-rate-badge,
-.restock-badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  min-width: 60px;
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-/* Excellent (>=90%) - Verde */
-.performance-badge.excellent,
-.cpi-badge.excellent,
-.percentage-badge.excellent,
-.count-badge.excellent,
-.conversion-rate-badge.excellent,
-.restock-badge.excellent {
-  background: rgba(36, 150, 137, 0.7);
-  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
-  border-color: rgba(36, 150, 137, 0.5);
-}
-
-/* Good (>=80%) - Roxo/Azul */
-.performance-badge.good,
-.cpi-badge.good,
-.percentage-badge.good,
-.count-badge.good,
-.conversion-rate-badge.good,
-.restock-badge.good {
-  background: rgba(76, 51, 230, 0.6);
-  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
-  border-color: rgba(76, 51, 230, 0.4);
-}
-
-/* Average (>=70%) - Laranja/Amarelo */
-.performance-badge.average,
-.cpi-badge.average,
-.percentage-badge.average,
-.count-badge.average,
-.conversion-rate-badge.average,
-.restock-badge.average {
-  background: rgba(235, 156, 29, 0.6);
-  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
-  border-color: rgba(235, 156, 29, 0.4);
-}
-
-/* Low (<70%) - Vermelho */
-.performance-badge.low,
-.cpi-badge.low,
-.percentage-badge.low,
-.count-badge.low,
-.conversion-rate-badge.low,
-.restock-badge.low {
-  background: rgba(255, 71, 87, 0.6);
-  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
-  border-color: rgba(255, 71, 87, 0.4);
-}
-
-/* Animação de pulsar para excellent */
-.performance-badge.excellent,
-.cpi-badge.excellent,
-.percentage-badge.excellent,
-.count-badge.excellent,
-.conversion-rate-badge.excellent {
-  animation: pulsePerformance 2s ease-in-out infinite;
-}
-
-@keyframes pulsePerformance {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-/* Restock badge específico */
-.restock-badge {
-  padding: 4px 10px;
-  min-width: 80px;
 }
