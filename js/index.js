@@ -245,7 +245,7 @@ window.showScreen = function (screenId) {
     // Timer mínimo para garantir que o skeleton seja visível antes dos dados renderizarem
     setTimeout(() => {
       if (window.renderMarketLists) window.renderMarketLists();
-    }, 1000);
+    }, 2000);
   }
 
   if (screenId === "dashboard-screen" && window.initDashboardAnalisys)
