@@ -370,8 +370,8 @@
   transform: translateY(-2px);
 }
 
-.chart-title {
-  font-size: 13px;
+.card-title {
+  font-size: 12px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.8);
   margin: 0 0 20px 0;
@@ -382,7 +382,7 @@
   padding-left: 12px;
 }
 
-.chart-title::before {
+.card-title::before {
   content: "";
   position: absolute;
   left: 0;
