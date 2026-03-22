@@ -582,3 +582,86 @@
 .active-filter-card strong {
   color: var(--accent-green);
 }
+
+/* ========================================================================
+   SKELETON LOADING - ANIMAÇÃO DE CARREGAMENTO DE CONTEÚDO
+   ======================================================================== */
+
+/* Animação shimmer — movimento horizontal de brilho simulando carregamento */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+/* Classe base do skeleton — aplicada em todos os elementos de carregamento */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Container do skeleton de aba — substitui o conteúdo real durante carregamento */
+.skeleton-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+  animation: fadeInModule 0.2s ease-out;
+}
+
+/* Linha de título de seção skeleton */
+.skeleton-section-title {
+  height: 12px;
+  width: 140px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+/* Grid de cards de métricas skeleton (2 colunas) */
+.skeleton-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+/* Card de métrica skeleton */
+.skeleton-metric-card {
+  height: 90px;
+  border-radius: 20px;
+}
+
+/* Card de gráfico skeleton */
+.skeleton-chart-card {
+  height: 220px;
+  border-radius: 24px;
+}
+
+/* Card de lista skeleton */
+.skeleton-list-card {
+  height: 200px;
+  border-radius: 24px;
+}
+
+/* Linha de item de lista skeleton */
+.skeleton-list-item {
+  height: 52px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+/* Card largo skeleton (largura total) */
+.skeleton-full-card {
+  height: 140px;
+  border-radius: 20px;
+}

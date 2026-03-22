@@ -343,6 +343,108 @@ function extractRecurringData(lists) {
 window.extractRecurringData = extractRecurringData;
 
 /* ==========================================================================
+   SKELETON LOADING - FUNÇÕES DE CARREGAMENTO
+   ========================================================================== */
+
+/**
+ * Retorna o HTML do skeleton correspondente ao layout de cada aba
+ * Cada aba tem seu próprio skeleton que imita sua estrutura real
+ *
+ * @param {string} tabModuleName - Nome da aba a ser carregada
+ * @returns {string} - HTML do skeleton correspondente
+ */
+function getSkeletonTemplateForTab(tabModuleName) {
+  const skeletonTemplates = {
+    // Skeleton da aba de Eficiência de Compra
+    "purchase-efficiency": `
+      <div class="skeleton-tab-container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="skeleton-metrics-grid">
+          <div class="skeleton skeleton-metric-card"></div>
+          <div class="skeleton skeleton-metric-card"></div>
+        </div>
+        <div class="skeleton skeleton-chart-card"></div>
+        <div class="skeleton skeleton-full-card"></div>
+        <div class="skeleton skeleton-chart-card"></div>
+      </div>
+    `,
+    // Skeleton da aba de Inflação Pessoal
+    "personal-inflation": `
+      <div class="skeleton-tab-container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="skeleton skeleton-list-card"></div>
+        <div class="skeleton skeleton-list-item"></div>
+        <div class="skeleton skeleton-list-item"></div>
+        <div class="skeleton skeleton-list-item"></div>
+      </div>
+    `,
+    // Skeleton da aba de Comportamento e Hábito
+    "behavior-habits": `
+      <div class="skeleton-tab-container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="skeleton-metrics-grid">
+          <div class="skeleton skeleton-metric-card"></div>
+          <div class="skeleton skeleton-metric-card"></div>
+        </div>
+        <div class="skeleton skeleton-full-card"></div>
+        <div class="skeleton skeleton-full-card"></div>
+        <div class="skeleton skeleton-list-item"></div>
+        <div class="skeleton skeleton-list-item"></div>
+        <div class="skeleton skeleton-list-item"></div>
+      </div>
+    `,
+    // Skeleton da aba de Insights de Saúde
+    "health-insights": `
+      <div class="skeleton-tab-container">
+        <div class="skeleton skeleton-section-title"></div>
+        <div class="skeleton skeleton-chart-card"></div>
+        <div class="skeleton skeleton-full-card"></div>
+      </div>
+    `,
+  };
+
+  return skeletonTemplates[tabModuleName] || `
+    <div class="skeleton-tab-container">
+      <div class="skeleton skeleton-section-title"></div>
+      <div class="skeleton skeleton-chart-card"></div>
+      <div class="skeleton skeleton-full-card"></div>
+    </div>
+  `;
+}
+
+/**
+ * Exibe o skeleton de carregamento no módulo de aba ativo
+ * Salva o innerHTML original no dataset para restaurar após o carregamento
+ *
+ * @param {string} tabModuleName - Nome da aba sendo carregada
+ */
+function showTabSkeleton(tabModuleName) {
+  const activeModule = document.getElementById(`tab-module-${tabModuleName}`);
+  if (!activeModule) return;
+
+  // Salva o conteúdo original para restaurar após o carregamento
+  activeModule.dataset.originalContent = activeModule.innerHTML;
+  activeModule.innerHTML = getSkeletonTemplateForTab(tabModuleName);
+}
+
+/**
+ * Remove o skeleton e restaura o conteúdo original do módulo de aba
+ * Deve ser chamado ANTES do módulo tentar acessar elementos do DOM
+ *
+ * @param {string} tabModuleName - Nome da aba que vai carregar os dados
+ */
+function hideTabSkeleton(tabModuleName) {
+  const activeModule = document.getElementById(`tab-module-${tabModuleName}`);
+  if (!activeModule) return;
+
+  // Restaura o conteúdo original se o skeleton estiver sendo exibido
+  if (activeModule.dataset.originalContent !== undefined) {
+    activeModule.innerHTML = activeModule.dataset.originalContent;
+    delete activeModule.dataset.originalContent;
+  }
+}
+
+/* ==========================================================================
    GERENCIAMENTO DE ABAS
    ========================================================================== */
 
@@ -385,8 +487,21 @@ window.activateDashboardTab = function (tabModuleName) {
       .map((segment) => capitalizeFirstLetter(segment))
       .join("") +
     "Module";
+
   if (window[functionName]) {
-    window[functionName]();
+    // Exibe o skeleton — o conteúdo original é salvo internamente no dataset
+    showTabSkeleton(tabModuleName);
+
+    // Aguarda um frame para o skeleton ser pintado pelo browser,
+    // depois restaura o HTML original e carrega os dados reais
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        // Restaura os elementos originais no DOM antes de o módulo acessá-los
+        hideTabSkeleton(tabModuleName);
+        // Carrega os dados do módulo com os elementos já disponíveis no DOM
+        window[functionName]();
+      }, 350);
+    });
   }
 };
 
