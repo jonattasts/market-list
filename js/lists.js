@@ -58,6 +58,44 @@ window.handleEditListFromSwipe = function (index) {
   window.openEditListForm();
 };
 
+/* ==========================================================================
+   SKELETON LOADING - FUNÇÕES DE CARREGAMENTO DA LISTA DE COMPRAS
+   ========================================================================== */
+
+/**
+ * Retorna o HTML de um card skeleton que imita a estrutura do list-master-card
+ */
+function getListCardSkeletonTemplate() {
+  return `
+    <div class="skeleton-list-card-wrapper">
+      <div class="skeleton-list skeleton-list-card-title"></div>
+      <div class="skeleton-list skeleton-list-card-location"></div>
+      <div class="skeleton-list skeleton-list-card-date"></div>
+      <div class="skeleton-list skeleton-list-card-finance"></div>
+      <div class="skeleton-list skeleton-list-card-status"></div>
+      <div class="skeleton-list skeleton-list-card-progress"></div>
+    </div>
+  `;
+}
+
+/**
+ * Exibe o skeleton de carregamento no container de listas
+ * Renderiza N cards skeleton para simular o layout real enquanto os dados carregam
+ *
+ * @param {number} cardCount - Quantidade de cards skeleton a exibir (padrão: 4)
+ */
+window.showListsSkeleton = function (cardCount = 4) {
+  const container = window.listsMasterContainer;
+  if (!container) return;
+
+  let skeletonHTML = "";
+  for (let i = 0; i < cardCount; i++) {
+    skeletonHTML += getListCardSkeletonTemplate();
+  }
+
+  container.innerHTML = `<div style="padding: 0 20px 20px;">${skeletonHTML}</div>`;
+};
+
 window.renderMarketLists = function () {
   window.listsMasterContainer.innerHTML = "";
   const term = window.normalizeString(window.searchInput.value);

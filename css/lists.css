@@ -234,3 +234,85 @@
     transform: translateY(0) translateX(0);
   }
 }
+
+/* ==========================================================================
+   SKELETON LOADING - ANIMAÇÃO DE CARREGAMENTO DA LISTA DE COMPRAS
+   ========================================================================== */
+
+/* Animação shimmer — movimento horizontal simulando carregamento */
+@keyframes listsSkeletonShimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+/* Classe base do skeleton */
+.skeleton-list {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.12) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 800px 100%;
+  animation: listsSkeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Card skeleton que imita o list-master-card */
+.skeleton-list-card-wrapper {
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+/* Linha do título do card */
+.skeleton-list-card-title {
+  height: 18px;
+  width: 60%;
+  border-radius: 6px;
+}
+
+/* Linha de local */
+.skeleton-list-card-location {
+  height: 13px;
+  width: 45%;
+  border-radius: 6px;
+}
+
+/* Linha de data */
+.skeleton-list-card-date {
+  height: 13px;
+  width: 35%;
+  border-radius: 6px;
+}
+
+/* Separador financeiro */
+.skeleton-list-card-finance {
+  height: 40px;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+/* Linha de status */
+.skeleton-list-card-status {
+  height: 12px;
+  width: 30%;
+  border-radius: 6px;
+}
+
+/* Barra de progresso */
+.skeleton-list-card-progress {
+  height: 6px;
+  width: 100%;
+  border-radius: 3px;
+}

@@ -239,8 +239,14 @@ window.showScreen = function (screenId) {
 
   window.closePopover();
 
-  if (screenId === "market-lists-screen" && window.renderMarketLists)
-    window.renderMarketLists();
+  if (screenId === "market-lists-screen") {
+    // Exibe skeleton imediatamente ao abrir a tela
+    if (window.showListsSkeleton) window.showListsSkeleton();
+    // Timer mínimo para garantir que o skeleton seja visível antes dos dados renderizarem
+    setTimeout(() => {
+      if (window.renderMarketLists) window.renderMarketLists();
+    }, 1000);
+  }
 
   if (screenId === "dashboard-screen" && window.initDashboardAnalisys)
     window.initDashboardAnalisys();
@@ -336,7 +342,13 @@ function initFirebaseListener(userName) {
         if (window.marketListData.length === 0) {
           window.showScreen("home-screen");
         } else {
+          // Exibe skeleton antes da primeira renderização ao carregar do Firestore
+          if (window.showListsSkeleton) window.showListsSkeleton();
           window.showScreen("market-lists-screen");
+          // Timer mínimo para garantir visibilidade do skeleton na primeira carga
+          setTimeout(() => {
+            if (window.renderMarketLists) window.renderMarketLists();
+          }, 400);
         }
         isFirstLoad = false;
       } else {
@@ -345,7 +357,12 @@ function initFirebaseListener(userName) {
             .getElementById("market-lists-screen")
             .classList.contains("screen-hidden")
         ) {
-          window.renderMarketLists();
+          // Exibe skeleton antes de re-renderizar ao receber atualizações do Firestore
+          if (window.showListsSkeleton) window.showListsSkeleton();
+          // Timer mínimo para garantir visibilidade do skeleton na atualização
+          setTimeout(() => {
+            window.renderMarketLists();
+          }, 400);
         }
         if (
           !document
