@@ -78,8 +78,8 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
   document.getElementById("metric-economy").innerText =
     window.formatCurrencyBRL(economy);
 
-  // Métrica 1.C: Gasto por Categoria (Gráfico Pizza)
-  renderShareWalletChart(categoryTotals);
+  // Métrica 1.C: Gasto por Categoria (Gráfico Pizza) — renderizado pelo personal-inflation.js
+  window.renderShareWalletChart(categoryTotals);
 
   // Métrica 3.B: Taxa de Conversão dos Últimos 3 Meses
   calculateMonthlyConversionRate(allLists);
@@ -223,58 +223,6 @@ function calculateMonthlyConversionRate(allLists) {
   );
 }
 
-/**
- * Renderiza gráfico de Gasto por Categoria (Pizza)
- */
-function renderShareWalletChart(categoryTotals) {
-  const ctx = document.getElementById("chart-share-wallet");
-  if (!ctx) return;
-
-  if (window.chartShareWallet) window.chartShareWallet.destroy();
-
-  const labels = Object.keys(categoryTotals);
-  const data = Object.values(categoryTotals);
-
-  if (labels.length === 0) return;
-
-  window.chartShareWallet = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          data: data,
-          backgroundColor: [
-            "#4c33e6",
-            "#249689",
-            "#ff4757",
-            "#ffa502",
-            "#3498db",
-            "#2ed573",
-            "#eccc68",
-          ],
-          borderWidth: 0,
-          hoverOffset: 10,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            color: "rgba(255,255,255,0.7)",
-            font: { size: 10 },
-            padding: 15,
-          },
-        },
-      },
-      cutout: "70%",
-    },
-  });
-}
 
 /**
  * Renderiza gráfico de Volume de Itens por Compra (Coluna)

@@ -154,6 +154,73 @@ function processPersonalInflationData(filteredLists) {
   );
 }
 
+
+/**
+ * Renderiza gráfico de Gasto por Categoria (Pizza)
+ * Exibe o tooltip formatado em BRL ao clicar em uma categoria
+ */
+function renderShareWalletChart(categoryTotals) {
+  const ctx = document.getElementById("chart-share-wallet");
+  if (!ctx) return;
+
+  if (window.chartShareWallet) window.chartShareWallet.destroy();
+
+  const labels = Object.keys(categoryTotals);
+  const data = Object.values(categoryTotals);
+
+  if (labels.length === 0) return;
+
+  window.chartShareWallet = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: [
+            "#4c33e6",
+            "#249689",
+            "#ff4757",
+            "#ffa502",
+            "#3498db",
+            "#2ed573",
+            "#eccc68",
+          ],
+          borderWidth: 0,
+          hoverOffset: 10,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "rgba(255,255,255,0.7)",
+            font: { size: 10 },
+            padding: 15,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            // Formata o valor do tooltip exibindo em BRL ao clicar na categoria
+            label: function (tooltipItem) {
+              const value = tooltipItem.raw;
+              return " " + window.formatCurrencyBRL(value);
+            },
+          },
+        },
+      },
+      cutout: "70%",
+    },
+  });
+}
+
+// Expõe globalmente para ser chamado pelo purchase-efficiency.js
+window.renderShareWalletChart = renderShareWalletChart;
+
 /**
  * Renderiza estado vazio para o módulo de inflação pessoal
  */
