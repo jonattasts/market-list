@@ -5,7 +5,7 @@
 /**
  * Carrega e renderiza o módulo de Insights de Saúde
  * Inclui:
- * - Ratio Ultraprocessados vs In Natura (Gráfico)
+ * - Ratio Ultraprocessados vs Saudáveis (Gráfico)
  * - Sazonalidade de Consumo
  */
 window.loadHealthInsightsModule = function () {
@@ -31,71 +31,89 @@ window.loadHealthInsightsModule = function () {
  * Processa dados de insights de saúde
  */
 function processHealthInsightsData(filteredLists) {
-  // Agrega todos os itens e categorias das listas filtradas
-  const categoryTotals = {};
-
-  filteredLists.forEach((list) => {
-    (list.categories || []).forEach((category) => {
-      // Agregação para gasto por categoria
-      if (!categoryTotals[category.name]) categoryTotals[category.name] = 0;
-
-      category.items.forEach((item) => {
-        const unitValue = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-        const quantity = item.quantity || 1;
-        const valorTotalItem = unitValue * quantity;
-
-        if (item.checked) {
-          categoryTotals[category.name] += valorTotalItem;
-        }
-      });
-    });
-  });
-
-  // Métrica 4.A: Ratio Ultraprocessados vs In Natura
-  calculateHealthRatio(categoryTotals);
+  // Analisa individualmente cada item comprado das listas filtradas
+  // em vez de usar o nome da categoria como base de classificação
+  calculateHealthRatio(filteredLists);
 
   // Métrica 4.B: Sazonalidade de Consumo
   calculateSeasonality(filteredLists);
 }
 
 /**
- * Métrica 4.A: Ratio Ultraprocessados vs In Natura
- * Classificação baseado em padrões de categoria
+ * Métrica 4.A: Ratio Ultraprocessados vs Saudáveis
+ *
+ * Classifica cada item individualmente pelo seu nome usando palavras-chave.
+ * Soma o valor total gasto (preço x quantidade) de itens comprados (checked)
+ * em cada categoria de saúde: saudável, processado e outros.
+ *
+ * @param {Array} filteredLists - Listas filtradas pelo filtro ativo
  */
-function calculateHealthRatio(categoryTotals) {
-  // Sistema de classificação hierárquico
-  const categoryClassification = {
-    // In Natura / Saudáveis
+function calculateHealthRatio(filteredLists) {
+  // Palavras-chave para classificação individual de itens
+  const itemClassification = {
+    // Saudáveis / Minimamente processados / Saudáveis
     healthy: [
+      // Grãos e cereais básicos
+      "feijao", "arroz", "lentilha", "grao de bico", "ervilha", "amendoim",
+      "aveia", "quinoa", "chia", "linhaça", "milho", "trigo", "cevada",
+      // Farinhas e derivados básicos
+      "farinha", "amido", "fuba", "polvilho", "tapioca",
+      // Massas simples
+      "macarrao", "espaguete", "parafuso", "penne", "lasanha", "talharim",
+      // Proteínas saudáveis
+      "carne", "frango", "peixe", "file", "peito", "coxa", "asa", "costela",
+      "alcatra", "patinho", "musculo", "contra file", "picanha", "coxao",
+      "sardinha", "atum", "camarao", "tilapia", "bacalhau", "salmao",
+      "ovo", "ovos", "placa de ovos",
+      // Laticínios básicos
+      "leite", "iogurte", "queijo", "ricota", "cottage", "coalhada",
+      "requeijao", "manteiga", "creme de leite",
+      // Frutas
+      "banana", "maca", "pera", "uva", "laranja", "limao", "abacaxi",
+      "mamao", "melancia", "melao", "manga", "morango", "acerola", "goiaba",
+      "maracuja", "abacate", "caju", "coco", "kiwi", "pessego", "ameixa",
       "fruta",
-      "legume",
-      "verdura",
-      "hortifruti",
-      "carne",
-      "peixe",
-      "ovo",
-      "leite",
-      "natural",
-      "saudavel",
-      "graos",
-      "cereais",
+      // Verduras e legumes
+      "alface", "rucula", "espinafre", "couve", "brocolis", "repolho",
+      "cenoura", "beterraba", "batata", "mandioca", "aipim", "inhame",
+      "chuchu", "abobrinha", "pepino", "tomate", "cebola", "alho",
+      "pimentao", "berinjela", "quiabo", "jiló", "abobora", "milho verde",
+      "brocoli", "couve flor", "acelga", "agriao", "salsa", "cebolinha",
+      "verdura", "legume", "hortalica", "hortifruti",
+      // Óleos naturais e temperos básicos
+      "azeite", "oleo de coco", "vinagre", "sal", "pimenta", "oregano",
+      "alecrim", "manjericao", "canela", "gengibre", "curcuma", "colorau",
+      // Açúcar básico e adoçantes naturais
+      "acucar", "mel", "rapadura",
     ],
-    // Ultraprocessados / Menos Saudáveis
+    // Ultraprocessados / Menos saudáveis
     processed: [
-      "bolacha",
-      "biscoito",
-      "refrigerante",
-      "doce",
-      "salgadinho",
-      "congelado",
-      "embutido",
-      "salsicha",
-      "presunto",
-      "bebida alcoolica",
-      "cerveja",
-      "vinho",
+      // Biscoitos e salgadinhos
+      "bolacha", "biscoito", "wafer", "cream cracker", "maria", "maisena",
+      "salgadinho", "chips", "cheetos", "doritos", "ruffles", "batata frita",
+      // Bebidas industrializadas
+      "refrigerante", "coca", "pepsi", "guarana", "fanta", "sprite",
+      "suco de caixa", "suco de lata", "energetico", "red bull",
+      "cerveja", "vinho", "whisky", "vodka", "cachaca", "bebida alcoolica",
+      "isotônico", "nescau", "achocolatado",
+      // Embutidos e frios
+      "salsicha", "presunto", "mortadela", "linguica", "calabresa",
+      "bacon", "pepperoni", "salame", "copa", "apresuntado", "nugget",
+      "hamburguer", "burger", "embutido",
+      // Doces e sobremesas industrializadas
+      "chocolate", "bombom", "bala", "pirulito", "sorvete", "gelatina",
+      "pudim", "doce", "brigadeiro", "bis", "kitkat", "snickers",
+      "paçoca", "cocada", "goiabada", "geleia",
+      // Comidas congeladas e prontas
+      "lasanha congelada", "pizza congelada", "congelado", "pronto",
+      "miojo", "lamen", "macarrao instantaneo", "cup noodles",
+      // Molhos e temperos industrializados
+      "ketchup", "maionese", "mostarda", "molho shoyu", "molho inglês",
+      "caldo knorr", "sazon", "tempero pronto", "maggi",
+      // Pães industrializados
+      "pao de forma", "pao hot dog", "pao hamburguer", "bisnaguinha",
+      // Outros ultraprocessados
+      "margarina", "creme vegetal",
     ],
   };
 
@@ -103,20 +121,33 @@ function calculateHealthRatio(categoryTotals) {
   let processedTotal = 0;
   let othersTotal = 0;
 
-  Object.keys(categoryTotals).forEach((categoryName) => {
-    const normalizedCategory = window.normalizeString(categoryName);
-    const value = categoryTotals[categoryName];
+  // Itera individualmente em cada item comprado de cada lista
+  filteredLists.forEach((list) => {
+    (list.categories || []).forEach((category) => {
+      category.items.forEach((item) => {
+        // Considera apenas itens efetivamente comprados (checked)
+        if (!item.checked) return;
 
-    const isHealthy = categoryClassification.healthy.some((keyword) =>
-      normalizedCategory.includes(keyword),
-    );
-    const isProcessed = categoryClassification.processed.some((keyword) =>
-      normalizedCategory.includes(keyword),
-    );
+        const normalizedItemName = window.normalizeString(item.name);
+        const unitValue = parseFloat(
+          item.price.replace(/\./g, "").replace(",", "."),
+        );
+        const quantity = item.quantity || 1;
+        const totalItemValue = unitValue * quantity;
 
-    if (isHealthy) healthyTotal += value;
-    else if (isProcessed) processedTotal += value;
-    else othersTotal += value;
+        // Classifica o item pelo seu nome individualmente
+        const isHealthy = itemClassification.healthy.some((keyword) =>
+          normalizedItemName.includes(window.normalizeString(keyword)),
+        );
+        const isProcessed = itemClassification.processed.some((keyword) =>
+          normalizedItemName.includes(window.normalizeString(keyword)),
+        );
+
+        if (isHealthy) healthyTotal += totalItemValue;
+        else if (isProcessed) processedTotal += totalItemValue;
+        else othersTotal += totalItemValue;
+      });
+    });
   });
 
   renderHealthRatioChart(healthyTotal, processedTotal, othersTotal);
@@ -129,12 +160,12 @@ function renderHealthRatioChart(healthy, processed, others) {
   const ctx = document.getElementById("chart-perfil-saude");
   if (!ctx) return;
 
-  if (chartHealthProfile) chartHealthProfile.destroy();
+  if (window.chartHealthProfile) window.chartHealthProfile.destroy();
 
-  chartHealthProfile = new Chart(ctx, {
+  window.chartHealthProfile = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["In Natura / Saudável", "Processados", "Outros"],
+      labels: ["Saudável", "Processados", "Outros"],
       datasets: [
         {
           data: [healthy, processed, others],
@@ -150,6 +181,15 @@ function renderHealthRatioChart(healthy, processed, others) {
         legend: {
           position: "bottom",
           labels: { color: "rgba(255,255,255,0.7)", font: { size: 10 } },
+        },
+        tooltip: {
+          callbacks: {
+            // Formata o valor do tooltip exibindo em BRL ao clicar na fatia
+            label: function (tooltipItem) {
+              const value = tooltipItem.raw;
+              return " " + window.formatCurrencyBRL(value);
+            },
+          },
         },
       },
     },
