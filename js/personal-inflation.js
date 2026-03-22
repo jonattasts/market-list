@@ -53,7 +53,7 @@ function processPersonalInflationData(filteredLists) {
         <span class="item-sub-text">Anterior: ${window.formatCurrencyBRL(item.avgPrevious)} → Atual: ${window.formatCurrencyBRL(item.avgCurrent)}</span>
       `,
       (item) => `
-        <div class="cpi-badge ${item.performanceClass}">
+        <div class="percentage-badge ${item.performanceClass}">
           ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
         </div>
       `,
@@ -115,7 +115,11 @@ function processPersonalInflationData(filteredLists) {
       emoji = "📈";
     }
 
-    const performanceClass = window.getPerformanceClassForPriceVariation(diff);
+    // Define a classe de performance do badge:
+    // excellent = redução de valor, good = sem alteração, low = aumento de valor
+    let performanceClass = "good";
+    if (diff < 0) performanceClass = "excellent";
+    else if (diff > 0) performanceClass = "low";
 
     cpiItems.push({
       name: window.capitalize(itemData.name),
@@ -147,7 +151,7 @@ function processPersonalInflationData(filteredLists) {
       <span class="item-sub-text">Anterior: ${window.formatCurrencyBRL(item.avgPrevious)} → Atual: ${window.formatCurrencyBRL(item.avgCurrent)}</span>
     `,
     (item) => `
-      <div class="cpi-badge ${item.performanceClass}">
+      <div class="percentage-badge ${item.performanceClass}">
         ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
       </div>
     `,
