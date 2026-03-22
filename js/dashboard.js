@@ -26,7 +26,7 @@ let activeFilter = { type: "geral", value: null };
 window.activeFilter = activeFilter;
 
 // Estado de abas ativas
-let activeTabModule = "personal-inflation";
+let activeTabModule = "purchase-efficiency";
 
 /* ==========================================================================
    ESTADO DE PAGINAÇÃO DAS LISTAS
@@ -428,8 +428,8 @@ window.initDashboardAnalisys = function () {
   updateFilterButtonVisualState();
 
   // Ativa a primeira aba por padrão
-  activeTabModule = "personal-inflation";
-  activateDashboardTab("personal-inflation");
+  activeTabModule = "purchase-efficiency";
+  activateDashboardTab("purchase-efficiency");
 };
 
 function resetPagination() {

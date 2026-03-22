@@ -459,9 +459,19 @@
         <!-- ========================================================= -->
         <div class="dashboard-tabs-container">
           <ul class="dashboard-tabs-list">
-            <!-- Aba 1: Inflação Pessoal -->
+            <!-- Aba 1: Eficiência de Compra -->
             <li>
               <button class="dashboard-tab-button active"
+                data-tab="purchase-efficiency"
+                onclick="activateDashboardTab('purchase-efficiency')">
+                <ion-icon name="checkmark-done-outline"></ion-icon>
+                <span>Eficiência</span>
+              </button>
+            </li>
+
+            <!-- Aba 2: Inflação Pessoal -->
+            <li>
+              <button class="dashboard-tab-button"
                 data-tab="personal-inflation"
                 onclick="activateDashboardTab('personal-inflation')">
                 <ion-icon name="trending-up-outline"></ion-icon>
@@ -469,22 +479,12 @@
               </button>
             </li>
 
-            <!-- Aba 2: Comportamento e Hábito -->
+            <!-- Aba 3: Comportamento e Hábito -->
             <li>
               <button class="dashboard-tab-button" data-tab="behavior-habits"
                 onclick="activateDashboardTab('behavior-habits')">
                 <ion-icon name="heart-outline"></ion-icon>
                 <span>Comportamento</span>
-              </button>
-            </li>
-
-            <!-- Aba 3: Eficiência de Compra -->
-            <li>
-              <button class="dashboard-tab-button"
-                data-tab="purchase-efficiency"
-                onclick="activateDashboardTab('purchase-efficiency')">
-                <ion-icon name="checkmark-done-outline"></ion-icon>
-                <span>Eficiência</span>
               </button>
             </li>
 
@@ -512,13 +512,13 @@
             </div>
 
             <!-- ========================================================= -->
-            <!-- ABA 1: INFLAÇÃO PESSOAL -->
+            <!-- ABA 1: EFICIÊNCIA DE COMPRA -->
             <!-- ========================================================= -->
-            <div id="tab-module-personal-inflation"
+            <div id="tab-module-purchase-efficiency"
               class="dashboard-tab-module active">
-              <!-- Performance Financeira -->
+              <!-- Eficiência da Compra -->
               <div class="metrics-section">
-                <h2 class="section-title">Performance Financeira</h2>
+                <h2 class="section-title">Eficiência da Compra</h2>
 
                 <div class="metrics-grid">
                   <div class="metric-card-stat info">
@@ -541,6 +541,32 @@
                   <canvas id="chart-share-wallet"></canvas>
                 </div>
 
+                <!-- Taxa de Conversão dos Últimos 3 Meses -->
+                <div class="metric-card-full conversion-rate-card">
+                  <h3 class="card-title">Taxa de Conversão (Últimos 3
+                    Meses)</h3>
+                  <div id="conversion-rate-container"
+                    class="conversion-rate-list">
+                    <div class="empty-state-minor">Sem dados suficientes</div>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <h3 class="card-title">Volume de Itens por Compra</h3>
+                  <canvas id="chart-volume-itens"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- ABA 2: INFLAÇÃO PESSOAL -->
+            <!-- ========================================================= -->
+            <div id="tab-module-personal-inflation"
+              class="dashboard-tab-module">
+              <!-- Inflação Pessoal -->
+              <div class="metrics-section">
+                <h2 class="section-title">Inflação Pessoal</h2>
+
                 <div class="metric-card-full cpi-card">
                   <h3 class="card-title">Inflação Pessoal (Recorrentes)</h3>
                   <div id="cpi-container" class="cpi-list">
@@ -551,7 +577,7 @@
             </div>
 
             <!-- ========================================================= -->
-            <!-- ABA 2: COMPORTAMENTO E HÁBITO -->
+            <!-- ABA 3: COMPORTAMENTO E HÁBITO -->
             <!-- ========================================================= -->
             <div id="tab-module-behavior-habits" class="dashboard-tab-module">
               <!-- Comportamento e Hábito -->
@@ -611,32 +637,6 @@
                     <div class="empty-state-minor">Sem histórico
                       suficiente</div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ========================================================= -->
-            <!-- ABA 3: EFICIÊNCIA DE COMPRA -->
-            <!-- ========================================================= -->
-            <div id="tab-module-purchase-efficiency"
-              class="dashboard-tab-module">
-              <!-- Eficiência da Compra -->
-              <div class="metrics-section">
-                <h2 class="section-title">Eficiência da Compra</h2>
-
-                <!-- Taxa de Conversão dos Últimos 3 Meses -->
-                <div class="metric-card-full conversion-rate-card">
-                  <h3 class="card-title">Taxa de Conversão (Últimos 3
-                    Meses)</h3>
-                  <div id="conversion-rate-container"
-                    class="conversion-rate-list">
-                    <div class="empty-state-minor">Sem dados suficientes</div>
-                  </div>
-                </div>
-
-                <div class="chart-card">
-                  <h3 class="card-title">Volume de Itens por Compra</h3>
-                  <canvas id="chart-volume-itens"></canvas>
                 </div>
               </div>
             </div>
