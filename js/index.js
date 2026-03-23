@@ -245,7 +245,7 @@ window.showScreen = function (screenId) {
     // Timer mínimo para garantir que o skeleton seja visível antes dos dados renderizarem
     setTimeout(() => {
       if (window.renderMarketLists) window.renderMarketLists();
-    }, 2000);
+    }, 700);
   }
 
   if (screenId === "dashboard-screen" && window.initDashboardAnalisys)
@@ -348,7 +348,7 @@ function initFirebaseListener(userName) {
           // Timer mínimo para garantir visibilidade do skeleton na primeira carga
           setTimeout(() => {
             if (window.renderMarketLists) window.renderMarketLists();
-          }, 400);
+          }, 700);
         }
         isFirstLoad = false;
       } else {
@@ -362,7 +362,7 @@ function initFirebaseListener(userName) {
           // Timer mínimo para garantir visibilidade do skeleton na atualização
           setTimeout(() => {
             window.renderMarketLists();
-          }, 400);
+          }, 700);
         }
         if (
           !document
