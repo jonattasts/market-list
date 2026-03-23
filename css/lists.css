@@ -34,14 +34,14 @@
 }
 
 .search-group {
-  background: var(--bg-card);
+  background: var(--search-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px var(--shadow-card);
 }
 
 .search-group ion-icon {
@@ -55,6 +55,11 @@
   flex: 1;
   font-size: 15px;
   background: transparent;
+  color: var(--text-main);
+}
+
+.search-group input::placeholder {
+  color: var(--text-secondary);
 }
 
 .search-group input:disabled {
@@ -187,11 +192,11 @@
 }
 
 .popover-content {
-  background-color: #ffffff;
+  background-color: var(--bg-popover);
   min-width: 190px;
   border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--border-color, #eee);
+  box-shadow: 0 12px 30px var(--shadow-card);
+  border: 1px solid var(--border-color);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -202,7 +207,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text-main, #333);
+  color: var(--text-main);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -210,17 +215,17 @@
 }
 
 .popover-item:active {
-  background-color: #f8f9fa;
+  background-color: var(--bg-page);
 }
 
 .popover-item ion-icon {
   font-size: 20px;
-  color: var(--primary, #6200ee);
+  color: var(--primary);
 }
 
 .popover-divider {
   height: 1px;
-  background-color: var(--border-color, #eee);
+  background-color: var(--border-color);
   margin: 0 10px;
 }
 
@@ -253,9 +258,9 @@
 .skeleton-list {
   background: linear-gradient(
     90deg,
-    rgba(0, 0, 0, 0.06) 25%,
-    rgba(0, 0, 0, 0.12) 50%,
-    rgba(0, 0, 0, 0.06) 75%
+    var(--skeleton-from) 25%,
+    var(--skeleton-mid) 50%,
+    var(--skeleton-from) 75%
   );
   background-size: 800px 100%;
   animation: listsSkeletonShimmer 1.4s ease-in-out infinite;

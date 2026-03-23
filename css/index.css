@@ -1,7 +1,10 @@
 /* ==========================================================================
    GLOBAL TOKENS & RESET
    ========================================================================== */
-:root {
+
+/* --- Tema Light (padrão) --- */
+:root,
+[data-theme="light"] {
   --primary: #4c33e6;
   --primary-light: #8a78ff;
   --bg-page: #f1f4f8;
@@ -16,10 +19,55 @@
   --success: #2ed573;
   --toast-bg: #2f3542;
 
+  /* Cores específicas do tema light */
+  --bg-header: #4c33e6;
+  --bg-overlay: #f1f4f8;
+  --bg-popover: #ffffff;
+  --text-on-header: #ffffff;
+  --shadow-card: rgba(0, 0, 0, 0.08);
+  --search-bg: #ffffff;
+  --item-checked-bg: #f8f9fa;
+  --item-checked-border: #e9ecef;
+  --skeleton-from: rgba(0, 0, 0, 0.06);
+  --skeleton-mid: rgba(0, 0, 0, 0.12);
+  --filter-card-bg: #ffffff;
+  --sync-overlay-bg: #f1f4f8;
+
   /* Header size tokens para padronização */
   --header-padding-large: 35px 16px 30px;
   --header-padding-medium: 30px 16px 25px;
   --header-padding-small: 20px 16px 15px;
+}
+
+/* --- Tema Dark --- */
+[data-theme="dark"] {
+  --primary: #7c6ff7;
+  --primary-light: #a89fff;
+  --bg-page: #0d1117;
+  --bg-card: #161b22;
+  --bg-card-light: #161b2280;
+  --text-main: #e6edf3;
+  --text-secondary: #8b949e;
+  --accent-green: #2ed573;
+  --border-color: #30363d;
+  --transition: all 0.3s ease;
+  --danger: #ff4757;
+  --success: #2ed573;
+  --toast-bg: #e6edf3;
+
+  /* Cores específicas do tema dark */
+  --bg-header: #161b22;
+  --bg-overlay: #0d1117;
+  --bg-popover: #1c2128;
+  --text-on-header: #e6edf3;
+  --shadow-card: rgba(0, 0, 0, 0.4);
+  --search-bg: #1c2128;
+  --item-checked-bg: #0d1117;
+  --item-checked-border: #30363d;
+  --skeleton-from: rgba(255, 255, 255, 0.04);
+  --skeleton-mid: rgba(255, 255, 255, 0.08);
+  --filter-card-bg: #1c2128;
+  --sync-overlay-bg: #0d1117;
 }
 
 * {
@@ -42,6 +90,17 @@ body {
   touch-action: none; /* Previne scroll de toque no body */
 }
 
+/* Transição suave entre temas em todos os elementos */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
 /* ==========================================================================
    APP CONTAINER & ESTRUTURA
    ========================================================================== */
@@ -62,8 +121,8 @@ body {
 
 /* Header base - fixo no topo */
 header {
-  background-color: var(--primary);
-  color: white;
+  background-color: var(--bg-header);
+  color: var(--text-on-header);
   padding: var(--header-padding-large);
   display: flex;
   justify-content: space-around;
@@ -101,6 +160,7 @@ header h1,
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: anywhere;
+  color: var(--text-on-header);
 }
 
 .screen-hidden {

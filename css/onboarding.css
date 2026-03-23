@@ -18,7 +18,7 @@
   background: var(--bg-card);
   padding: 40px 30px;
   border-radius: 28px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 15px 35px var(--shadow-card);
   width: 100%;
   max-width: 380px;
 }
@@ -60,6 +60,8 @@
   font-size: 16px;
   transition: var(--transition);
   outline: none;
+  background-color: var(--bg-page);
+  color: var(--text-main);
 }
 
 .onboarding-input-group input:focus {
@@ -108,7 +110,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--bg-page);
+  background: var(--sync-overlay-bg);
   display: flex;
   flex-direction: column;
   justify-content: center;

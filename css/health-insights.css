@@ -8,11 +8,11 @@
 
 /* Cards de Gráficos Futuristas */
 .chart-card {
-  background: #ffffff;
+  background: var(--bg-card);
   backdrop-filter: blur(10px);
   padding: 16px;
   border-radius: 24px;
-  border: 1px solid rgba(76, 51, 230, 0.12);
+  border: 1px solid var(--border-color);
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;
@@ -65,7 +65,7 @@
   transform: translateY(-50%);
   width: 4px;
   height: 16px;
-  background: linear-gradient(180deg, #4c33e6, #249689);
+  background: linear-gradient(180deg, var(--primary), var(--accent-green));
   border-radius: 2px;
 }
 
@@ -127,11 +127,11 @@
 
 /* Card Métrica Full */
 .metric-card-full {
-  background: #ffffff;
+  background: var(--bg-card);
   backdrop-filter: blur(10px);
   padding: 16px;
   border-radius: 24px;
-  border: 1px solid rgba(76, 51, 230, 0.12);
+  border: 1px solid var(--border-color);
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;

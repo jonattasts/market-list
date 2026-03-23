@@ -40,7 +40,7 @@
   margin: -30px 16px 16px;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px var(--shadow-card);
   position: relative;
   z-index: 20;
   flex-shrink: 0;
@@ -122,6 +122,11 @@
   color: var(--toast-bg);
 }
 
+/* No tema dark o toast-bg é claro, precisa da cor do texto dark para o subtotal */
+[data-theme="dark"] .finance-value-subtotal {
+  color: var(--text-main);
+}
+
 .finance-value-total {
   font-size: 18px;
   font-weight: 800;
@@ -153,7 +158,7 @@
 
 .item-search-inline {
   box-shadow: none;
-  background: #ffffffde;
+  background: var(--bg-card);
   border: none;
   padding: 8px 12px;
 }
@@ -298,14 +303,18 @@
 }
 
 .item-price {
-  color: var(--toast-bg);
+  color: var(--text-main);
   font-weight: 600;
+}
+
+[data-theme="light"] .item-price {
+  color: var(--toast-bg);
 }
 
 .custom-check {
   width: 26px;
   height: 26px;
-  border: 2px solid #d0d5dd;
+  border: 2px solid var(--border-color);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -333,8 +342,8 @@
 
 /* ITEM MARCADO */
 .item-card.checked {
-  background: #f8f9fa;
-  border-color: #e9ecef;
+  background: var(--item-checked-bg);
+  border-color: var(--item-checked-border);
 }
 
 .item-card.checked .item-name {

@@ -91,9 +91,20 @@
       <!-- ============================================================= -->
       <div id="home-screen" class="screen-hidden">
 
-        <!-- Header Principal - Tamanho Médio -->
+        <!-- Header Principal - Tamanho Médio com botão de tema -->
         <header class="medium">
+
+          <!-- Espaço vazio à esquerda para centralizar o título -->
+          <div class="header-action"></div>
+
           <h1>Market List</h1>
+
+          <!-- Botão de alternância de tema (light/dark) -->
+          <div class="header-action" id="button-theme-toggle" onclick="toggleTheme()">
+            <!-- Ícone inicial definido pelo theme.js via updateThemeToggleIcon() -->
+            <ion-icon name="moon-outline"></ion-icon>
+          </div>
+
         </header>
 
         <!-- Conteúdo Central -->
@@ -732,6 +743,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Módulo de tema: carregado antes dos outros scripts para evitar flash -->
+    <script type="module" src="js/theme.js"></script>
 
     <script type="module" src="js/index.js"></script>
     <script type="module" src="js/lists.js"></script>

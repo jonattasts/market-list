@@ -4,8 +4,8 @@
 
 /* Card de Inflação Pessoal */
 .cpi-card {
-  background: #ffffff;
-  border: 1px solid rgba(76, 51, 230, 0.2);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .cpi-card::before {
@@ -36,6 +36,11 @@
   font-size: 13px;
   transition: all 0.2s ease;
   animation: slideInRight 0.4s ease-out backwards;
+}
+
+/* No tema dark o fundo do cpi-item ganha mais opacidade para contrastar */
+[data-theme="dark"] .cpi-item {
+  background: rgba(124, 111, 247, 0.06);
 }
 
 .cpi-item:nth-child(1) {
@@ -89,7 +94,7 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--text-main);
+  color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
