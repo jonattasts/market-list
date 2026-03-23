@@ -163,7 +163,10 @@ function calculateMonthlyConversionRate(allLists) {
 
   sortedMonths.forEach((yearMonth) => {
     const monthData = listsByMonth[yearMonth];
-    const monthPeriod = window.formatMonthPeriod(monthData.year, monthData.month);
+    const monthPeriod = window.formatMonthPeriod(
+      monthData.year,
+      monthData.month,
+    );
 
     let totalItemsAdded = 0;
     let totalItemsChecked = 0;
@@ -185,7 +188,8 @@ function calculateMonthlyConversionRate(allLists) {
     const conversionRate =
       totalItemsAdded > 0 ? (totalItemsChecked / totalItemsAdded) * 100 : 0;
 
-    const performanceClass = window.getPerformanceClassByPercentage(conversionRate);
+    const performanceClass =
+      window.getPerformanceClassByPercentage(conversionRate);
 
     conversionRateItems.push({
       monthPeriod: monthPeriod,
@@ -222,7 +226,6 @@ function calculateMonthlyConversionRate(allLists) {
     `,
   );
 }
-
 
 /**
  * Renderiza gráfico de Volume de Itens por Compra (Coluna)
@@ -267,12 +270,15 @@ function renderVolumeItemsChart(filteredLists) {
       scales: {
         y: {
           beginAtZero: true,
-          grid: { color: "rgba(255,255,255,0.05)" },
-          ticks: { color: "rgba(255,255,255,0.5)" },
+          /* CORRIGIDO: Alterada cor da grade de rgba(255,255,255,0.05) para cor escura visível em fundo claro */
+          grid: { color: "rgba(76, 51, 230, 0.1)" },
+          /* CORRIGIDO: Alterada cor dos ticks de rgba(255,255,255,0.5) para cor escura visível em fundo claro */
+          ticks: { color: "rgba(20, 24, 27, 0.6)" },
         },
         x: {
           grid: { display: false },
-          ticks: { color: "rgba(255,255,255,0.5)" },
+          /* CORRIGIDO: Alterada cor dos ticks de rgba(255,255,255,0.5) para cor escura visível em fundo claro */
+          ticks: { color: "rgba(20, 24, 27, 0.6)" },
         },
       },
       plugins: { legend: { display: false } },
@@ -284,9 +290,7 @@ function renderVolumeItemsChart(filteredLists) {
  * Renderiza estado vazio para o módulo de eficiência de compra
  */
 function renderPurchaseEfficiencyEmptyState() {
-  const containers = [
-    "conversion-rate-container",
-  ];
+  const containers = ["conversion-rate-container"];
 
   containers.forEach((containerId) => {
     const container = document.getElementById(containerId);

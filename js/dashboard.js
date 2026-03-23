@@ -403,13 +403,16 @@ function getSkeletonTemplateForTab(tabModuleName) {
     `,
   };
 
-  return skeletonTemplates[tabModuleName] || `
+  return (
+    skeletonTemplates[tabModuleName] ||
+    `
     <div class="skeleton-tab-container">
       <div class="skeleton skeleton-section-title"></div>
       <div class="skeleton skeleton-chart-card"></div>
       <div class="skeleton skeleton-full-card"></div>
     </div>
-  `;
+  `
+  );
 }
 
 /**
@@ -660,9 +663,11 @@ function createPaginationControls(
     gap: 12px;
     margin-top: 16px;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
+    /* CORRIGIDO: Alterado background de rgba(255, 255, 255, 0.03) para rgba(76, 51, 230, 0.05) para melhor visibilidade em fundo claro */
+    background: rgba(76, 51, 230, 0.05);
+    /* CORRIGIDO: Alterado border-color de rgba(255, 255, 255, 0.05) para rgba(76, 51, 230, 0.15) para melhor visibilidade em fundo claro */
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(76, 51, 230, 0.15);
   `;
 
   const prevBtn = document.createElement("button");
@@ -694,7 +699,8 @@ function createPaginationControls(
   pageIndicator.style.cssText = `
     font-size: 13px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
+    /* CORRIGIDO: Alterada cor de rgba(255, 255, 255, 0.8) para cor escura visível em fundo claro */
+    color: rgba(20, 24, 27, 0.8);
     min-width: 50px;
     text-align: center;
   `;

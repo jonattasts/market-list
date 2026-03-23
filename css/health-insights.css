@@ -8,11 +8,11 @@
 
 /* Cards de Gráficos Futuristas */
 .chart-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   backdrop-filter: blur(10px);
   padding: 16px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(76, 51, 230, 0.12);
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;
@@ -41,14 +41,14 @@
 }
 
 .chart-card:hover {
-  border-color: rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.25);
   transform: translateY(-2px);
 }
 
 .card-title {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-main);
   margin: 0 0 20px 0;
   text-align: left;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
 
 .sazonalidade-card p {
   font-size: 14px;
-  color: #ffffff;
+  color: var(--text-main);
   line-height: 1.5;
   margin: 0;
 }
@@ -127,11 +127,11 @@
 
 /* Card Métrica Full */
 .metric-card-full {
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   backdrop-filter: blur(10px);
   padding: 16px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(76, 51, 230, 0.12);
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;
@@ -160,18 +160,18 @@
 }
 
 .metric-card-full:hover {
-  border-color: rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.25);
   transform: translateY(-2px);
 }
 
 /* Estado vazio menor */
 .empty-state-minor {
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   font-style: italic;
   font-size: 13px;
   padding: 30px 20px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 51, 230, 0.03);
   border-radius: 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border: 1px dashed var(--border-color);
 }

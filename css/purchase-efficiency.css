@@ -15,7 +15,7 @@
 
 /* Card específico para taxa de conversão */
 .conversion-rate-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   border: 1px solid rgba(76, 51, 230, 0.2);
 }
 
@@ -49,7 +49,7 @@
   border-radius: 20px;
   font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-main);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
@@ -124,9 +124,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 51, 230, 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
   font-size: 13px;
   transition: all 0.2s ease;
   animation: slideInRight 0.4s ease-out backwards;
@@ -160,22 +160,22 @@
 }
 
 .data-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(76, 51, 230, 0.3);
+  background: rgba(76, 51, 230, 0.06);
+  border-color: rgba(76, 51, 230, 0.25);
   transform: translateX(4px);
 }
 
 /* Texto principal do item */
 .item-main-text {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-main);
   font-size: 14px;
 }
 
 /* Texto secundário do item */
 .item-sub-text {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
   margin-top: 4px;
   display: block;
 }
@@ -183,13 +183,13 @@
 /* Estado vazio menor */
 .empty-state-minor {
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   font-style: italic;
   font-size: 13px;
   padding: 30px 20px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 51, 230, 0.03);
   border-radius: 16px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border: 1px dashed var(--border-color);
 }
 
 /* Controles de Paginação */
@@ -200,9 +200,9 @@
   gap: 12px;
   margin-top: 16px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(76, 51, 230, 0.03);
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
 }
 
 .pagination-button {
@@ -230,11 +230,11 @@
 
 /* Cards de Gráficos Futuristas */
 .chart-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   backdrop-filter: blur(10px);
   padding: 16px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(76, 51, 230, 0.12);
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;
@@ -263,14 +263,14 @@
 }
 
 .chart-card:hover {
-  border-color: rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.25);
   transform: translateY(-2px);
 }
 
 .card-title {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-main);
   margin: 0 0 20px 0;
   text-align: left;
   text-transform: uppercase;

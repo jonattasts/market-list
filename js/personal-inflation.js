@@ -158,7 +158,6 @@ function processPersonalInflationData(filteredLists) {
   );
 }
 
-
 /**
  * Renderiza gráfico de Gasto por Categoria (Pizza)
  * Exibe o tooltip formatado em BRL ao clicar em uma categoria
@@ -202,7 +201,8 @@ function renderShareWalletChart(categoryTotals) {
         legend: {
           position: "bottom",
           labels: {
-            color: "rgba(255,255,255,0.7)",
+            /* CORRIGIDO: Alterada cor de rgba(255,255,255,0.7) para cor escura visível em fundo claro */
+            color: "rgba(20, 24, 27, 0.7)",
             font: { size: 10 },
             padding: 15,
           },
