@@ -1,7 +1,348 @@
 /* ==========================================================================
    TELA: HOME E FORMULÁRIOS
    ========================================================================== */
-#home-screen,
+
+/* --- Container da Tela Home --- */
+#home-screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Header da Home - Integrado ao Background Ondulado --- */
+#home-screen header {
+  background-color: var(--primary);
+  color: var(--text-on-header);
+  padding: 40px 20px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  position: relative;
+  top: auto;
+}
+
+/* Título do app no header */
+#home-screen header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-on-header);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  padding: 0 15px;
+}
+
+/* Botão de tema no header */
+#home-screen .header-action {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+#home-screen .header-action:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+#home-screen .header-action ion-icon {
+  font-size: 24px;
+  color: var(--text-on-header);
+}
+
+/* --- Área de Background Ondulado --- */
+.welcome-background-section {
+  background-color: var(--primary);
+  position: relative;
+  min-height: 45vh;
+  display: flex;
+  flex-direction: column;
+  background-image:
+    radial-gradient(
+      ellipse at 20% 30%,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 80% 70%,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(255, 255, 255, 0.05) 0%,
+      transparent 60%
+    );
+}
+
+/* --- Curva de Transição SVG --- */
+.wave-transition-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  line-height: 0;
+  transform: translateY(1px);
+}
+
+.wave-transition-container svg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wave-fill {
+  fill: var(--bg-card);
+}
+
+/* --- Conteúdo da Área de Boas-Vindas --- */
+.welcome-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 24px 40px;
+  position: relative;
+  z-index: 5;
+}
+
+.welcome-text-container {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.welcome-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-on-header);
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* --- Área de Conteúdo Inferior - Layout Refatorado --- */
+.home-content-lower {
+  background-color: var(--bg-card);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 24px 100px; /* Padding inferior aumentado para acomodar botão fixo */
+  position: relative;
+  z-index: 5;
+  /* Garante que ocupe todo o espaço disponível */
+  min-height: calc(55vh - 80px);
+}
+
+/* Container principal das ações */
+.welcome-actions-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  /* Espaço para o botão fixo na parte inferior */
+  padding-bottom: 80px;
+}
+
+/* Área do botão principal - centralizada verticalmente */
+.primary-action-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+/* --- BOTÃO CRIAR NOVA LISTA COM PULSE --- */
+.button-create-list-pulse {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  padding: 0;
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-light) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow:
+    0 4px 15px rgba(76, 51, 230, 0.4),
+    0 0 0 0 rgba(76, 51, 230, 0.7);
+  animation: pulse-ring 2s infinite;
+  transition: all 0.3s ease;
+}
+
+/* Animação de pulse ao redor do botão */
+@keyframes pulse-ring {
+  0% {
+    box-shadow:
+      0 4px 15px rgba(76, 51, 230, 0.4),
+      0 0 0 0 rgba(76, 51, 230, 0.7);
+  }
+  70% {
+    box-shadow:
+      0 4px 15px rgba(76, 51, 230, 0.4),
+      0 0 0 15px rgba(76, 51, 230, 0);
+  }
+  100% {
+    box-shadow:
+      0 4px 15px rgba(76, 51, 230, 0.4),
+      0 0 0 0 rgba(76, 51, 230, 0);
+  }
+}
+
+/* Container do conteúdo do botão */
+.button-create-list-pulse .button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 32px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ícone dentro do botão */
+.button-create-list-pulse ion-icon {
+  font-size: 22px;
+  color: white;
+  --ionicon-stroke-width: 40px;
+  transition: transform 0.3s ease;
+}
+
+/* Texto do botão */
+.button-create-list-pulse .button-text {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Efeito de brilho/glow interno */
+.button-create-list-pulse .button-glow {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+/* Hover effects */
+.button-create-list-pulse:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 8px 25px rgba(76, 51, 230, 0.5),
+    0 0 0 0 rgba(76, 51, 230, 0.7);
+  animation: none;
+}
+
+.button-create-list-pulse:hover .button-glow {
+  left: 100%;
+}
+
+.button-create-list-pulse:hover ion-icon {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Active/Click effect */
+.button-create-list-pulse:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(76, 51, 230, 0.3);
+}
+
+/* --- Botão Continue Fixo na Parte Inferior --- */
+.welcome-action-container {
+  position: absolute;
+  bottom: -65px;
+  right: 0px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0 10px 20px;
+  background: linear-gradient(to left, var(--bg-card) 80%, transparent);
+  border-radius: 30px;
+}
+
+.continue-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.button-continue {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-light) 100%
+  );
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 4px 15px rgba(76, 51, 230, 0.4),
+    0 0 0 0 rgba(76, 51, 230, 0.7);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.button-continue:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(76, 51, 230, 0.5);
+}
+
+.button-continue:active {
+  transform: scale(0.95);
+}
+
+.button-continue ion-icon {
+  font-size: 24px;
+  color: white;
+  --ionicon-stroke-width: 48px;
+}
+
 #new-list-screen,
 #new-category-screen,
 #new-item-screen {
@@ -11,17 +352,15 @@
   flex-direction: column;
 }
 
-.home-content,
 .form-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
-.welcome-card,
 .form-card {
   background: var(--bg-card);
   padding: 40px 20px;
@@ -32,13 +371,6 @@
   max-width: 400px;
 }
 
-/* Textos do card da home */
-.welcome-card h2,
-.welcome-card p {
-  color: var(--text-main);
-}
-
-/* Textos dos formulários */
 .form-card h2,
 .form-card p {
   color: var(--text-main);
@@ -64,6 +396,8 @@
   font-size: 16px;
   font-weight: 600;
   width: 100%;
+  border: none;
+  cursor: pointer;
 }
 
 .button-view-lists {
@@ -72,8 +406,76 @@
   color: var(--primary);
   font-weight: 600;
   border: none;
+  cursor: pointer;
 }
 
 .header-title-left {
   text-align: start;
+}
+
+/* --- Animações --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-text-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.welcome-action-container {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.button-create-list-pulse {
+  animation:
+    fadeInUp 0.6s ease-out 0.1s both,
+    pulse-ring 2s infinite 0.6s;
+}
+
+/* --- Responsividade --- */
+@media (max-height: 700px) {
+  .welcome-background-section {
+    min-height: 40vh;
+  }
+
+  .welcome-title {
+    font-size: 28px;
+  }
+
+  #home-screen header {
+    padding: 30px 20px 50px;
+  }
+
+  .home-content-lower {
+    padding-bottom: 90px;
+  }
+
+  .welcome-actions-card {
+    padding-bottom: 70px;
+  }
+}
+
+@media (max-height: 600px) {
+  .welcome-background-section {
+    min-height: 35vh;
+  }
+
+  .welcome-content-area {
+    padding-bottom: 30px;
+  }
+
+  .home-content-lower {
+    padding: 20px 20px 85px;
+  }
+
+  .button-create-list-pulse .button-content {
+    padding: 16px 28px;
+  }
 }

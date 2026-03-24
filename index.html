@@ -91,43 +91,71 @@
       <!-- ============================================================= -->
       <div id="home-screen" class="screen-hidden">
 
-        <!-- Header Principal - Tamanho Médio com botão de tema -->
-        <header class="medium">
+        <!-- Seção Superior com Background Ondulado -->
+        <div class="welcome-background-section">
 
-          <!-- Espaço vazio à esquerda para centralizar o título -->
-          <div class="header-action"></div>
+          <!-- Header Integrado -->
+          <header>
+            <!-- Espaço vazio à esquerda para centralizar -->
+            <div class="header-action"></div>
 
-          <h1>Market List</h1>
+            <h1>Market List</h1>
 
-          <!-- Botão de alternância de tema (light/dark) -->
-          <div class="header-action" id="button-theme-toggle"
-            onclick="toggleTheme()">
-            <!-- Ícone inicial definido pelo theme.js via updateThemeToggleIcon() -->
-            <ion-icon name="moon-outline"></ion-icon>
+            <!-- Botão de alternância de tema -->
+            <div class="header-action" id="button-theme-toggle"
+              onclick="toggleTheme()">
+              <ion-icon name="moon-outline"></ion-icon>
+            </div>
+          </header>
+
+          <!-- Conteúdo de Boas-Vindas -->
+          <div class="welcome-content-area">
+            <div class="welcome-text-container">
+              <!-- Título dinâmico com nome do usuário -->
+              <h2 class="welcome-title"
+                id="welcome-user-title">Boas-vindas!</h2>
+              <p class="welcome-subtitle">Organize suas compras de forma
+                inteligente e controle seus gastos.</p>
+            </div>
           </div>
 
-        </header>
+          <!-- Curva de Transição Ondulada -->
+          <div class="wave-transition-container">
+            <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path
+                class="wave-fill"
+                d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z">
+              </path>
+            </svg>
+          </div>
+        </div>
 
-        <!-- Conteúdo Central -->
-        <div class="home-content">
-          <div class="welcome-card">
+        <!-- Área de Conteúdo Inferior -->
+        <div class="home-content-lower">
+          <div class="welcome-actions-card">
 
-            <!-- Ícone ilustrativo -->
-            <span class="emoji-main">🛒</span>
+            <!-- Área do botão principal - centralizada -->
+            <div class="primary-action-area">
+              <!-- Botão Criar Nova Lista com Pulse e Design Melhorado -->
+              <button class="button-create-list-pulse"
+                onclick="openNewListForm()">
+                <span class="button-content">
+                  <ion-icon name="add-circle-outline"></ion-icon>
+                  <span class="button-text">Criar nova lista</span>
+                </span>
+                <span class="button-glow"></span>
+              </button>
+            </div>
 
-            <h2>Boas compras!</h2>
-            <p>Organize suas listas e controle seus gastos de forma simples.</p>
-
-            <!-- Ação Primária -->
-            <button class="button-start" onclick="openNewListForm()">
-              Criar nova lista
-            </button>
-
-            <!-- Ação Secundária -->
-            <button class="button-secondary button-view-lists"
-              onclick="showScreen('market-lists-screen')">
-              Ver minhas listas
-            </button>
+            <!-- Botão Continue Fixo na Parte Inferior -->
+            <div class="welcome-action-container">
+              <span class="continue-text">Minhas listas</span>
+              <button class="button-continue"
+                onclick="showScreen('market-lists-screen')"
+                aria-label="Ver minhas listas">
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              </button>
+            </div>
 
           </div>
         </div>

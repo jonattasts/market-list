@@ -212,6 +212,51 @@ window.handleUserIdentification = async function () {
 /* ==========================================================================
    NAVEGAÇÃO E INICIALIZAÇÃO
    ========================================================================== */
+
+/**
+ * Obtém a saudação apropriada baseada na hora atual do sistema.
+ * @returns {string} A saudação correspondente ao período do dia
+ */
+window.getGreetingByTimeOfDay = function () {
+  const currentDate = new Date();
+  const currentHour = currentDate.getHours();
+
+  if (currentHour >= 5 && currentHour < 12) {
+    return "Bom dia";
+  } else if (currentHour >= 12 && currentHour < 18) {
+    return "Boa tarde";
+  } else {
+    return "Boa noite";
+  }
+};
+
+/**
+ * Atualiza o título de boas-vindas com a saudação baseada na hora do dia
+ * e o nome do usuário armazenado.
+ * Busca no localStorage pela key 'marketUserName'.
+ */
+window.updateWelcomeTitle = function () {
+  const welcomeTitleElement = document.getElementById("welcome-user-title");
+  const storedUserName = localStorage.getItem("marketUserName");
+  const greeting = window.getGreetingByTimeOfDay();
+
+  if (welcomeTitleElement) {
+    if (storedUserName && storedUserName.trim() !== "") {
+      welcomeTitleElement.textContent = `${greeting}, ${storedUserName.trim()}!`;
+    } else {
+      welcomeTitleElement.textContent = `${greeting}!`;
+    }
+  }
+};
+
+/**
+ * Inicializa a tela home quando exibida.
+ * Atualiza o título com a saudação e o nome do usuário.
+ */
+window.initializeHomeScreen = function () {
+  window.updateWelcomeTitle();
+};
+
 window.showScreen = function (screenId) {
   const screens = [
     "onboarding-screen",
@@ -239,6 +284,11 @@ window.showScreen = function (screenId) {
 
   window.closePopover();
 
+  // Inicializa a tela home quando exibida
+  if (screenId === "home-screen") {
+    window.initializeHomeScreen();
+  }
+
   if (screenId === "market-lists-screen") {
     window.searchInput.value = "";
 
@@ -259,7 +309,7 @@ window.handleBackFromForm = function () {
 };
 
 /* ==========================================================================
-   UX NOVA: LÓGICA DO POPOVER DE OPÇÕES
+   LÓGICA DO POPOVER DE OPÇÕES
    ========================================================================== */
 window.toggleMenuOptions = function (event) {
   if (event) event.stopPropagation();

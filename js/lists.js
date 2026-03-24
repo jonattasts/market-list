@@ -179,7 +179,7 @@ function updatePaginationControls() {
   // Limpa números de página anteriores
   paginationNumbers.innerHTML = "";
 
-  // Renderiza números de página (máximo 5 visíveis por vez)
+  // Renderiza números de página (máximo 2 visíveis por vez)
   const maxVisibleButtons = 2;
 
   let startPage = Math.max(
