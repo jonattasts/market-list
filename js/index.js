@@ -240,6 +240,8 @@ window.showScreen = function (screenId) {
   window.closePopover();
 
   if (screenId === "market-lists-screen") {
+    window.searchInput.value = "";
+
     // Exibe skeleton imediatamente ao abrir a tela
     if (window.showListsSkeleton) window.showListsSkeleton();
     // Timer mínimo para garantir que o skeleton seja visível antes dos dados renderizarem

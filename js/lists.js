@@ -98,6 +98,7 @@ window.showListsSkeleton = function (cardCount = 4) {
 
 window.renderMarketLists = function () {
   window.listsMasterContainer.innerHTML = "";
+
   const term = window.normalizeString(window.searchInput.value);
 
   if (window.marketListData.length === 0) {
