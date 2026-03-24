@@ -10,25 +10,13 @@ const THEME_STORAGE_KEY = "marketListTheme";
 const THEME_TOGGLE_BUTTON_ID = "button-theme-toggle";
 
 /**
- * Retorna o tema preferido pelo sistema operacional do usuário
- * Usado como fallback inicial quando não há preferência salva
- *
- * @returns {string} - 'dark' ou 'light'
- */
-function getSystemPreferredTheme() {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-/**
  * Retorna o tema atualmente salvo no localStorage
  * Se não houver preferência salva, retorna o tema do sistema
  *
  * @returns {string} - 'dark' ou 'light'
  */
 function getSavedTheme() {
-  return localStorage.getItem(THEME_STORAGE_KEY) || getSystemPreferredTheme();
+  return localStorage.getItem(THEME_STORAGE_KEY) || "light";
 }
 
 /**

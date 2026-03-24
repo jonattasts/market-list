@@ -173,6 +173,12 @@ function renderShareWalletChart(categoryTotals) {
 
   if (labels.length === 0) return;
 
+  /* CORRIGIDO: Lê o tema atual do body no momento da criação do gráfico
+     para garantir que a cor da legenda seja correta desde o início,
+     independente de o tema dark ou light estar ativo */
+  const isDark = document.body.getAttribute("data-theme") === "dark";
+  const currentLegendColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(20, 24, 27, 0.7)";
+
   window.chartShareWallet = new Chart(ctx, {
     type: "doughnut",
     data: {
@@ -201,8 +207,7 @@ function renderShareWalletChart(categoryTotals) {
         legend: {
           position: "bottom",
           labels: {
-            /* CORRIGIDO: Alterada cor de rgba(255,255,255,0.7) para cor escura visível em fundo claro */
-            color: "rgba(20, 24, 27, 0.7)",
+            color: currentLegendColor,
             font: { size: 10 },
             padding: 15,
           },

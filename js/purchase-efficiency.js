@@ -249,6 +249,13 @@ function renderVolumeItemsChart(filteredLists) {
     return count;
   });
 
+  /* CORRIGIDO: Lê o tema atual do body no momento da criação do gráfico
+     para garantir que as cores dos ticks e grid sejam corretas desde o início,
+     independente de o tema dark ou light estar ativo */
+  const isDark = document.body.getAttribute("data-theme") === "dark";
+  const currentTickColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(20, 24, 27, 0.6)";
+  const currentGridColor = isDark ? "rgba(76, 51, 230, 0.08)" : "rgba(76, 51, 230, 0.1)";
+
   window.chartVolumeItens = new Chart(ctx, {
     type: "bar",
     data: {
@@ -270,15 +277,12 @@ function renderVolumeItemsChart(filteredLists) {
       scales: {
         y: {
           beginAtZero: true,
-          /* CORRIGIDO: Alterada cor da grade de rgba(255,255,255,0.05) para cor escura visível em fundo claro */
-          grid: { color: "rgba(76, 51, 230, 0.1)" },
-          /* CORRIGIDO: Alterada cor dos ticks de rgba(255,255,255,0.5) para cor escura visível em fundo claro */
-          ticks: { color: "rgba(20, 24, 27, 0.6)" },
+          grid: { color: currentGridColor },
+          ticks: { color: currentTickColor },
         },
         x: {
           grid: { display: false },
-          /* CORRIGIDO: Alterada cor dos ticks de rgba(255,255,255,0.5) para cor escura visível em fundo claro */
-          ticks: { color: "rgba(20, 24, 27, 0.6)" },
+          ticks: { color: currentTickColor },
         },
       },
       plugins: { legend: { display: false } },

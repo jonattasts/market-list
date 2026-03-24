@@ -699,11 +699,12 @@ function createPaginationControls(
   pageIndicator.style.cssText = `
     font-size: 13px;
     font-weight: 600;
-    /* CORRIGIDO: Alterada cor de rgba(255, 255, 255, 0.8) para cor escura visível em fundo claro */
-    color: rgba(20, 24, 27, 0.8);
     min-width: 50px;
     text-align: center;
   `;
+  /* CORRIGIDO: Usa CSS variable --text-main para que a cor do índice responda
+     automaticamente ao tema dark/light sem precisar de override manual em JS */
+  pageIndicator.style.color = "var(--text-main)";
 
   const nextBtn = document.createElement("button");
   nextBtn.innerHTML = '<ion-icon name="chevron-forward-outline"></ion-icon>';

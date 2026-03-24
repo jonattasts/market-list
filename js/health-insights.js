@@ -332,6 +332,16 @@ function renderHealthRatioChart(healthy, processed, others) {
 
   if (window.chartHealthProfile) window.chartHealthProfile.destroy();
 
+  /* CORRIGIDO: Lê o tema atual do body no momento da criação do gráfico
+     para garantir que a cor da legenda seja correta desde o início,
+     independente de o tema dark ou light estar ativo */
+  const isDark = document.body.getAttribute("data-theme") === "dark";
+  const currentLegendColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(20, 24, 27, 0.7)";
+
+  /* CORRIGIDO: Cor de "Outros" alterada de rgba(20, 24, 27, 0.3) — invisível no dark —
+     para uma cor neutra visível nos dois temas (cinza médio com boa opacidade) */
+  const othersSliceColor = isDark ? "rgba(180, 180, 195, 0.5)" : "rgba(120, 120, 140, 0.4)";
+
   window.chartHealthProfile = new Chart(ctx, {
     type: "pie",
     data: {
@@ -339,7 +349,7 @@ function renderHealthRatioChart(healthy, processed, others) {
       datasets: [
         {
           data: [healthy, processed, others],
-          backgroundColor: ["#249689", "#ff4757", "rgba(20, 24, 27, 0.3)"],
+          backgroundColor: ["#249689", "#ff4757", othersSliceColor],
           borderWidth: 0,
         },
       ],
@@ -351,8 +361,7 @@ function renderHealthRatioChart(healthy, processed, others) {
         legend: {
           position: "bottom",
           labels: {
-            /* CORRIGIDO: Alterada cor de rgba(255,255,255,0.7) para cor escura visível em fundo claro */
-            color: "rgba(20, 24, 27, 0.7)",
+            color: currentLegendColor,
             font: { size: 10 },
           },
         },
