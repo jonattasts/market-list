@@ -180,7 +180,8 @@ function updatePaginationControls() {
   paginationNumbers.innerHTML = "";
 
   // Renderiza números de página (máximo 5 visíveis por vez)
-  const maxVisibleButtons = 5;
+  const maxVisibleButtons = 2;
+
   let startPage = Math.max(
     1,
     currentPageIndex - Math.floor(maxVisibleButtons / 2),

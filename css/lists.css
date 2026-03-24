@@ -351,10 +351,12 @@
 }
 
 /* Container dos controles */
-.pagination-controls {
+.pagination-controls.market-list {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  min-width: 247px;
+  max-width: 247px;
   gap: 4px;
   flex: 1;
 }
