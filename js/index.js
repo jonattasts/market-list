@@ -391,17 +391,7 @@ function initFirebaseListener(userName) {
       }));
 
       if (isFirstLoad) {
-        if (window.marketListData.length === 0) {
-          window.showScreen("home-screen");
-        } else {
-          // Exibe skeleton antes da primeira renderização ao carregar do Firestore
-          if (window.showListsSkeleton) window.showListsSkeleton();
-          window.showScreen("market-lists-screen");
-          // Timer mínimo para garantir visibilidade do skeleton na primeira carga
-          setTimeout(() => {
-            if (window.renderMarketLists) window.renderMarketLists();
-          }, 700);
-        }
+        window.showScreen("home-screen");
         isFirstLoad = false;
       } else {
         if (
@@ -448,9 +438,11 @@ async function validateUserPersistence(savedName) {
       return;
     }
 
+    window.showScreen("home-screen");
     initFirebaseListener(savedName);
   } catch (error) {
     console.error("Erro ao validar persistência:", error);
+    window.showScreen("home-screen");
     initFirebaseListener(savedName);
   }
 }
