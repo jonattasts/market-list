@@ -11,13 +11,14 @@
   --bg-card: #ffffff;
   --bg-card-light: #ffffff80;
   --text-main: #14181b;
+  --text-primary: #14181b;
   --text-secondary: #57636c;
   --accent-green: #249689;
   --border-color: #e0e3e7;
   --transition: all 0.3s ease;
   --danger: #ff4757;
   --success: #2ed573;
-  --toast-bg: #2f3542;
+  --toast-bg: #ffffff;
 
   /* Cores específicas do tema light */
   --bg-header: #4c33e6;
@@ -47,13 +48,14 @@
   --bg-card: #161b22;
   --bg-card-light: #161b2280;
   --text-main: #e6edf3;
+  --text-primary: #ffffff;
   --text-secondary: #8b949e;
   --accent-green: #2ed573;
   --border-color: #30363d;
   --transition: all 0.3s ease;
   --danger: #ff4757;
   --success: #2ed573;
-  --toast-bg: #e6edf3;
+  --toast-bg: #2f3542;
 
   /* Cores específicas do tema dark */
   --bg-header: #161b22;

@@ -7,7 +7,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--toast-bg);
-  color: var(--bg-page);
+  color: var(--text-primary);
   padding: 20px 20px;
   border-radius: 16px;
   font-size: 14px;
@@ -23,10 +23,7 @@
   cursor: pointer;
 }
 
-/* No tema dark o toast-bg é claro (#e6edf3), então o texto precisa ser escuro */
-[data-theme="dark"] .toast {
-  color: #14181b;
-}
+
 
 .toast.danger {
   border-left-color: var(--danger);
