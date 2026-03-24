@@ -100,7 +100,8 @@
           <h1>Market List</h1>
 
           <!-- Botão de alternância de tema (light/dark) -->
-          <div class="header-action" id="button-theme-toggle" onclick="toggleTheme()">
+          <div class="header-action" id="button-theme-toggle"
+            onclick="toggleTheme()">
             <!-- Ícone inicial definido pelo theme.js via updateThemeToggleIcon() -->
             <ion-icon name="moon-outline"></ion-icon>
           </div>
@@ -162,12 +163,30 @@
             <ion-icon name="search-outline"></ion-icon>
             <input type="text" id="search-input"
               placeholder="Buscar por nome, data ou local..."
-              oninput="renderMarketLists()" />
+              oninput="handleSearchInput()" />
           </div>
         </div>
 
         <!-- Wrapper para conteúdo com scroll (apenas as listas) -->
         <div class="lists-content-wrapper">
+
+          <!-- Container de Paginação -->
+          <div id="pagination-container" class="pagination-container">
+            <div class="pagination-info">
+              <span id="pagination-indicator">Página 1 de 1</span>
+            </div>
+            <div class="pagination-controls">
+              <button id="pagination-button-previous" class="pagination-button"
+                onclick="navigateToPreviousPage()" disabled>
+                <ion-icon name="chevron-back-outline"></ion-icon>
+              </button>
+              <div id="pagination-numbers" class="pagination-numbers"></div>
+              <button id="pagination-button-next" class="pagination-button"
+                onclick="navigateToNextPage()" disabled>
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
 
           <!-- Container Dinâmico das Listas -->
           <div class="list-container master-list"
