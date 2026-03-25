@@ -149,6 +149,28 @@ function getItemsForCurrentPage() {
 }
 
 /**
+ * Verifica se a página atual ficou vazia e ajusta para a página anterior se necessário
+ * @returns {boolean} True se a página foi ajustada, false caso contrário
+ */
+function adjustPageIfEmpty() {
+  const totalPages = calculateTotalPages(filteredListsData.length);
+
+  // Se a página atual é maior que o total de páginas disponíveis, ajusta
+  if (currentPageIndex > totalPages && totalPages > 0) {
+    currentPageIndex = totalPages;
+    return true;
+  }
+
+  // Se não há dados e estamos em uma página > 1, volta para página 1
+  if (filteredListsData.length === 0 && currentPageIndex > 1) {
+    currentPageIndex = 1;
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Atualiza a interface dos controles de paginação
  * Renderiza números de página e atualiza estados dos botões
  */
@@ -459,9 +481,17 @@ window.renderMarketLists = function () {
     return nameMatch || locationMatch || dateMatch;
   });
 
+  // Verifica se a página atual ficou vazia após exclusão e ajusta para página anterior
+  const pageWasAdjusted = adjustPageIfEmpty();
+
   // Atualiza controles e renderiza
   updatePaginationControls();
   renderListsForCurrentPage();
+
+  // Se a página foi ajustada, re-renderiza os controles de paginação com a nova página
+  if (pageWasAdjusted) {
+    updatePaginationControls();
+  }
 };
 
 /**
