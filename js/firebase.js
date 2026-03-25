@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Firebase
+   Firebase - Configuração e Exportação de Todos os Métodos
    ========================================================================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -13,9 +13,14 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  query,
+  orderBy,
+  onSnapshot,
+  where,
+  limit,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔧 FIREBASE */
+/* 🔧 FIREBASE KEYS */
 const firebaseConfig = {
   apiKey: "AIzaSyDcCOiSvr1M1ocEnuZcNtpkCVZ_8ckPJ34",
   authDomain: "market-list-e09aa.firebaseapp.com",
@@ -29,14 +34,24 @@ const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 
 export {
+  // Instância do Firestore
   firestore,
+  // Métodos de documento e coleção
   collection,
   doc,
+  // Métodos de CRUD
   addDoc,
   getDocs,
   getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
+  // Métodos de timestamp
   serverTimestamp,
+  // Métodos de query e consulta - AGORA EXPORTADOS DA INSTÂNCIA CONFIGURADA
+  query,
+  orderBy,
+  onSnapshot,
+  where,
+  limit,
 };

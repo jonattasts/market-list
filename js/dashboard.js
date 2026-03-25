@@ -447,6 +447,9 @@ function hideTabSkeleton(tabModuleName) {
   }
 }
 
+// Exporta globalmente para o sistema de validação acessar
+window.hideTabSkeleton = hideTabSkeleton;
+
 /* ==========================================================================
    GERENCIAMENTO DE ABAS
    ========================================================================== */

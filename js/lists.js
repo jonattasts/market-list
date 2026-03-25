@@ -29,7 +29,7 @@ window.confirmDeleteList = async function (listIndex) {
       window.showToast("Lista removida com sucesso", "success");
     } catch (error) {
       console.error("Erro ao deletar:", error);
-      window.showToast("Erro ao excluir lista", "danger");
+      window.showToast("Erro de conexão com o Servidor!", "danger");
     }
   }
 };
@@ -85,7 +85,13 @@ function getListCardSkeletonTemplate() {
  */
 window.showListsSkeleton = function (skeletonCardCount = 4) {
   const containerElement = window.listsMasterContainer;
+  const paginationContainer = document.getElementById("pagination-container");
+
   if (!containerElement) return;
+
+  if (paginationContainer) {
+    paginationContainer.style.display = "none";
+  }
 
   let skeletonHTML = "";
   for (let index = 0; index < skeletonCardCount; index++) {
@@ -93,6 +99,18 @@ window.showListsSkeleton = function (skeletonCardCount = 4) {
   }
 
   containerElement.innerHTML = `<div style="padding: 0 20px 20px;">${skeletonHTML}</div>`;
+};
+
+/**
+ * Remove o skeleton de carregamento e prepara o container para renderização real
+ * Chamado após a validação de dependências ser concluída com sucesso
+ */
+window.hideListsSkeleton = function () {
+  const containerElement = window.listsMasterContainer;
+  if (!containerElement) return;
+
+  // Limpa o conteúdo de skeleton, deixando pronto para renderização
+  containerElement.innerHTML = "";
 };
 
 /* ==========================================================================
@@ -189,7 +207,6 @@ function updatePaginationControls() {
     return;
   }
 
-  // Mostra o container de paginação
   paginationContainer.style.display = "flex";
 
   const totalPages = calculateTotalPages(filteredListsData.length);
@@ -325,6 +342,8 @@ window.navigateToNextPage = function () {
  */
 function renderListsForCurrentPage() {
   const containerElement = window.listsMasterContainer;
+  const paginationContainer = document.getElementById("pagination-container");
+
   if (!containerElement) return;
 
   containerElement.innerHTML = "";
@@ -338,6 +357,10 @@ function renderListsForCurrentPage() {
         <p>Nenhuma lista encontrada.</p>
       </div>
     `;
+
+    if (paginationContainer) {
+      paginationContainer.style.display = "none";
+    }
     return;
   }
 
@@ -429,6 +452,10 @@ function renderListsForCurrentPage() {
     swipeContainer.appendChild(cardElement);
     containerElement.appendChild(swipeContainer);
   });
+
+  if (paginationContainer && pageItems.length > 0) {
+    paginationContainer.style.display = "flex";
+  }
 }
 
 /**
@@ -447,11 +474,12 @@ window.renderMarketLists = function () {
       searchInputElement.disabled = true;
     }
     const containerElement = window.listsMasterContainer;
+    const paginationContainer = document.getElementById("pagination-container");
+
     if (containerElement) {
       containerElement.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
     }
-    // Esconde paginação
-    const paginationContainer = document.getElementById("pagination-container");
+
     if (paginationContainer) {
       paginationContainer.style.display = "none";
     }
@@ -484,8 +512,9 @@ window.renderMarketLists = function () {
   // Verifica se a página atual ficou vazia após exclusão e ajusta para página anterior
   const pageWasAdjusted = adjustPageIfEmpty();
 
-  // Atualiza controles e renderiza
+  // Atualiza controles de paginação (mas só mostra após renderizar as listas)
   updatePaginationControls();
+
   renderListsForCurrentPage();
 
   // Se a página foi ajustada, re-renderiza os controles de paginação com a nova página
