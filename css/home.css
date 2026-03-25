@@ -103,8 +103,13 @@
   height: 100%;
 }
 
+/* SVG fill precisa de transition explícita pois
+   a regra global de transition não cobre a propriedade fill do SVG.
+   Sem isso, a wave muda de cor instantaneamente enquanto o fundo
+   ainda está transicionando */
 .wave-fill {
   fill: var(--bg-card);
+  transition: fill 0.7s ease;
 }
 
 /* --- Conteúdo da Área de Boas-Vindas --- */
@@ -153,9 +158,7 @@
   min-height: calc(55vh - 80px);
 }
 
-/* Container principal das ações */
 .welcome-actions-card {
-  background: var(--bg-card);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -294,7 +297,6 @@
   align-items: center;
   gap: 12px;
   padding: 10px 0 10px 20px;
-  background: linear-gradient(to left, var(--bg-card) 80%, transparent);
   border-radius: 30px;
 }
 
