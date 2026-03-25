@@ -15,7 +15,7 @@
   --text-secondary: #57636c;
   --accent-green: #249689;
   --border-color: #e0e3e7;
-  --transition: all 0.3s ease;
+  --transition: all 0.7s ease;
   --danger: #ff4757;
   --success: #2ed573;
   --toast-bg: #ffffff;
@@ -52,7 +52,7 @@
   --text-secondary: #8b949e;
   --accent-green: #2ed573;
   --border-color: #30363d;
-  --transition: all 0.3s ease;
+  --transition: all 0.7s ease;
   --danger: #ff4757;
   --success: #2ed573;
   --toast-bg: #2f3542;
