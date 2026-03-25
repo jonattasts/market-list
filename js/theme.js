@@ -1,17 +1,17 @@
 /* ==========================================================================
    MÓDULO: GERENCIAMENTO DE TEMA (LIGHT / DARK)
-   Responsabilidade única: toggle, persistência e detecção do sistema
+   Responsabilidads: toggle, persistência, detecção do sistema e 
+   sincronização de ícones em todos os botões de tema do app
    ========================================================================== */
 
 // Chave de persistência no localStorage
 const THEME_STORAGE_KEY = "marketListTheme";
 
-// Ícone do botão de alternância no header
-const THEME_TOGGLE_BUTTON_ID = "button-theme-toggle";
+const THEME_TOGGLE_BUTTON_SELECTOR = ".theme-toggle-button";
 
 /**
- * Retorna o tema atualmente salvo no localStorage
- * Se não houver preferência salva, retorna o tema do sistema
+ * Retorna o tema atualmente salvo no localStorage.
+ * Se não houver preferência salva, retorna o tema light.
  *
  * @returns {string} - 'dark' ou 'light'
  */
@@ -20,8 +20,8 @@ function getSavedTheme() {
 }
 
 /**
- * Aplica o tema ao documento via atributo data-theme no <body>
- * Atualiza o ícone do botão de alternância de forma instantânea (sem flicker)
+ * Aplica o tema ao documento via atributo data-theme no <body>.
+ * Atualiza todos os ícones de tema (lua/sol) em todos os botões do app.
  *
  * @param {string} themeName - 'dark' ou 'light'
  */
@@ -29,8 +29,7 @@ function applyTheme(themeName) {
   // Aplica o atributo de tema no body para ativar as CSS variables corretas
   document.body.setAttribute("data-theme", themeName);
 
-  // Atualiza o ícone do botão de alternância
-  updateThemeToggleIcon(themeName);
+  updateAllThemeToggleIcons(themeName);
 
   // Atualiza os gráficos do dashboard se estiverem visíveis,
   // pois as cores dos gráficos são definidas em JS e não reagem às CSS variables
@@ -38,30 +37,38 @@ function applyTheme(themeName) {
 }
 
 /**
- * Atualiza o ícone do botão de tema no header da home
- * sunny-outline = modo claro está ativo (clique para escurecer)
- * moon-outline  = modo escuro está ativo (clique para clarear)
- *
+ * 
+ * Atualiza os ícones (lua/sol) em TODOS os botões de tema do app.
+
  * @param {string} themeName - 'dark' ou 'light'
  */
-function updateThemeToggleIcon(themeName) {
-  const toggleButton = document.getElementById(THEME_TOGGLE_BUTTON_ID);
-  if (!toggleButton) return;
-
-  const iconElement = toggleButton.querySelector("ion-icon");
-  if (!iconElement) return;
-
-  // No tema dark: exibe ícone de sol (para voltar ao light)
-  // No tema light: exibe ícone de lua (para ir para o dark)
-  iconElement.setAttribute(
-    "name",
-    themeName === "dark" ? "sunny-outline" : "moon-outline",
+function updateAllThemeToggleIcons(themeName) {
+  const themeToggleButtons = document.querySelectorAll(
+    THEME_TOGGLE_BUTTON_SELECTOR,
   );
+
+  themeToggleButtons.forEach(function (button) {
+    const iconLight = button.querySelector(".theme-icon-light");
+    const iconDark = button.querySelector(".theme-icon-dark");
+
+    if (iconLight && iconDark) {
+      if (themeName === "dark") {
+        // Tema escuro ativo: mostra sol (para clarear), esconde lua
+        iconLight.classList.add("screen-hidden");
+        iconDark.classList.remove("screen-hidden");
+      } else {
+        // Tema claro ativo: mostra lua (para escurecer), esconde sol
+        iconLight.classList.remove("screen-hidden");
+        iconDark.classList.add("screen-hidden");
+      }
+    }
+  });
 }
 
 /**
- * Alterna entre os temas light e dark
- * Persiste a escolha no localStorage para manter entre sessões
+ * Alterna entre os temas light e dark.
+ * Persiste a escolha no localStorage para manter entre sessões.
+ * Sincroniza todos os botões de tema do app.
  */
 function toggleTheme() {
   const currentTheme = document.body.getAttribute("data-theme") || "light";
@@ -70,13 +77,13 @@ function toggleTheme() {
   // Persiste a preferência do usuário
   localStorage.setItem(THEME_STORAGE_KEY, newTheme);
 
-  // Aplica o novo tema
+  // Aplica o novo tema (atualiza body, ícones e gráficos)
   applyTheme(newTheme);
 }
 
 /**
- * Atualiza as cores dos gráficos Chart.js quando o tema muda
- * Necessário pois as cores dos gráficos são definidas via JS, não CSS
+ * 
+ * Atualiza as cores dos gráficos Chart.js quando o tema muda.
  *
  * @param {string} themeName - 'dark' ou 'light'
  */
@@ -114,18 +121,18 @@ function updateChartsTheme(themeName) {
 }
 
 /**
- * Inicializa o sistema de tema
- * Chamado no DOMContentLoaded para aplicar o tema antes da primeira renderização
+ *
+ * Chamado no DOMContentLoaded para aplicar o tema antes da primeira renderização.
  */
 function initTheme() {
   const savedTheme = getSavedTheme();
   applyTheme(savedTheme);
 
-  // Escuta mudanças de preferência do sistema em tempo real
-  // Só aplica se o usuário não tiver feito uma escolha manual
+  // Escuta mudanças de preferência do sistema em tempo real.
+  // Só aplica se o usuário não tiver feito uma escolha manual.
   window
     .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", (event) => {
+    .addEventListener("change", function (event) {
       const hasManualPreference = localStorage.getItem(THEME_STORAGE_KEY);
       if (!hasManualPreference) {
         applyTheme(event.matches ? "dark" : "light");

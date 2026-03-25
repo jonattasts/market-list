@@ -169,6 +169,67 @@ header h1,
   display: none !important;
 }
 
+/* Botão de ação no header (voltar, opções, tema) */
+.header-action {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  /* Previne scroll ao tocar nos botões */
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.header-action ion-icon {
+  font-size: 24px;
+  color: var(--text-on-header);
+  transition: transform 0.2s ease;
+}
+
+.header-action:active ion-icon {
+  transform: scale(0.9);
+}
+
+/* Botão de alternância de tema */
+.theme-toggle-button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ícones de tema dentro do botão */
+.theme-icon-light,
+.theme-icon-dark {
+  position: absolute;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+/* Quando visível */
+.theme-icon-light:not(.screen-hidden),
+.theme-icon-dark:not(.screen-hidden) {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Quando oculto (via classe screen-hidden) */
+.theme-icon-light.screen-hidden,
+.theme-icon-dark.screen-hidden {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+/* Grupo de ações no header (para múltiplos botões à direita) */
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 /* Utility classes */
 .mt-20 {
   margin-top: 20px;

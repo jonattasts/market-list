@@ -103,9 +103,12 @@
             <h1>Market List</h1>
 
             <!-- Botão de alternância de tema -->
-            <div class="header-action" id="button-theme-toggle"
-              onclick="toggleTheme()">
-              <ion-icon name="moon-outline"></ion-icon>
+            <div class="header-action theme-toggle-button"
+              onclick="toggleTheme()" aria-label="Alternar tema">
+              <ion-icon name="moon-outline"
+                class="theme-icon-light"></ion-icon>
+              <ion-icon name="sunny-outline"
+                class="theme-icon-dark screen-hidden"></ion-icon>
             </div>
           </header>
 
@@ -177,7 +180,15 @@
 
           <h1 class="header-title">Listas de Compras</h1>
 
-          <!-- Botão opções -->
+          <!-- Botão de alternância de tema -->
+          <div class="header-action theme-toggle-button"
+            onclick="toggleTheme()" aria-label="Alternar tema">
+            <ion-icon name="moon-outline"
+              class="theme-icon-light"></ion-icon>
+            <ion-icon name="sunny-outline"
+              class="theme-icon-dark screen-hidden"></ion-icon>
+          </div>
+
           <div class="header-action" id="button-options-list"
             onclick="toggleMenuOptions(event)">
             <ion-icon name="ellipsis-horizontal-outline"
@@ -418,7 +429,14 @@
             </h1>
           </div>
 
-          <div class="header-action"></div>
+          <!-- Botão de alternância de tema -->
+          <div class="header-action theme-toggle-button"
+            onclick="toggleTheme()" aria-label="Alternar tema">
+            <ion-icon name="moon-outline"
+              class="theme-icon-light"></ion-icon>
+            <ion-icon name="sunny-outline"
+              class="theme-icon-dark screen-hidden"></ion-icon>
+          </div>
         </header>
 
         <!-- ================= CARD DO RESUMO (fixo, sobrepondo header) ================= -->
@@ -509,8 +527,21 @@
 
           <h1 class="header-title">Análise de Consumo</h1>
 
-          <div class="header-action" onclick="toggleFilterModal()">
-            <ion-icon name="options-outline" class="icon-filter"></ion-icon>
+          <!-- Container de ações do header (tema + filtro) -->
+          <div class="header-actions-group">
+            <!-- Botão de alternância de tema -->
+            <div class="header-action theme-toggle-button"
+              onclick="toggleTheme()" aria-label="Alternar tema">
+              <ion-icon name="moon-outline"
+                class="theme-icon-light"></ion-icon>
+              <ion-icon name="sunny-outline"
+                class="theme-icon-dark screen-hidden"></ion-icon>
+            </div>
+
+            <!-- Botão de filtro -->
+            <div class="header-action" onclick="toggleFilterModal()">
+              <ion-icon name="options-outline" class="icon-filter"></ion-icon>
+            </div>
           </div>
         </header>
 

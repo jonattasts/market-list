@@ -19,6 +19,7 @@
   flex-shrink: 0;
   /* Previne scroll ao tocar no header */
   touch-action: none;
+  justify-content: space-between;
 }
 
 .header-details-container {
@@ -27,11 +28,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .header-title-details {
   flex: none;
   padding: 0;
+  word-break: keep-all;
 }
 
 /* Dashboard fixo sobre o header */

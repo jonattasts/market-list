@@ -72,9 +72,15 @@
   }
 }
 
-/* ========================================================================
-   SISTEMA DE ABAS SCROLLÁVEIS HORIZONTAIS
-   ======================================================================== */
+/* Header do dashboard */
+#dashboard-screen header.small {
+  justify-content: space-between;
+  padding-right: 12px;
+}
+
+/* ======================================================================== */
+/* SISTEMA DE ABAS SCROLLÁVEIS HORIZONTAIS                                    */
+/* ======================================================================== */
 
 /* Container de abas com scroll horizontal */
 .dashboard-tabs-container {
