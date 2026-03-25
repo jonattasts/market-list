@@ -355,10 +355,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  min-width: 247px;
-  max-width: 247px;
   gap: 4px;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Botões de navegação (anterior/próximo) */
@@ -421,8 +421,10 @@
 .pagination-numbers {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 0 4px;
+  padding: 4px; 
+  min-width: 0;
+  overflow: hidden;
+  flex-shrink: 1;
 }
 
 /* Botões de número de página */
@@ -454,7 +456,7 @@
   background: var(--primary);
   color: white;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(var(--primary-rgb, 0, 122, 255), 0.25);
+  /* box-shadow: 0 2px 8px rgba(var(--primary-rgb, 0, 122, 255), 0.25); */
   transform: scale(1.05);
 }
 
