@@ -611,19 +611,13 @@
               <div class="metrics-section">
                 <h2 class="section-title">Eficiência da Compra</h2>
 
+                <!-- Ticket Médio -->
                 <div class="metrics-grid">
-                  <div class="metric-card-stat info">
+                  <div class="metric-card-stat info metric-card-stat-full">
                     <span class="stat-label">Ticket Médio (Lista)</span>
                     <span id="metric-ticket-medio" class="stat-value">R$
                       0,00</span>
                     <span class="stat-subtext">No período selecionado</span>
-                  </div>
-
-                  <div class="metric-card-stat success">
-                    <span class="stat-label">Economia Potencial</span>
-                    <span id="metric-economy" class="stat-value">R$ 0,00</span>
-                    <span class="stat-subtext">Itens desejados vs.
-                      comprados</span>
                   </div>
                 </div>
 
@@ -657,6 +651,14 @@
               <!-- Inflação Pessoal -->
               <div class="metrics-section">
                 <h2 class="section-title">Inflação Pessoal</h2>
+
+                <!-- Economia Potencial -->
+                <!-- Exibe valor positivo (economia) ou negativo (gasto maior) com base nos recorrentes -->
+                <div class="metric-card-stat inflation-economy-card">
+                  <span class="stat-label">Economia nos Recorrentes</span>
+                  <span id="metric-economy-inflation" class="stat-value">R$ 0,00</span>
+                  <span class="stat-subtext">Variação acumulada dos itens recorrentes</span>
+                </div>
 
                 <div class="metric-card-full cpi-card">
                   <h3 class="card-title">Inflação Pessoal (Recorrentes)</h3>

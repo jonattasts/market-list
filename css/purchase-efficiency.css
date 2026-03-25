@@ -2,6 +2,12 @@
    MÓDULO: EFICIÊNCIA DA COMPRA - ESTILOS ESPECÍFICOS
    ========================================================================== */
 
+
+/* Ocupa a linha inteira dentro do metrics-grid */
+.metric-card-stat-full {
+  grid-column: 1 / -1;
+}
+
 /* ==========================================================================
    TAXA DE CONVERSÃO DOS ÚLTIMOS 3 MESES
    ========================================================================== */

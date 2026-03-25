@@ -146,6 +146,45 @@
   }
 }
 
+/* ==========================================================================
+   CARD DE ECONOMIA NOS RECORRENTES
+   Exibe positivo (verde) quando há economia ou negativo (vermelho) quando há
+   gasto a mais, com base na variação acumulada dos itens recorrentes
+   ========================================================================== */
+
+/* Card de economia: ocupa a linha inteira da seção de inflação */
+.inflation-economy-card {
+  grid-column: 1 / -1;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Estado positivo: o usuário economizou em relação à compra anterior (verde) */
+.inflation-economy-card.economy-positive {
+  border-color: rgba(36, 150, 137, 0.4);
+  box-shadow: 0 0 20px rgba(36, 150, 137, 0.12);
+}
+
+.inflation-economy-card.economy-positive .stat-value {
+  color: #249689;
+}
+
+/* Estado negativo: o usuário gastou mais em relação à compra anterior (vermelho) */
+.inflation-economy-card.economy-negative {
+  border-color: rgba(255, 71, 87, 0.4);
+  box-shadow: 0 0 20px rgba(255, 71, 87, 0.12);
+}
+
+.inflation-economy-card.economy-negative .stat-value {
+  color: #ff4757;
+}
+
+/* ==========================================================================
+   TEXTOS GERAIS COMPARTILHADOS
+   ========================================================================== */
+
 /* Texto principal do item */
 .item-main-text {
   font-weight: 600;

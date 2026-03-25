@@ -6,10 +6,12 @@
  * Carrega e renderiza o módulo de Eficiência da Compra
  * Inclui:
  * - Ticket Médio por Lista
- * - Economia Potencial
  * - Gasto por Categoria (Gráfico)
  * - Taxa de Conversão dos Últimos 3 Meses
  * - Volume de Itens por Compra (Gráfico)
+ *
+ * Nota: O card de Economia Potencial foi movido para a aba de Inflação Pessoal
+ * e agora é calculado e atualizado pelo módulo personal-inflation.js
  */
 window.loadPurchaseEfficiencyModule = function () {
   const data = window.marketListData;
@@ -72,11 +74,6 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
   const averageTicket = totalSpentInPeriod / filteredLists.length;
   document.getElementById("metric-ticket-medio").innerText =
     window.formatCurrencyBRL(averageTicket);
-
-  // Métrica 1.B: Economia Potencial (Desejado - Comprado)
-  const economy = forecastTotal - totalSpentInPeriod;
-  document.getElementById("metric-economy").innerText =
-    window.formatCurrencyBRL(economy);
 
   // Métrica 1.C: Gasto por Categoria (Gráfico Pizza) — renderizado pelo personal-inflation.js
   window.renderShareWalletChart(categoryTotals);

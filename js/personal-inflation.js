@@ -31,6 +31,54 @@ window.loadPersonalInflationModule = function () {
 };
 
 /**
+ * Calcula o valor monetário economizado (ou gasto a mais) em um item recorrente.
+ * O cálculo é feito multiplicando a diferença de preço pela quantidade da última compra.
+ *
+ * Valor positivo = economia (preço atual menor que o anterior)
+ * Valor negativo = gasto a mais (preço atual maior que o anterior)
+ *
+ * @param {number} previousPrice - Preço da penúltima ocorrência
+ * @param {number} currentPrice - Preço da última ocorrência
+ * @param {number} quantity - Quantidade comprada na última ocorrência
+ * @returns {number} Valor monetário da variação (positivo = economia, negativo = custo maior)
+ */
+function calculateRecurringItemSavings(previousPrice, currentPrice, quantity) {
+  return (previousPrice - currentPrice) * quantity;
+}
+
+/**
+ *
+ * Atualiza o card de Economia nos Recorrentes na aba de Inflação Pessoal.
+ * O valor exibido é a soma das variações monetárias de todos os itens recorrentes.
+ *
+ * @param {Array} cpiItems - Lista de itens de inflação pessoal já processados
+ */
+function updateInflationEconomyCard(cpiItems) {
+  const economyElement = document.getElementById("metric-economy-inflation");
+
+  if (!economyElement) return;
+
+  // Soma as economias (positivas) e gastos a mais (negativos) de todos os recorrentes
+  const totalSavings = cpiItems.reduce((accumulator, item) => {
+    // avgPrevious - avgCurrent: positivo se preço caiu, negativo se subiu
+    const savingsPerItem = item.avgPrevious - item.avgCurrent;
+    return accumulator + savingsPerItem;
+  }, 0);
+
+  economyElement.innerText = `${totalSavings < 0 ? "-" : ""}${window.formatCurrencyBRL(Math.abs(totalSavings))}`;
+
+  const economyCard = economyElement.closest(".inflation-economy-card");
+  if (economyCard) {
+    economyCard.classList.remove("economy-positive", "economy-negative");
+    if (totalSavings >= 0) {
+      economyCard.classList.add("economy-positive");
+    } else {
+      economyCard.classList.add("economy-negative");
+    }
+  }
+}
+
+/**
  * Processa dados de inflação pessoal e renderiza a interface
  */
 function processPersonalInflationData(filteredLists) {
@@ -44,6 +92,9 @@ function processPersonalInflationData(filteredLists) {
     window.cachedDashboardData.cpiItems &&
     window.cachedDashboardData.lastFilter === currentFilterKey
   ) {
+    // Reutiliza cache e atualiza o card de economia
+    updateInflationEconomyCard(window.cachedDashboardData.cpiItems);
+
     window.renderPaginatedList(
       container,
       window.cachedDashboardData.cpiItems,
@@ -86,17 +137,21 @@ function processPersonalInflationData(filteredLists) {
 
     // Ordena as ocorrências por data (mais recente primeiro)
     const sortedOccurrences = itemData.prices
-      .map((o) => ({
-        ...o,
-        dateObj: window.parseDateLocal(o.date),
-        valorNumerico: parseFloat(o.price.replace(/\./g, "").replace(",", ".")),
+      .map((occurrence) => ({
+        ...occurrence,
+        dateObj: window.parseDateLocal(occurrence.date),
+        valorNumerico: parseFloat(
+          occurrence.price.replace(/\./g, "").replace(",", "."),
+        ),
       }))
-      .sort((a, b) => b.dateObj - a.dateObj);
+      .sort(
+        (occurrenceA, occurrenceB) => occurrenceB.dateObj - occurrenceA.dateObj,
+      );
 
     // Pega a última e a penúltima ocorrência (de listas diferentes)
     const lastOccurrence = sortedOccurrences[0];
     const penultimateOccurrence = sortedOccurrences.find(
-      (o) => o.listId !== lastOccurrence.listId,
+      (occurrence) => occurrence.listId !== lastOccurrence.listId,
     );
 
     // Se não encontrou penúltima ocorrência em lista diferente, ignora
@@ -104,6 +159,9 @@ function processPersonalInflationData(filteredLists) {
 
     const avgCurrent = lastOccurrence.valorNumerico;
     const avgPrevious = penultimateOccurrence.valorNumerico;
+
+    // Quantidade da última compra usada para calcular a economia monetária real
+    const lastQuantity = lastOccurrence.quantity || 1;
 
     let diff = parseFloat(
       (((avgCurrent - avgPrevious) / avgPrevious) * 100).toFixed(10),
@@ -125,6 +183,7 @@ function processPersonalInflationData(filteredLists) {
       name: window.capitalize(itemData.name),
       avgPrevious,
       avgCurrent,
+      lastQuantity,
       diff,
       emoji,
       performanceClass: performanceClass,
@@ -141,6 +200,9 @@ function processPersonalInflationData(filteredLists) {
   // Armazena em cache
   window.cachedDashboardData.cpiItems = cpiItems;
   window.cachedDashboardData.lastFilter = currentFilterKey;
+
+  // Atualiza o card de economia acumulada dos recorrentes
+  updateInflationEconomyCard(cpiItems);
 
   window.renderPaginatedList(
     container,
@@ -177,7 +239,9 @@ function renderShareWalletChart(categoryTotals) {
      para garantir que a cor da legenda seja correta desde o início,
      independente de o tema dark ou light estar ativo */
   const isDark = document.body.getAttribute("data-theme") === "dark";
-  const currentLegendColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(20, 24, 27, 0.7)";
+  const currentLegendColor = isDark
+    ? "rgba(255,255,255,0.7)"
+    : "rgba(20, 24, 27, 0.7)";
 
   window.chartShareWallet = new Chart(ctx, {
     type: "doughnut",
