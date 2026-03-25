@@ -119,12 +119,7 @@
 .finance-value-subtotal {
   font-size: 15px;
   font-weight: 600;
-  color: var(--toast-bg);
-}
-
-/* No tema dark o toast-bg é claro, precisa da cor do texto dark para o subtotal */
-[data-theme="dark"] .finance-value-subtotal {
-  color: var(--text-main);
+  color: var(--text-secondary);
 }
 
 .finance-value-total {
