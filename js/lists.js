@@ -4,10 +4,12 @@
 
 /**
  * Exclui permanentemente uma lista do Firestore.
+ * NÃO remove do array local - aguarda o onSnapshot atualizar automaticamente.
  */
-window.confirmDeleteList = async function (index) {
-  const list = window.marketListData[index];
-  const listName = list.listName;
+window.confirmDeleteList = async function (listIndex) {
+  const listToDelete = window.marketListData[listIndex];
+  const listName = listToDelete.listName;
+  const listIdentifier = listToDelete.id;
 
   if (
     confirm(
@@ -19,30 +21,27 @@ window.confirmDeleteList = async function (index) {
       const { firestore, doc, deleteDoc } = await import("./firebase.js");
 
       // Remove do Firestore
-      const listRef = doc(firestore, "lists", list.id);
-      await deleteDoc(listRef);
+      const listReference = doc(firestore, "lists", listIdentifier);
+      await deleteDoc(listReference);
 
-      // O onSnapshot no index.js cuidará de atualizar o marketListData e re-renderizar,
-      // mas removemos localmente para feedback instantâneo se necessário
-      window.marketListData.splice(index, 1);
+      // O onSnapshot no index.js atualizará o marketListData e chamará renderMarketLists()
 
-      window.renderMarketLists();
       window.showToast("Lista removida com sucesso", "success");
-    } catch (e) {
-      console.error("Erro ao deletar:", e);
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
       window.showToast("Erro ao excluir lista", "danger");
     }
   }
 };
 
-window.copyList = function (event, index) {
+window.copyList = function (event, listIndex) {
   event.stopPropagation();
   window.isEditingListMode = false;
   window.isCopyingListMode = true;
-  window.currentListIndex = index;
+  window.currentListIndex = listIndex;
   window.previousScreen = "market-lists-screen";
 
-  const originalList = window.marketListData[index];
+  const originalList = window.marketListData[listIndex];
   document.getElementById("form-title").innerText = "Copiar Lista";
   document.getElementById("button-save-list").innerText = "Confirmar Cópia";
   document.getElementById("new-list-name").value = originalList.listName;
@@ -52,8 +51,8 @@ window.copyList = function (event, index) {
   window.showScreen("new-list-screen");
 };
 
-window.handleEditListFromSwipe = function (index) {
-  window.currentListIndex = index;
+window.handleEditListFromSwipe = function (listIndex) {
+  window.currentListIndex = listIndex;
   window.previousScreen = "market-lists-screen";
   window.openEditListForm();
 };
@@ -82,18 +81,18 @@ function getListCardSkeletonTemplate() {
  * Exibe o skeleton de carregamento no container de listas
  * Renderiza N cards skeleton para simular o layout real enquanto os dados carregam
  *
- * @param {number} cardCount - Quantidade de cards skeleton a exibir (padrão: 4)
+ * @param {number} skeletonCardCount - Quantidade de cards skeleton a exibir (padrão: 4)
  */
-window.showListsSkeleton = function (cardCount = 4) {
-  const container = window.listsMasterContainer;
-  if (!container) return;
+window.showListsSkeleton = function (skeletonCardCount = 4) {
+  const containerElement = window.listsMasterContainer;
+  if (!containerElement) return;
 
   let skeletonHTML = "";
-  for (let i = 0; i < cardCount; i++) {
+  for (let index = 0; index < skeletonCardCount; index++) {
     skeletonHTML += getListCardSkeletonTemplate();
   }
 
-  container.innerHTML = `<div style="padding: 0 20px 20px;">${skeletonHTML}</div>`;
+  containerElement.innerHTML = `<div style="padding: 0 20px 20px;">${skeletonHTML}</div>`;
 };
 
 /* ==========================================================================
@@ -200,11 +199,11 @@ function updatePaginationControls() {
 
     // Ellipsis se houver gap
     if (startPage > 2) {
-      const ellipsis = document.createElement("span");
-      ellipsis.textContent = "...";
-      ellipsis.style.color = "var(--text-secondary)";
-      ellipsis.style.padding = "0 4px";
-      paginationNumbers.appendChild(ellipsis);
+      const ellipsisElement = document.createElement("span");
+      ellipsisElement.textContent = "...";
+      ellipsisElement.style.color = "var(--text-secondary)";
+      ellipsisElement.style.padding = "0 4px";
+      paginationNumbers.appendChild(ellipsisElement);
     }
   }
 
@@ -219,11 +218,11 @@ function updatePaginationControls() {
   if (endPage < totalPages) {
     // Ellipsis se houver gap
     if (endPage < totalPages - 1) {
-      const ellipsis = document.createElement("span");
-      ellipsis.textContent = "...";
-      ellipsis.style.color = "var(--text-secondary)";
-      ellipsis.style.padding = "0 4px";
-      paginationNumbers.appendChild(ellipsis);
+      const ellipsisElement = document.createElement("span");
+      ellipsisElement.textContent = "...";
+      ellipsisElement.style.color = "var(--text-secondary)";
+      ellipsisElement.style.padding = "0 4px";
+      paginationNumbers.appendChild(ellipsisElement);
     }
 
     const lastButton = createPageNumberButton(totalPages, false);
@@ -242,20 +241,20 @@ function updatePaginationControls() {
  * @returns {HTMLElement} Elemento button configurado
  */
 function createPageNumberButton(pageNumber, isActive) {
-  const button = document.createElement("button");
-  button.className = "pagination-number-button";
-  button.textContent = pageNumber;
-  button.setAttribute("data-page", pageNumber);
+  const buttonElement = document.createElement("button");
+  buttonElement.className = "pagination-number-button";
+  buttonElement.textContent = pageNumber;
+  buttonElement.setAttribute("data-page", pageNumber);
 
   if (isActive) {
-    button.classList.add("active");
+    buttonElement.classList.add("active");
   }
 
-  button.onclick = function () {
+  buttonElement.onclick = function () {
     navigateToPage(pageNumber);
   };
 
-  return button;
+  return buttonElement;
 }
 
 /**
@@ -303,15 +302,15 @@ window.navigateToNextPage = function () {
  * Utiliza os dados já filtrados e paginados
  */
 function renderListsForCurrentPage() {
-  const container = window.listsMasterContainer;
-  if (!container) return;
+  const containerElement = window.listsMasterContainer;
+  if (!containerElement) return;
 
-  container.innerHTML = "";
+  containerElement.innerHTML = "";
 
   const pageItems = getItemsForCurrentPage();
 
   if (pageItems.length === 0) {
-    container.innerHTML = `
+    containerElement.innerHTML = `
       <div class="empty-state">
         <span class="empty-emoji">📝</span>
         <p>Nenhuma lista encontrada.</p>
@@ -322,34 +321,34 @@ function renderListsForCurrentPage() {
 
   pageItems.forEach((list) => {
     const originalIndex = window.marketListData.findIndex(
-      (original) => original.id === list.id,
+      (originalList) => originalList.id === list.id,
     );
 
     let totalItemsCount = 0,
-      purchased = 0,
+      purchasedItemsCount = 0,
       subtotalValue = 0,
-      totalValue = 0;
+      totalCheckedValue = 0;
 
-    (list.categories || []).forEach((cat) => {
-      cat.items.forEach((item) => {
+    (list.categories || []).forEach((category) => {
+      category.items.forEach((item) => {
         totalItemsCount++;
-        if (item.checked) purchased++;
-        const valorUnitario = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
+        if (item.checked) purchasedItemsCount++;
+        const unitPrice = parseFloat(
+          item.price.replace(/\\./g, "").replace(",", "."),
         );
-        const qtd = item.quantity || 1;
-        if (!isNaN(valorUnitario)) {
-          const valorTotalItem = valorUnitario * qtd;
-          subtotalValue += valorTotalItem;
-          if (item.checked) totalValue += valorTotalItem;
+        const quantity = item.quantity || 1;
+        if (!isNaN(unitPrice)) {
+          const totalItemValue = unitPrice * quantity;
+          subtotalValue += totalItemValue;
+          if (item.checked) totalCheckedValue += totalItemValue;
         }
       });
     });
 
-    const percent =
-      totalItemsCount > 0 ? (purchased / totalItemsCount) * 100 : 0;
-    const format = (val) =>
-      val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const percentageComplete =
+      totalItemsCount > 0 ? (purchasedItemsCount / totalItemsCount) * 100 : 0;
+    const formatCurrency = (value) =>
+      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
     const swipeContainer = document.createElement("div");
     swipeContainer.className = "swipe-container";
@@ -366,15 +365,15 @@ function renderListsForCurrentPage() {
             </button>
         `;
 
-    const card = document.createElement("div");
-    card.className = "list-master-card";
-    card.onclick = () => window.openListDetails(originalIndex);
+    const cardElement = document.createElement("div");
+    cardElement.className = "list-master-card";
+    cardElement.onclick = () => window.openListDetails(originalIndex);
 
-    card.ontouchstart = window.handleTouchStart;
-    card.ontouchmove = window.handleTouchMove;
-    card.ontouchend = window.handleTouchEnd;
+    cardElement.ontouchstart = window.handleTouchStart;
+    cardElement.ontouchmove = window.handleTouchMove;
+    cardElement.ontouchend = window.handleTouchEnd;
 
-    card.innerHTML = `
+    cardElement.innerHTML = `
         <div class="list-master-header dashboard-header">
             <span class="list-master-title">${list.listName}</span>
             <div style="display: flex; gap: 8px; align-items: center;">
@@ -393,20 +392,20 @@ function renderListsForCurrentPage() {
         <div class="card-financial-info" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 10px;">
             <div style="display: flex; flex-direction: column;">
                 <span style="font-size: 11px; color: var(--text-secondary);">Subtotal</span>
-                <span style="font-size: 13px; font-weight: 600; color: var(--toast-bg);">${format(subtotalValue)}</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--toast-bg);">${formatCurrency(subtotalValue)}</span>
             </div>
             <div style="display: flex; flex-direction: column; text-align: right;">
                 <span style="font-size: 11px; color: var(--text-secondary);">Total Marcado</span>
-                <span style="font-size: 15px; font-weight: 700; color: var(--danger);">${format(totalValue)}</span>
+                <span style="font-size: 15px; font-weight: 700; color: var(--danger);">${formatCurrency(totalCheckedValue)}</span>
             </div>
         </div>
-        <div class="status-text" style="margin-top: 8px;">${purchased} comprado(s)</div>
-        <div class="mini-progress-bg"><div class="mini-progress-bar" style="width: ${percent}%"></div></div>
+        <div class="status-text" style="margin-top: 8px;">${purchasedItemsCount} comprado(s)</div>
+        <div class="mini-progress-bg"><div class="mini-progress-bar" style="width: ${percentageComplete}%"></div></div>
     `;
 
     swipeContainer.appendChild(actionButtons);
-    swipeContainer.appendChild(card);
-    container.appendChild(swipeContainer);
+    swipeContainer.appendChild(cardElement);
+    containerElement.appendChild(swipeContainer);
   });
 }
 
@@ -415,19 +414,19 @@ function renderListsForCurrentPage() {
  * Aplica filtros de busca, ordenação e configura paginação
  */
 window.renderMarketLists = function () {
-  const searchInput = document.getElementById("search-input");
-  const searchTerm = searchInput
-    ? window.normalizeString(searchInput.value)
+  const searchInputElement = document.getElementById("search-input");
+  const searchTerm = searchInputElement
+    ? window.normalizeString(searchInputElement.value)
     : "";
 
   // Se não houver dados, mostra estado vazio e desabilita busca
   if (window.marketListData.length === 0) {
-    if (searchInput) {
-      searchInput.disabled = true;
+    if (searchInputElement) {
+      searchInputElement.disabled = true;
     }
-    const container = window.listsMasterContainer;
-    if (container) {
-      container.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
+    const containerElement = window.listsMasterContainer;
+    if (containerElement) {
+      containerElement.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
     }
     // Esconde paginação
     const paginationContainer = document.getElementById("pagination-container");
@@ -437,8 +436,8 @@ window.renderMarketLists = function () {
     return;
   }
 
-  if (searchInput) {
-    searchInput.disabled = false;
+  if (searchInputElement) {
+    searchInputElement.disabled = false;
   }
 
   // Ordenação por data (descendente)
@@ -470,8 +469,8 @@ window.renderMarketLists = function () {
  * Gerencia a interação entre busca e paginação
  */
 window.handleSearchInput = function () {
-  const searchInput = document.getElementById("search-input");
-  const searchTerm = searchInput ? searchInput.value.trim() : "";
+  const searchInputElement = document.getElementById("search-input");
+  const searchTerm = searchInputElement ? searchInputElement.value.trim() : "";
 
   // Se começou a digitar (busca ativa)
   if (searchTerm.length > 0 && !isSearchActive) {
@@ -495,27 +494,28 @@ window.handleSearchInput = function () {
    ========================================================================== */
 window.handleTouchStart = function (event) {
   window.touchStartX = event.touches[0].clientX;
-  const card = event.currentTarget;
-  if (window.activeSwipeCard && window.activeSwipeCard !== card)
+  const cardElement = event.currentTarget;
+  if (window.activeSwipeCard && window.activeSwipeCard !== cardElement)
     window.activeSwipeCard.style.transform = "translateX(0)";
 };
 
 window.handleTouchMove = function (event) {
   const touchX = event.touches[0].clientX;
-  const diff = touchX - window.touchStartX;
-  const card = event.currentTarget;
-  if (diff < 0 && diff > -160) card.style.transform = `translateX(${diff}px)`;
+  const difference = touchX - window.touchStartX;
+  const cardElement = event.currentTarget;
+  if (difference < 0 && difference > -160)
+    cardElement.style.transform = `translateX(${difference}px)`;
 };
 
 window.handleTouchEnd = function (event) {
-  const card = event.currentTarget;
+  const cardElement = event.currentTarget;
   const touchEndX = event.changedTouches[0].clientX;
-  const diff = touchEndX - window.touchStartX;
-  if (diff < -80) {
-    card.style.transform = "translateX(-150px)";
-    window.activeSwipeCard = card;
+  const difference = touchEndX - window.touchStartX;
+  if (difference < -80) {
+    cardElement.style.transform = "translateX(-150px)";
+    window.activeSwipeCard = cardElement;
   } else {
-    card.style.transform = "translateX(0)";
+    cardElement.style.transform = "translateX(0)";
     window.activeSwipeCard = null;
   }
 };
