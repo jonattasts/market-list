@@ -1,0 +1,80 @@
+/* ==========================================================================
+   TELAS DE FORMULÁRIO (NEW LIST, NEW CATEGORY, NEW ITEM)
+   ========================================================================== */
+
+/* --- Containers das Telas de Formulário --- */
+#new-list-screen,
+#new-category-screen,
+#new-item-screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Seção de Formulário --- */
+.form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin-top: 30px;
+}
+
+/* --- Card do Formulário --- */
+.form-card {
+  background: var(--bg-card);
+  padding: 40px 20px;
+  border-radius: 24px;
+  box-shadow: 0 10px 25px var(--shadow-card);
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-card h2,
+.form-card p {
+  color: var(--text-main);
+}
+
+/* --- Emoji do Formulário --- */
+.emoji-main {
+  font-size: 60px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.emoji-form {
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+
+/* --- Botão de Início/Salvar --- */
+.button-start {
+  margin-top: 25px;
+  padding: 16px 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+}
+
+/* --- Botão de Ver Listas --- */
+.button-view-lists {
+  margin-top: 10px;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+/* --- Título do Header Alinhado à Esquerda --- */
+.header-title-left {
+  text-align: start;
+}
