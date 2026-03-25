@@ -307,10 +307,6 @@
   font-weight: 600;
 }
 
-[data-theme="light"] .item-price {
-  color: var(--toast-bg);
-}
-
 .custom-check {
   width: 26px;
   height: 26px;

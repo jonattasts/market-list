@@ -414,7 +414,7 @@ function renderListsForCurrentPage() {
         <div class="card-financial-info" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 10px;">
             <div style="display: flex; flex-direction: column;">
                 <span style="font-size: 11px; color: var(--text-secondary);">Subtotal</span>
-                <span style="font-size: 13px; font-weight: 600; color: var(--toast-bg);">${formatCurrency(subtotalValue)}</span>
+                <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">${formatCurrency(subtotalValue)}</span>
             </div>
             <div style="display: flex; flex-direction: column; text-align: right;">
                 <span style="font-size: 11px; color: var(--text-secondary);">Total Marcado</span>
