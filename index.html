@@ -198,11 +198,12 @@
         <!-- Wrapper para conteúdo com scroll (apenas as listas) -->
         <div class="lists-content-wrapper">
 
+          <!-- Container Dinâmico das Listas -->
+          <div class="list-container master-list"
+            id="lists-master-container"></div>
+
           <!-- Container de Paginação -->
           <div id="pagination-container" class="pagination-container">
-            <div class="pagination-info">
-              <span id="pagination-indicator">Página 1 de 1</span>
-            </div>
             <div class="pagination-controls market-list">
               <button id="pagination-button-previous" class="pagination-button"
                 onclick="navigateToPreviousPage()" disabled>
@@ -214,11 +215,11 @@
                 <ion-icon name="chevron-forward-outline"></ion-icon>
               </button>
             </div>
-          </div>
 
-          <!-- Container Dinâmico das Listas -->
-          <div class="list-container master-list"
-            id="lists-master-container"></div>
+            <div class="pagination-info">
+              <span id="pagination-indicator">Página 1 de 1</span>
+            </div>
+          </div>
 
         </div>
 
