@@ -8,6 +8,7 @@ import {
   doc,
   addDoc,
   getDocs,
+  getDocsFromServer,
   getDoc,
   setDoc,
   updateDoc,
@@ -42,6 +43,7 @@ export {
   // Métodos de CRUD
   addDoc,
   getDocs,
+  getDocsFromServer,
   getDoc,
   setDoc,
   updateDoc,

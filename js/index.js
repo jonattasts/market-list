@@ -9,7 +9,7 @@ import {
   serverTimestamp,
   setDoc,
   getDoc,
-  getDocs,
+  getDocsFromServer,
   query,
   orderBy,
   onSnapshot,
@@ -145,25 +145,40 @@ window.formatCurrencyInput = function (input) {
    ========================================================================== */
 
 /**
- * Verifica se a conexão com o Firebase/Firestore está funcionando corretamente
- * Tenta fazer uma operação de leitura real para validar conectividade e permissões
- * Usa a instância configurada do Firebase (firestore)
+ *
+ * Verifica se a conexão com o Firebase/Firestore está funcionando corretamente.
+ * Usa getDocsFromServer para forçar leitura direta no servidor, ignorando o cache
+ * offline do Firestore.
+ *
+ * Um timeout de 5 segundos é usado como fallback para casos em que o Firebase
+ * simplesmente não responde (ex: sem rede, projectId inexistente).
  *
  * @returns {Promise<boolean>} True se conexão OK e com permissões, false se falhou
  */
 async function validateDatabaseConnection() {
   try {
-    // Tenta acessar a coleção de listas do usuário atual para verificar conexão real
     const userName = localStorage.getItem("marketUserName");
 
-    // Se não há usuário logado, não pode validar - considera falha
+    // Se não há usuário logado
     if (!userName) {
       console.warn("Database validation: No user name found in localStorage");
       return false;
     }
 
-    // Cria uma query que deve funcionar se o usuário tem permissão e conexão
-    // Usando os métodos importados do firebase.js (instância configurada)
+    // Cria uma promise de timeout para forçar falha caso o Firebase fique pendente
+    // Necessário porque projectId inexistente pode não gerar exceção imediata
+    // O tempo é maior (5s) para acomodar latência real de rede sem falsos negativos
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(
+          new Error(
+            "VALIDATION_TIMEOUT: Firebase connection timed out after 5 seconds",
+          ),
+        );
+      }, 5000);
+    });
+
+    // Cria a query normalmente — o filtro garante escopo correto do usuário
     const listsQuery = query(
       collection(firestore, "lists"),
       where("userName", "==", userName),
@@ -174,11 +189,15 @@ async function validateDatabaseConnection() {
     // 1. Não há conexão de internet
     // 2. As regras de segurança negam acesso
     // 3. O projeto Firebase está inacessível
-    await getDocs(listsQuery);
+    await Promise.race([getDocsFromServer(listsQuery), timeoutPromise]);
 
     return true;
   } catch (error) {
     console.error("Database validation error:", error);
+
+    if (error.message && error.message.startsWith("VALIDATION_TIMEOUT")) {
+      return false;
+    }
 
     // Erros que indicam falha real de conexão ou permissão
     const connectionErrorCodes = [
@@ -189,6 +208,9 @@ async function validateDatabaseConnection() {
       "unauthenticated", // Não autenticado
       "internal", // Erro interno do Firebase
       "unknown", // Erro desconhecido
+      "invalid-argument", // Argumento inválido (ex: projectId malformado)
+      "not-found", // Projeto não encontrado no Firebase
+      "failed-precondition", // Índice ausente ou configuração inválida
     ];
 
     // Se o código do erro está na lista de erros críticos, considera falha
@@ -205,6 +227,16 @@ async function validateDatabaseConnection() {
     if (
       error.message &&
       error.message.includes("Could not reach Cloud Firestore backend")
+    ) {
+      return false;
+    }
+
+    // Se o erro contém indicadores de configuração inválida do Firebase
+    if (
+      error.message &&
+      (error.message.includes("invalid") ||
+        error.message.includes("not found") ||
+        error.message.includes("does not exist"))
     ) {
       return false;
     }
@@ -281,20 +313,28 @@ function validateScreenFunctions(requiredFunctionsList) {
 }
 
 /**
- * Executa a validação completa de dependências de uma tela
- * Esta função roda em paralelo ao skeleton existente
+ *
+ * Executa a validação completa de dependências de uma tela.
+ * Esta função roda em paralelo ao skeleton existente.
+ *
+ * A ordem de validação é intencional e garante o redirecionamento correto:
+ * 1. Banco de dados → falha redireciona para home-screen com toast de conexão
+ * 2. Chart.js → falha redireciona para tela anterior com toast de indisponibilidade
+ * 3. Funções da tela → falha redireciona para tela anterior com toast de indisponibilidade
  *
  * @param {string} screenIdentifier - ID da tela a ser validada
- * @returns {Promise<Object>} Resultado da validação com status e erros
+ * @returns {Promise<Object>} Resultado da validação com status, tipo de falha e erros
  */
 async function executeScreenValidation(screenIdentifier) {
   const configuration = screenValidationConfiguration[screenIdentifier];
   if (!configuration) {
-    return { isValid: true, errors: [] }; // Tela não requer validação
+    return { isValid: true, failureType: null, errors: [] }; // Tela não requer validação
   }
 
   const validationResults = {
     isValid: true,
+    // Tipo de falha: "database" redireciona para home-screen, "screen" redireciona para tela anterior
+    failureType: null,
     errors: [],
     details: {},
   };
@@ -306,34 +346,37 @@ async function executeScreenValidation(screenIdentifier) {
 
     if (!databaseConnectionValid) {
       validationResults.isValid = false;
+      validationResults.failureType = "database";
       validationResults.errors.push("Conexão com banco de dados indisponível");
+      return validationResults;
     }
   }
 
   // Etapa 2: Validação do Chart.js (se necessário)
-  if (configuration.requiresChartJs && validationResults.isValid) {
+  if (configuration.requiresChartJs) {
     const chartJsLibraryValid = validateChartJsLibrary();
     validationResults.details.chartJs = chartJsLibraryValid;
 
     if (!chartJsLibraryValid) {
       validationResults.isValid = false;
+      validationResults.failureType = "screen";
       validationResults.errors.push("Biblioteca Chart.js não disponível");
+      return validationResults;
     }
   }
 
-  // Etapa 3: Validação das Funções da Tela (se ainda válido)
-  if (validationResults.isValid) {
-    const functionsValidationResult = validateScreenFunctions(
-      configuration.requiredFunctions,
-    );
-    validationResults.details.functions = functionsValidationResult;
+  // Etapa 3: Validação das Funções da Tela
+  const functionsValidationResult = validateScreenFunctions(
+    configuration.requiredFunctions,
+  );
+  validationResults.details.functions = functionsValidationResult;
 
-    if (!functionsValidationResult.isValid) {
-      validationResults.isValid = false;
-      validationResults.errors.push(
-        `Funções indisponíveis: ${functionsValidationResult.missingFunctions.join(", ")}`,
-      );
-    }
+  if (!functionsValidationResult.isValid) {
+    validationResults.isValid = false;
+    validationResults.failureType = "screen";
+    validationResults.errors.push(
+      `Funções indisponíveis: ${functionsValidationResult.missingFunctions.join(", ")}`,
+    );
   }
 
   currentValidationState.validationResults = validationResults;
@@ -341,12 +384,15 @@ async function executeScreenValidation(screenIdentifier) {
 }
 
 /**
- * Trata o resultado da validação - sucesso ou falha
- * Esconde o skeleton existente e toma ação apropriada
- * SEMPRE redireciona para home-screen e exibe toast em caso de falha de conexão
+ *
+ * - Falha de banco (failureType === "database"):
+ *   Redireciona para home-screen com toast "Falha na comunicação com o Servidor!"
+ *
+ * - Falha de tela (failureType === "screen"):
+ *   Redireciona para a tela anterior com toast "A [Nome da Tela] não está disponível no momento!"
  *
  * @param {string} screenIdentifier - ID da tela validada
- * @param {Object} validationResult - Resultado da validação
+ * @param {Object} validationResult - Resultado da validação (com failureType)
  * @returns {boolean} True se pode prosseguir com renderização, false se deve abortar
  */
 function handleValidationResult(screenIdentifier, validationResult) {
@@ -368,14 +414,31 @@ function handleValidationResult(screenIdentifier, validationResult) {
   if (validationResult.isValid) {
     currentValidationState.isValidating = false;
     return true;
-  } else {
-    window.showToast("Erro de conexão com o Servidor!", "danger");
-
-    executeScreenNavigation("home-screen");
-
-    currentValidationState.isValidating = false;
-    return false;
   }
+
+  // Falha de banco de dados: redireciona para home-screen
+  if (validationResult.failureType === "database") {
+    window.showToast("Falha na comunicação com o Servidor!", "danger");
+    executeScreenNavigation("home-screen");
+  }
+  // Falha de funcionalidades da tela (plugins ou funções): redireciona para tela anterior
+  // Mantém o usuário no fluxo informando que aquela tela específica está indisponível
+  else if (validationResult.failureType === "screen" && configuration) {
+    const screenDisplayName = configuration.screenName || screenIdentifier;
+    window.showToast(
+      `A ${screenDisplayName} não está disponível no momento!`,
+      "danger",
+    );
+    executeScreenNavigation(configuration.previousScreen);
+  }
+  // Fallback genérico para casos não mapeados
+  else {
+    window.showToast("Falha na comunicação com o Servidor!", "danger");
+    executeScreenNavigation("home-screen");
+  }
+
+  currentValidationState.isValidating = false;
+  return false;
 }
 
 /* ==========================================================================
@@ -397,7 +460,7 @@ window.saveAndSync = async function () {
     });
   } catch (e) {
     console.error("Erro ao atualizar Firestore:", e);
-    window.showToast("Erro de conexão com o Servidor!", "danger");
+    window.showToast("Falha na comunicação com o Servidor!", "danger");
   }
 };
 
@@ -486,7 +549,7 @@ window.handleUserIdentification = async function () {
   } catch (error) {
     if (buttonStart) buttonStart.classList.remove("is-loading");
     console.error("Erro identificação:", error);
-    window.showToast("Erro de conexão com o Servidor!", "danger");
+    window.showToast("Falha na comunicação com o Servidor!", "danger");
   }
 };
 
@@ -539,10 +602,14 @@ window.initializeHomeScreen = function () {
 };
 
 /**
- * Executa a navegação de tela sem validação (uso interno para evitar loops)
- * IMPORTANTE: Para a tela de listas, NÃO dispara renderMarketLists aqui.
+ *
+ * Executa a navegação de tela sem validação (uso interno para evitar loops).
  * O render das listas deve ocorrer APENAS após a validação ser concluída (em showScreen),
  * para evitar que hideListsSkeleton sobrescreva o conteúdo já renderizado.
+ *
+ * Para o dashboard, initDashboardAnalisys NÃO é chamado aqui quando a tela
+ * requer validação — será chamado pelo próprio módulo após a validação concluir,
+ * evitando que o dashboard renderize com credenciais inválidas do firebase.js.
  *
  * @param {string} screenIdentifier - ID da tela de destino
  */
@@ -581,14 +648,19 @@ function executeScreenNavigation(screenIdentifier) {
   if (screenIdentifier === "market-lists-screen") {
     window.searchInput.value = "";
 
-    // Exibe skeleton e garante que a paginação esteja escondida enquanto valida
-    // O renderMarketLists NÃO é chamado aqui - será chamado em showScreen
-    // após a validação concluir, evitando que hideListsSkeleton apague as listas
     if (window.showListsSkeleton) window.showListsSkeleton();
   }
 
-  if (screenIdentifier === "dashboard-screen" && window.initDashboardAnalisys)
+  const dashboardRequiresValidation =
+    screenValidationConfiguration.hasOwnProperty("dashboard-screen");
+
+  if (
+    screenIdentifier === "dashboard-screen" &&
+    !dashboardRequiresValidation &&
+    window.initDashboardAnalisys
+  ) {
     window.initDashboardAnalisys();
+  }
 }
 
 /**
@@ -597,17 +669,9 @@ function executeScreenNavigation(screenIdentifier) {
  * A tela de detalhes (market-list-screen-details) é a única exceção:
  * ao voltar dela, a paginação é preservada para manter a experiência do usuário.
  */
-const screensThatResetPagination = new Set([
-  "home-screen",
-  "dashboard-screen",
-]);
+const screensThatResetPagination = new Set(["home-screen", "dashboard-screen"]);
 
 /**
- * Navega para uma tela específica com validação de dependências quando necessário
- * A validação ocorre DURANTE o skeleton já existente da tela.
- * Para a tela de listas, o renderMarketLists é chamado SOMENTE após a validação
- * ser concluída com sucesso, garantindo a ordem correta:
- * skeleton → validação → hideListsSkeleton → renderMarketLists
  *
  * Regra de paginação ao entrar na tela de listas:
  * - Vindo de home-screen ou dashboard-screen: reseta para página 1
@@ -646,7 +710,8 @@ window.showScreen = async function (screenIdentifier) {
       screenIdentifier === "market-lists-screen" &&
       screensThatResetPagination.has(currentlyVisibleScreen)
     ) {
-      if (window.resetPaginationToFirstPage) window.resetPaginationToFirstPage();
+      if (window.resetPaginationToFirstPage)
+        window.resetPaginationToFirstPage();
     }
 
     // Primeiro navega para a tela (que já exibe o skeleton existente)
@@ -656,22 +721,26 @@ window.showScreen = async function (screenIdentifier) {
     // Executa a validação em paralelo (durante o skeleton)
     const validationResult = await executeScreenValidation(screenIdentifier);
 
-    // Trata o resultado - esconde skeleton e decide se continua ou volta
+    // Trata o resultado — esconde skeleton e decide se continua ou redireciona
     const canProceed = handleValidationResult(
       screenIdentifier,
       validationResult,
     );
 
     if (!canProceed) {
-      // Se falhou, o handleValidationResult já voltou para home-screen
+      // handleValidationResult redireciona para a tela correta
       return;
     }
 
-    // Validação concluída com sucesso: agora é seguro renderizar as listas
-    // O skeleton já foi limpo por hideListsSkeleton dentro de handleValidationResult
-    // Portanto, renderMarketLists preencherá o container sem risco de ser apagado
+    // Para listas: o skeleton já foi limpo por hideListsSkeleton dentro de handleValidationResult
     if (screenIdentifier === "market-lists-screen") {
       if (window.renderMarketLists) window.renderMarketLists();
+    }
+
+    // Para dashboard: só inicializa APÓS a validação confirmar que banco e Chart.js estão OK
+    // Evita que o dashboard tente renderizar gráficos ou buscar dados com conexão inválida
+    if (screenIdentifier === "dashboard-screen") {
+      if (window.initDashboardAnalisys) window.initDashboardAnalisys();
     }
   } else {
     // Tela não requer validação, navegação normal
@@ -805,7 +874,7 @@ function initFirebaseListener(userName) {
       ];
 
       if (error.code && connectionErrorCodes.includes(error.code)) {
-        window.showToast("Erro de conexão com o Servidor!", "danger");
+        window.showToast("Falha na comunicação com o Servidor!", "danger");
         executeScreenNavigation("home-screen");
       }
 
@@ -842,7 +911,7 @@ async function validateUserPersistence(savedName) {
   } catch (error) {
     console.error("Erro ao validar persistência:", error);
 
-    window.showToast("Erro de conexão com o Servidor!", "danger");
+    window.showToast("Falha na comunicação com o Servidor!", "danger");
     executeScreenNavigation("home-screen");
   }
 }
