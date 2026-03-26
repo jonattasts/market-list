@@ -540,6 +540,9 @@ window.initializeHomeScreen = function () {
 
 /**
  * Executa a navegação de tela sem validação (uso interno para evitar loops)
+ * IMPORTANTE: Para a tela de listas, NÃO dispara renderMarketLists aqui.
+ * O render das listas deve ocorrer APENAS após a validação ser concluída (em showScreen),
+ * para evitar que hideListsSkeleton sobrescreva o conteúdo já renderizado.
  *
  * @param {string} screenIdentifier - ID da tela de destino
  */
@@ -578,13 +581,10 @@ function executeScreenNavigation(screenIdentifier) {
   if (screenIdentifier === "market-lists-screen") {
     window.searchInput.value = "";
 
-    // Exibe skeleton existente e garante que paginação esteja escondida
+    // Exibe skeleton e garante que a paginação esteja escondida enquanto valida
+    // O renderMarketLists NÃO é chamado aqui - será chamado em showScreen
+    // após a validação concluir, evitando que hideListsSkeleton apague as listas
     if (window.showListsSkeleton) window.showListsSkeleton();
-
-    // O timer garante que o skeleton seja visível por tempo suficiente
-    setTimeout(() => {
-      if (window.renderMarketLists) window.renderMarketLists();
-    }, 350);
   }
 
   if (screenIdentifier === "dashboard-screen" && window.initDashboardAnalisys)
@@ -592,8 +592,26 @@ function executeScreenNavigation(screenIdentifier) {
 }
 
 /**
+ * Telas que, ao navegar de volta para a lista de compras, devem resetar
+ * a paginação para a primeira página.
+ * A tela de detalhes (market-list-screen-details) é a única exceção:
+ * ao voltar dela, a paginação é preservada para manter a experiência do usuário.
+ */
+const screensThatResetPagination = new Set([
+  "home-screen",
+  "dashboard-screen",
+]);
+
+/**
  * Navega para uma tela específica com validação de dependências quando necessário
- * A validação ocorre DURANTE o skeleton já existente da tela
+ * A validação ocorre DURANTE o skeleton já existente da tela.
+ * Para a tela de listas, o renderMarketLists é chamado SOMENTE após a validação
+ * ser concluída com sucesso, garantindo a ordem correta:
+ * skeleton → validação → hideListsSkeleton → renderMarketLists
+ *
+ * Regra de paginação ao entrar na tela de listas:
+ * - Vindo de home-screen ou dashboard-screen: reseta para página 1
+ * - Vindo de market-list-screen-details: preserva a página atual
  *
  * @param {string} screenIdentifier - ID da tela de destino
  */
@@ -601,12 +619,38 @@ window.showScreen = async function (screenIdentifier) {
   const requiresValidation =
     screenValidationConfiguration.hasOwnProperty(screenIdentifier);
 
+  // Captura a tela atualmente visível antes de navegar,
+  // para usar como referência na decisão de reset de paginação
+  const currentlyVisibleScreen = [
+    "home-screen",
+    "market-lists-screen",
+    "market-list-screen-details",
+    "dashboard-screen",
+    "new-list-screen",
+    "new-category-screen",
+    "new-item-screen",
+    "onboarding-screen",
+  ].find((screenId) => {
+    const element = document.getElementById(screenId);
+    return element && !element.classList.contains("screen-hidden");
+  });
+
   if (requiresValidation) {
     // Marca que está validando para controlar o fluxo
     currentValidationState.isValidating = true;
     currentValidationState.targetScreen = screenIdentifier;
 
+    // Reseta paginação para primeira página se a origem exige isso
+    // (ex: home-screen, dashboard-screen), mas preserva ao voltar dos detalhes
+    if (
+      screenIdentifier === "market-lists-screen" &&
+      screensThatResetPagination.has(currentlyVisibleScreen)
+    ) {
+      if (window.resetPaginationToFirstPage) window.resetPaginationToFirstPage();
+    }
+
     // Primeiro navega para a tela (que já exibe o skeleton existente)
+    // Para listas: apenas mostra skeleton, SEM agendar renderMarketLists
     executeScreenNavigation(screenIdentifier);
 
     // Executa a validação em paralelo (durante o skeleton)
@@ -622,7 +666,13 @@ window.showScreen = async function (screenIdentifier) {
       // Se falhou, o handleValidationResult já voltou para home-screen
       return;
     }
-    // Se sucesso, o skeleton já foi escondido e a tela continua visível
+
+    // Validação concluída com sucesso: agora é seguro renderizar as listas
+    // O skeleton já foi limpo por hideListsSkeleton dentro de handleValidationResult
+    // Portanto, renderMarketLists preencherá o container sem risco de ser apagado
+    if (screenIdentifier === "market-lists-screen") {
+      if (window.renderMarketLists) window.renderMarketLists();
+    }
   } else {
     // Tela não requer validação, navegação normal
     executeScreenNavigation(screenIdentifier);

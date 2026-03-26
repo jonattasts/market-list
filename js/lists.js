@@ -148,6 +148,18 @@ function initializePagination() {
 }
 
 /**
+ * Reseta a paginação para a primeira página.
+ * Exposta globalmente para ser chamada pelo index.js ao navegar para a tela
+ * de listas vindo de telas que não preservam o estado de paginação
+ * (ex: home-screen, dashboard-screen).
+ * Ao retornar da tela de detalhes, esta função NÃO deve ser chamada,
+ * preservando a página em que o usuário estava.
+ */
+window.resetPaginationToFirstPage = function () {
+  initializePagination();
+};
+
+/**
  * Calcula o número total de páginas baseado na quantidade de itens
  * @param {number} totalItems - Total de itens a serem paginados
  * @returns {number} Número total de páginas
