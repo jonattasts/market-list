@@ -253,7 +253,10 @@ window.handleConfirmShare = async function () {
   );
 
   if (isAlreadyShared) {
-    window.showToast("Esta lista já está compartilhada com esse nome.", "danger");
+    window.showToast(
+      "Esta lista já está compartilhada com esse nome.",
+      "danger",
+    );
     return;
   }
 
@@ -290,11 +293,7 @@ window.handleConfirmShare = async function () {
 
   try {
     // Persiste a nova lista de compartilhados no Firestore
-    const listDocumentReference = doc(
-      firestore,
-      "lists",
-      currentList.id,
-    );
+    const listDocumentReference = doc(firestore, "lists", currentList.id);
     await updateDoc(listDocumentReference, {
       sharedWith: updatedSharedUsersArray,
       updatedAt: serverTimestamp(),
@@ -306,10 +305,7 @@ window.handleConfirmShare = async function () {
 
     // Fecha a janela e re-renderiza a tela de listas
     window.closeShareWindow();
-    window.showToast(
-      `Lista compartilhada com ${normalizedName}!`,
-      "success",
-    );
+    window.showToast(`Lista compartilhada com ${normalizedName}!`, "success");
 
     // Re-renderiza a tela de listas atualizando cache e interface
     if (window.renderMarketLists) window.renderMarketLists();
@@ -352,11 +348,7 @@ window.handleRemoveSharedUser = async function (userIndex) {
 
   try {
     // Persiste a remoção no Firestore
-    const listDocumentReference = doc(
-      firestore,
-      "lists",
-      currentList.id,
-    );
+    const listDocumentReference = doc(firestore, "lists", currentList.id);
     await updateDoc(listDocumentReference, {
       sharedWith: updatedSharedUsersArray,
       updatedAt: serverTimestamp(),
@@ -366,7 +358,10 @@ window.handleRemoveSharedUser = async function (userIndex) {
     window.marketListData[window.currentListIndex].sharedWith =
       updatedSharedUsersArray;
 
-    window.showToast(`${userToRemove.name} removido do compartilhamento.`, "success");
+    window.showToast(
+      `${userToRemove.name} removido do compartilhamento.`,
+      "success",
+    );
 
     // Re-renderiza a janela com os dados atualizados
     const bodyElement = document.getElementById("share-window-body");
@@ -375,7 +370,9 @@ window.handleRemoveSharedUser = async function (userIndex) {
     if (updatedSharedUsersArray.length > 0) {
       // Ainda há usuários compartilhados: exibe a lista atualizada
       titleElement.textContent = "Compartilhado com";
-      bodyElement.innerHTML = getSharedUsersListTemplate(updatedSharedUsersArray);
+      bodyElement.innerHTML = getSharedUsersListTemplate(
+        updatedSharedUsersArray,
+      );
     } else {
       // Nenhum usuário restante: exibe o formulário de adição
       titleElement.textContent = "Compartilhar Lista";
@@ -409,10 +406,13 @@ window.handleRemoveSharedUser = async function (userIndex) {
 window.toggleDetailsMenuOptions = function (event) {
   if (event) event.stopPropagation();
 
-  const detailsPopoverElement = document.getElementById("details-options-popover");
+  const detailsPopoverElement = document.getElementById(
+    "details-options-popover",
+  );
   if (!detailsPopoverElement) return;
 
-  const isPopoverHidden = detailsPopoverElement.classList.contains("popover-hidden");
+  const isPopoverHidden =
+    detailsPopoverElement.classList.contains("popover-hidden");
 
   if (isPopoverHidden) {
     detailsPopoverElement.classList.remove("popover-hidden");
@@ -434,7 +434,9 @@ window.toggleDetailsMenuOptions = function (event) {
  * Fecha o popover de opções da tela de detalhes.
  */
 window.closeDetailsPopover = function () {
-  const detailsPopoverElement = document.getElementById("details-options-popover");
+  const detailsPopoverElement = document.getElementById(
+    "details-options-popover",
+  );
   if (detailsPopoverElement) {
     detailsPopoverElement.classList.add("popover-hidden");
     detailsPopoverElement.classList.remove("popover-visible");
@@ -459,8 +461,12 @@ window.handleDetailsPopoverAction = function (action) {
 
 // Listener global para fechar o popover de detalhes ao clicar fora
 document.addEventListener("click", function (clickEvent) {
-  const detailsPopoverElement = document.getElementById("details-options-popover");
-  const detailsOptionsButtonElement = document.getElementById("button-options-details");
+  const detailsPopoverElement = document.getElementById(
+    "details-options-popover",
+  );
+  const detailsOptionsButtonElement = document.getElementById(
+    "button-options-details",
+  );
 
   if (
     detailsPopoverElement &&
@@ -548,13 +554,6 @@ window.initSharedListsListener = async function (currentUserName) {
         }));
 
         // Filtra para evitar duplicatas com listas próprias do usuário
-        const uniqueSharedLists = sharedListsData.filter(
-          (sharedList) =>
-            !window.marketListData.some(
-              (ownedList) => ownedList.id === sharedList.id,
-            ),
-        );
-
         // Agrega as listas compartilhadas ao array global
         window.marketListData = [
           ...window.marketListData.filter(
@@ -567,7 +566,9 @@ window.initSharedListsListener = async function (currentUserName) {
         ];
 
         // Re-renderiza a tela de listas se estiver visível
-        const listsScreenElement = document.getElementById("market-lists-screen");
+        const listsScreenElement = document.getElementById(
+          "market-lists-screen",
+        );
         if (
           listsScreenElement &&
           !listsScreenElement.classList.contains("screen-hidden")
@@ -576,11 +577,17 @@ window.initSharedListsListener = async function (currentUserName) {
         }
       },
       (sharedListenerError) => {
-        console.error("Erro listener listas compartilhadas:", sharedListenerError);
+        console.error(
+          "Erro listener listas compartilhadas:",
+          sharedListenerError,
+        );
       },
     );
   } catch (importError) {
-    console.error("Erro ao inicializar listener de listas compartilhadas:", importError);
+    console.error(
+      "Erro ao inicializar listener de listas compartilhadas:",
+      importError,
+    );
   }
 };
 

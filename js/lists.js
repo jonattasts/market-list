@@ -391,7 +391,7 @@ function renderListsForCurrentPage() {
         totalItemsCount++;
         if (item.checked) purchasedItemsCount++;
         const unitPrice = parseFloat(
-          item.price.replace(/\\./g, "").replace(",", "."),
+          item.price.replace(/\./g, "").replace(",", "."),
         );
         const quantity = item.quantity || 1;
         if (!isNaN(unitPrice)) {
@@ -413,28 +413,38 @@ function renderListsForCurrentPage() {
 
     const actionButtons = document.createElement("div");
     actionButtons.className = "swipe-actions";
-    actionButtons.innerHTML = `
-            <button onclick="handleEditListFromSwipe(${originalIndex})" style="background: var(--primary); width: 75px;">
-                <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
-            </button>
-            <button onclick="confirmDeleteList(${originalIndex})" style="background: var(--danger); width: 75px;">
-                <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
-            </button>
-        `;
+
+    // verifica as permissões do usuário atual antes de renderizar os botões de swipe
+    const currentUserName = localStorage.getItem("marketUserName");
+    const isOwnerOfThisList = list.userName === currentUserName;
+
+    if (isOwnerOfThisList) {
+      actionButtons.innerHTML = `
+        <button onclick="handleEditListFromSwipe(${originalIndex})" style="background: var(--primary); width: 75px;">
+            <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
+        </button>
+        <button onclick="confirmDeleteList(${originalIndex})" style="background: var(--danger); width: 75px;">
+            <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
+        </button>
+      `;
+    }
 
     const cardElement = document.createElement("div");
     cardElement.className = "list-master-card";
     cardElement.onclick = () => window.openListDetails(originalIndex);
 
-    cardElement.ontouchstart = window.handleTouchStart;
-    cardElement.ontouchmove = window.handleTouchMove;
-    cardElement.ontouchend = window.handleTouchEnd;
+    // Swipe gesture apenas para o dono da lista
+    if (isOwnerOfThisList) {
+      cardElement.ontouchstart = window.handleTouchStart;
+      cardElement.ontouchmove = window.handleTouchMove;
+      cardElement.ontouchend = window.handleTouchEnd;
+    }
 
     cardElement.innerHTML = `
         <div class="list-master-header dashboard-header">
             <span class="list-master-title">${list.listName}</span>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <ion-icon name="copy-outline" onclick="copyList(event, ${originalIndex})" style="color: var(--primary); font-size: 20px;"></ion-icon>
+                ${isOwnerOfThisList ? `<ion-icon name="copy-outline" onclick="copyList(event, ${originalIndex})" style="color: var(--primary); font-size: 20px;"></ion-icon>` : ""}
             <span class="item-count">${totalItemsCount} ${totalItemsCount === 1 ? "item" : "itens"}</span>
             </div>
         </div>

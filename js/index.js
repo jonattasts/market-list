@@ -201,16 +201,15 @@ async function validateDatabaseConnection() {
 
     // Erros que indicam falha real de conexão ou permissão
     const connectionErrorCodes = [
-      "permission-denied", // Sem permissão de acesso
-      "unavailable", // Serviço indisponível
+      "permission-denied",    // Sem permissão de acesso
+      "unavailable",          // Serviço indisponível
       "network-request-failed", // Sem conexão de rede
-      "resource-exhausted", // Quota excedida
-      "unauthenticated", // Não autenticado
-      "internal", // Erro interno do Firebase
-      "unknown", // Erro desconhecido
-      "invalid-argument", // Argumento inválido (ex: projectId malformado)
-      "not-found", // Projeto não encontrado no Firebase
-      "failed-precondition", // Índice ausente ou configuração inválida
+      "resource-exhausted",   // Quota excedida
+      "unauthenticated",      // Não autenticado
+      "internal",             // Erro interno do Firebase
+      "unknown",              // Erro desconhecido
+      "invalid-argument",     // Argumento inválido (ex: projectId malformado)
+      "not-found",            // Projeto não encontrado no Firebase
     ];
 
     // Se o código do erro está na lista de erros críticos, considera falha
@@ -829,10 +828,22 @@ function initFirebaseListener(userName) {
   onSnapshot(
     q,
     (snapshot) => {
-      window.marketListData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      // Preserva as listas compartilhadas já carregadas pelo
+      // initSharedListsListener ao atualizar as listas próprias do usuário.
+      const ownedLists = snapshot.docs.map((firestoreDoc) => ({
+        id: firestoreDoc.id,
+        ...firestoreDoc.data(),
       }));
+
+      // Mantém no array global apenas as listas compartilhadas (não-próprias),
+      // depois insere as listas próprias atualizadas no início
+      const sharedListsAlreadyLoaded = window.marketListData.filter(
+        (existingList) =>
+          !ownedLists.some((ownedList) => ownedList.id === existingList.id) &&
+          existingList.userName !== userName,
+      );
+
+      window.marketListData = [...ownedLists, ...sharedListsAlreadyLoaded];
 
       if (isFirstLoad) {
         window.showScreen("home-screen");
