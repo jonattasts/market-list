@@ -40,9 +40,12 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
   const allFlattenedItems = [];
   const categoryTotals = {};
   let totalSpentInPeriod = 0;
+
+  /* Contagem de itens únicos (linhas de produto) e não soma de quantidades.
+     Cada linha de produto conta como 1 item adicionado/comprado, independente da quantidade.
+  */
   let totalItemsAdded = 0;
   let totalItemsChecked = 0;
-  let forecastTotal = 0;
 
   filteredLists.forEach((list) => {
     (list.categories || []).forEach((category) => {
@@ -51,20 +54,21 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
 
       category.items.forEach((item) => {
         allFlattenedItems.push(item);
-        totalItemsAdded += item.quantity || 1;
+
+        // Conta 1 por linha de produto (não pela quantidade)
+        totalItemsAdded += 1;
 
         const unitValue = parseFloat(
           item.price.replace(/\./g, "").replace(",", "."),
         );
         const quantity = item.quantity || 1;
-        const valorTotalItem = unitValue * quantity;
-
-        forecastTotal += valorTotalItem;
+        const totalItemValue = unitValue * quantity;
 
         if (item.checked) {
-          totalItemsChecked += item.quantity || 1;
-          categoryTotals[category.name] += valorTotalItem;
-          totalSpentInPeriod += valorTotalItem;
+          // Conta 1 por linha de produto marcado (não pela quantidade)
+          totalItemsChecked += 1;
+          categoryTotals[category.name] += totalItemValue;
+          totalSpentInPeriod += totalItemValue;
         }
       });
     });
@@ -165,6 +169,9 @@ function calculateMonthlyConversionRate(allLists) {
       monthData.month,
     );
 
+    /* CORRIGIDO: Contagem de itens únicos (linhas de produto) e não soma de quantidades.
+       Cada linha de produto conta como 1 item adicionado/comprado por mês,
+       mantendo consistência com a contagem exibida nos demais cards do módulo. */
     let totalItemsAdded = 0;
     let totalItemsChecked = 0;
 
@@ -172,11 +179,12 @@ function calculateMonthlyConversionRate(allLists) {
     monthData.lists.forEach((list) => {
       (list.categories || []).forEach((category) => {
         category.items.forEach((item) => {
-          const quantity = item.quantity || 1;
-          totalItemsAdded += quantity;
+          // Conta 1 por linha de produto (não pela quantidade)
+          totalItemsAdded += 1;
 
           if (item.checked) {
-            totalItemsChecked += quantity;
+            // Conta 1 por linha de produto marcado (não pela quantidade)
+            totalItemsChecked += 1;
           }
         });
       });
@@ -236,22 +244,30 @@ function renderVolumeItemsChart(filteredLists) {
   const labels = filteredLists.map((label) =>
     window.formatDateBRL(label.date).split("/").slice(0, 2).join("/"),
   );
+
+  /* CORRIGIDO: Contagem de itens únicos marcados (linhas de produto) por lista.
+     Cada linha de produto conta como 1 no gráfico, independente da quantidade,
+     garantindo que o valor exibido no gráfico bata com o total mostrado no card. */
   const data = filteredLists.map((list) => {
-    let count = 0;
+    let uniqueCheckedItemCount = 0;
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
-        if (item.checked) count += item.quantity || 1;
+        if (item.checked) uniqueCheckedItemCount += 1;
       });
     });
-    return count;
+    return uniqueCheckedItemCount;
   });
 
   /* CORRIGIDO: Lê o tema atual do body no momento da criação do gráfico
      para garantir que as cores dos ticks e grid sejam corretas desde o início,
      independente de o tema dark ou light estar ativo */
   const isDark = document.body.getAttribute("data-theme") === "dark";
-  const currentTickColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(20, 24, 27, 0.6)";
-  const currentGridColor = isDark ? "rgba(76, 51, 230, 0.08)" : "rgba(76, 51, 230, 0.1)";
+  const currentTickColor = isDark
+    ? "rgba(255,255,255,0.6)"
+    : "rgba(20, 24, 27, 0.6)";
+  const currentGridColor = isDark
+    ? "rgba(76, 51, 230, 0.08)"
+    : "rgba(76, 51, 230, 0.1)";
 
   window.chartVolumeItens = new Chart(ctx, {
     type: "bar",
