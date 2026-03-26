@@ -1,0 +1,412 @@
+/* ==========================================================================
+   JANELA DE COMPARTILHAMENTO DE LISTA
+   ========================================================================== */
+
+/* Overlay + container da janela (mesmo padrão do filter-modal do dashboard) */
+.share-window-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.share-window-overlay.share-window-visible {
+  pointer-events: all;
+  opacity: 1;
+}
+
+/* Backdrop escurecido */
+.share-window-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Card principal da janela */
+.share-window-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-card);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 32px;
+  box-shadow: 0 -8px 40px var(--shadow-card);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+  max-height: 90dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.share-window-overlay.share-window-visible .share-window-card {
+  transform: translateY(0);
+}
+
+/* Handle de arraste (decorativo) */
+.share-window-drag-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+/* Header da janela */
+.share-window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.share-window-header h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.share-window-close-button {
+  background: var(--bg-page);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.share-window-close-button ion-icon {
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+
+.share-window-close-button:active {
+  transform: scale(0.9);
+}
+
+/* Emoji no topo */
+.share-window-emoji {
+  font-size: 48px;
+  text-align: center;
+  display: block;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   SEÇÃO DE FORMULÁRIO - ADICIONAR USUÁRIO COMPARTILHADO
+   ========================================================================== */
+
+.share-window-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Toggle de permissão */
+.share-window-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+}
+
+.share-window-toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.share-window-toggle-label span:first-child {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.share-window-toggle-label span:last-child {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Toggle switch */
+.share-window-toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.share-window-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.share-window-toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border-color);
+  border-radius: 28px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.share-window-toggle-track::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.share-window-toggle-switch input:checked + .share-window-toggle-track {
+  background: var(--primary);
+}
+
+.share-window-toggle-switch input:checked + .share-window-toggle-track::after {
+  transform: translateX(20px);
+}
+
+/* Botão de submit */
+.share-window-submit-button {
+  margin-top: 20px;
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  min-height: 52px;
+}
+
+.share-window-submit-button:active {
+  transform: scale(0.97);
+}
+
+/* Estado de loading no botão */
+.share-window-submit-button.is-loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.share-window-submit-button.is-loading .share-button-text {
+  opacity: 0;
+}
+
+.share-window-submit-button.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: shareButtonSpin 0.7s linear infinite;
+}
+
+@keyframes shareButtonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   SEÇÃO DE LISTA DE USUÁRIOS COMPARTILHADOS
+   ========================================================================== */
+
+.share-window-users-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.share-window-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+
+/* Item de usuário compartilhado */
+.share-user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+
+.share-user-item:last-child {
+  margin-bottom: 0;
+}
+
+.share-user-icon {
+  font-size: 28px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.share-user-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.share-user-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.share-user-permission {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Badge de permissão */
+.share-permission-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.share-permission-badge.can-edit {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--accent-green);
+}
+
+.share-permission-badge.read-only {
+  background: var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Botão de remover usuário compartilhado */
+.share-user-remove-button {
+  background: none;
+  border: none;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.share-user-remove-button ion-icon {
+  font-size: 20px;
+  color: var(--danger);
+}
+
+.share-user-remove-button:active {
+  transform: scale(0.9);
+  background: rgba(255, 59, 48, 0.1);
+}
+
+/* Estado de loading no botão de remover */
+.share-user-remove-button.is-removing {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Botão "Compartilhar com mais pessoas" */
+.share-window-add-more-button {
+  width: 100%;
+  background: var(--bg-page);
+  border: 1px dashed var(--primary);
+  color: var(--primary);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  margin-top: 4px;
+}
+
+.share-window-add-more-button ion-icon {
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.share-window-add-more-button:active {
+  transform: scale(0.97);
+  background: var(--border-color);
+}
+
+/* ==========================================================================
+   POPOVER DA TELA DE DETALHES
+   ========================================================================== */
+
+#details-options-popover {
+  /* Anula a centralização automática do navegador */
+  inset: auto !important;
+
+  /* Define a posição exata */
+  position: fixed !important;
+  top: 60px !important;
+  right: 16px !important;
+
+  /* Reseta estilos nativos */
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  z-index: 10000;
+  width: auto;
+  height: auto;
+}

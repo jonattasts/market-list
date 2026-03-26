@@ -24,6 +24,14 @@ window.renderListDetails = function () {
   const currentList = window.marketListData[window.currentListIndex];
   document.getElementById("main-list-title").innerText = currentList.listName;
 
+  // Obtém as permissões do usuário atual para esta lista
+  const userPermissions = window.getCurrentUserPermissions
+    ? window.getCurrentUserPermissions(currentList)
+    : { isOwner: true, canEdit: true };
+
+  // Atualiza a visibilidade dos botões de ação com base nas permissões
+  applyPermissionsToDetailsHeader(userPermissions);
+
   const term = window.itemSearchInput
     ? window.normalizeString(window.itemSearchInput.value)
     : "";
@@ -40,13 +48,21 @@ window.renderListDetails = function () {
 
     const catSection = document.createElement("div");
     catSection.className = "category-section";
+
+    // Ícones de edição e exclusão de categoria apenas para quem pode editar
+    const categoryActionsHTML = userPermissions.canEdit
+      ? `
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <ion-icon name="create-outline" onclick="openEditCategoryForm(${catIdx})" style="color: var(--primary); font-size: 20px;"></ion-icon>
+          <ion-icon name="trash-outline" onclick="deleteCategory(${catIdx})" style="color: var(--danger); font-size: 18px;"></ion-icon>
+        </div>
+      `
+      : "";
+
     catSection.innerHTML = `
         <div class="category-header">
             <span class="category-name">${category.name}</span>
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <ion-icon name="create-outline" onclick="openEditCategoryForm(${catIdx})" style="color: var(--primary); font-size: 20px;"></ion-icon>
-                <ion-icon name="trash-outline" onclick="deleteCategory(${catIdx})" style="color: var(--danger); font-size: 18px;"></ion-icon>
-            </div>
+            ${categoryActionsHTML}
         </div>
         <div class="category-items-list"></div>
     `;
@@ -67,9 +83,12 @@ window.renderListDetails = function () {
         swipeContainer.className = "swipe-container";
         swipeContainer.style.marginBottom = "12px";
 
+        // Botões de swipe apenas para quem pode editar
         const actionButtons = document.createElement("div");
         actionButtons.className = "swipe-actions";
-        actionButtons.innerHTML = `
+
+        if (userPermissions.canEdit) {
+          actionButtons.innerHTML = `
                 <button onclick="enterEditMode(${catIdx}, ${itemIdx})" style="background: var(--primary); width: 75px;">
                     <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
                 </button>
@@ -77,12 +96,17 @@ window.renderListDetails = function () {
                     <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
                 </button>
             `;
+        }
 
         const card = document.createElement("div");
         card.className = `item-card ${item.checked ? "checked" : ""}`;
-        card.ontouchstart = window.handleTouchStart;
-        card.ontouchmove = window.handleTouchMove;
-        card.ontouchend = window.handleTouchEnd;
+
+        // Swipe gestures apenas para quem pode editar
+        if (userPermissions.canEdit) {
+          card.ontouchstart = window.handleTouchStart;
+          card.ontouchmove = window.handleTouchMove;
+          card.ontouchend = window.handleTouchEnd;
+        }
 
         const valorUnitario = parseFloat(
           item.price.replace(/\./g, "").replace(",", "."),
@@ -93,6 +117,7 @@ window.renderListDetails = function () {
           currency: "BRL",
         });
 
+        // Checkbox de marcação disponível para todos (dono e compartilhados podem marcar)
         card.innerHTML = `
                 <div class="item-info">
                     <div class="custom-check" onclick="toggleItemStatus(${catIdx}, ${itemIdx})"></div>
@@ -122,8 +147,44 @@ window.renderListDetails = function () {
       `;
   }
 
+  // Atualiza os botões de ação (Nova Categoria / Adicionar Item) conforme permissão
+  applyPermissionsToActionButtons(userPermissions);
+
   updateDashboard();
 };
+
+/**
+ * Aplica as restrições de permissão ao header da tela de detalhes.
+ * Oculta o botão de opções (compartilhar, editar lista) para usuários sem posse.
+ *
+ * @param {{ isOwner: boolean, canEdit: boolean }} userPermissions - Permissões do usuário atual
+ */
+function applyPermissionsToDetailsHeader(userPermissions) {
+  const detailsOptionsButton = document.getElementById("button-options-details");
+  if (detailsOptionsButton) {
+    // Apenas o dono pode acessar as opções de compartilhamento e edição da lista
+    detailsOptionsButton.style.display = userPermissions.isOwner ? "flex" : "none";
+  }
+}
+
+/**
+ * Aplica as restrições de permissão aos botões de ação da área de itens.
+ * Oculta "Nova Categoria" e "Adicionar Item" para usuários sem permissão de edição.
+ *
+ * @param {{ isOwner: boolean, canEdit: boolean }} userPermissions - Permissões do usuário atual
+ */
+function applyPermissionsToActionButtons(userPermissions) {
+  const addCategoryButton = document.querySelector(".button-add-cat");
+  const addItemButton = document.querySelector(".button-add-item");
+
+  if (addCategoryButton) {
+    addCategoryButton.style.display = userPermissions.canEdit ? "" : "none";
+  }
+
+  if (addItemButton) {
+    addItemButton.style.display = userPermissions.canEdit ? "" : "none";
+  }
+}
 
 window.updateDashboard = function () {
   const list = window.marketListData[window.currentListIndex];

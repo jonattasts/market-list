@@ -837,6 +837,12 @@ function initFirebaseListener(userName) {
       if (isFirstLoad) {
         window.showScreen("home-screen");
         isFirstLoad = false;
+
+        // Inicializa o listener de listas compartilhadas com o usuário atual
+        // após carregar as listas próprias (evita condição de corrida)
+        if (window.initSharedListsListener) {
+          window.initSharedListsListener(userName);
+        }
       } else {
         if (
           !document

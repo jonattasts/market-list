@@ -17,9 +17,13 @@
     <link rel="stylesheet" href="css/index.css" />
     <link rel="stylesheet" href="css/toast.css" />
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/home.css" />
     <link rel="stylesheet" href="css/forms.css" />
+    <link rel="stylesheet" href="css/home.css" />
+
+    <!-- CSS da Tela de Listas de Compras -->
     <link rel="stylesheet" href="css/lists.css" />
+    <link rel="stylesheet" href="css/share-window.css">
+
     <link rel="stylesheet" href="css/details.css" />
     <link rel="stylesheet" href="css/onboarding.css" />
 
@@ -31,7 +35,6 @@
     <link rel="stylesheet" href="css/behavior-habits.css">
     <link rel="stylesheet" href="css/purchase-efficiency.css">
     <link rel="stylesheet" href="css/health-insights.css">
-
   </head>
 
   <body>
@@ -401,8 +404,9 @@
                 class="category-select-input"></select>
             </div>
 
-            <!-- Salvar Item -->
-            <button class="button-start mt-30" onclick="handleSaveItem()">
+            <!-- Botão Salvar Item -->
+            <button id="button-save-item" class="button-start mt-30"
+              onclick="handleSaveItem()">
               Salvar
             </button>
 
@@ -411,22 +415,22 @@
       </div>
 
       <!-- ============================================================= -->
-      <!-- ===================== DETAILS LIST SCREEN ===================== -->
+      <!-- ===================== DETAILS SCREEN =================== -->
       <!-- ============================================================= -->
       <div id="market-list-screen-details" class="screen-hidden">
 
         <!-- Header Pequeno Fixo -->
         <header class="small">
-          <!-- Voltar -->
+
+          <!-- Botão Voltar -->
           <div class="header-action" onclick="exitDetailsScreen()">
             <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
           </div>
 
-          <!-- Título da Lista -->
+          <!-- Container do título da lista -->
           <div class="header-details-container">
-            <h1 id="main-list-title" class="header-title header-title-details">
-              Detalhes
-            </h1>
+            <h1 id="main-list-title"
+              class="header-title header-title-details"></h1>
           </div>
 
           <!-- Botão de alternância de tema -->
@@ -437,14 +441,21 @@
             <ion-icon name="sunny-outline"
               class="theme-icon-dark screen-hidden"></ion-icon>
           </div>
+
+          <!-- Botão de opções da tela de detalhes -->
+          <div class="header-action" id="button-options-details"
+            onclick="toggleDetailsMenuOptions(event)">
+            <ion-icon name="ellipsis-horizontal-outline"
+              class="icon-options-list"></ion-icon>
+          </div>
+
         </header>
 
         <!-- ================= CARD DO RESUMO (fixo, sobrepondo header) ================= -->
         <div class="dashboard">
-
           <div class="dashboard-header">
-            <h2 class="items-label">Resumo:</h2>
-            <span class="item-count" id="total-qty">0 itens</span>
+            <p id="total-qty" class="items-label">0 itens</p>
+            <span class="item-count date-text" id="list-date-display"></span>
           </div>
 
           <div class="status-text">
@@ -508,6 +519,18 @@
             <!-- Container Dinâmico de Itens -->
             <div class="list-container" id="list-items-container"></div>
 
+          </div>
+        </div>
+
+        <!-- Popover de opções da tela de detalhes -->
+        <div id="details-options-popover" class="popover-hidden"
+          popover="manual">
+          <div class="popover-content">
+            <div class="popover-item"
+              onclick="handleDetailsPopoverAction('share')">
+              <ion-icon name="share-social-outline"></ion-icon>
+              <span>Compartilhar</span>
+            </div>
           </div>
         </div>
 
@@ -656,8 +679,10 @@
                 <!-- Exibe valor positivo (economia) ou negativo (gasto maior) com base nos recorrentes -->
                 <div class="metric-card-stat inflation-economy-card">
                   <span class="stat-label">Economia nos Recorrentes</span>
-                  <span id="metric-economy-inflation" class="stat-value">R$ 0,00</span>
-                  <span class="stat-subtext">Variação acumulada dos itens recorrentes</span>
+                  <span id="metric-economy-inflation" class="stat-value">R$
+                    0,00</span>
+                  <span class="stat-subtext">Variação acumulada dos itens
+                    recorrentes</span>
                 </div>
 
                 <div class="metric-card-full cpi-card">
@@ -828,10 +853,13 @@
 
     <!-- Módulo de tema: carregado antes dos outros scripts para evitar flash -->
     <script type="module" src="js/theme.js"></script>
-
     <script type="module" src="js/index.js"></script>
-    <script type="module" src="js/lists.js"></script>
     <script type="module" src="js/forms.js"></script>
+
+    <!-- Scripts da tela de listas de compras -->
+    <script type="module" src="js/lists.js"></script>
+    <script type="module" src="js/share-window.js"></script>
+
     <script type="module" src="js/details.js"></script>
 
     <!-- Script base do Dashboard -->
