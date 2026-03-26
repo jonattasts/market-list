@@ -114,6 +114,60 @@ window.hideListsSkeleton = function () {
 };
 
 /* ==========================================================================
+   SISTEMA DE ABAS — MINHAS LISTAS E COMPARTILHADAS
+   ========================================================================== */
+
+// Aba ativa no momento: "owned" = Minhas Listas | "shared" = Compartilhadas
+let activeListsTab = "owned";
+
+/**
+ * Alterna a aba ativa da tela de listas e re-renderiza o conteúdo.
+ * Reseta a paginação ao trocar de aba para evitar estado inválido.
+ *
+ * @param {string} tabIdentifier - "owned" ou "shared"
+ */
+window.switchListsTab = function (tabIdentifier) {
+  if (activeListsTab === tabIdentifier) return;
+
+  activeListsTab = tabIdentifier;
+
+  // Reseta paginação ao trocar de aba
+  initializePagination();
+
+  // Atualiza aparência visual dos botões de aba
+  const ownedTabButton = document.getElementById("tab-button-owned-lists");
+  const sharedTabButton = document.getElementById("tab-button-shared-lists");
+
+  if (ownedTabButton && sharedTabButton) {
+    ownedTabButton.classList.toggle("lists-tab-active", tabIdentifier === "owned");
+    sharedTabButton.classList.toggle("lists-tab-active", tabIdentifier === "shared");
+  }
+
+  window.renderMarketLists();
+};
+
+/**
+ * Retorna o subconjunto de listas correspondente à aba atualmente ativa.
+ * "owned"  → listas cujo userName é igual ao usuário logado
+ * "shared" → listas cujo userName é diferente do usuário logado
+ *
+ * @returns {Array} Subconjunto filtrado do marketListData
+ */
+function getListsForActiveTab() {
+  const currentUserName = localStorage.getItem("marketUserName");
+
+  if (activeListsTab === "owned") {
+    return window.marketListData.filter(
+      (list) => list.userName === currentUserName,
+    );
+  }
+
+  return window.marketListData.filter(
+    (list) => list.userName !== currentUserName,
+  );
+}
+
+/* ==========================================================================
    VARIÁVEIS DE PAGINAÇÃO
    ========================================================================== */
 
@@ -363,12 +417,18 @@ function renderListsForCurrentPage() {
   const pageItems = getItemsForCurrentPage();
 
   if (pageItems.length === 0) {
-    containerElement.innerHTML = `
-      <div class="empty-state">
+    const emptyMessage =
+      activeListsTab === "shared"
+        ? `<div class="empty-state">
+            <span class="empty-emoji">🤝</span>
+            <p>Nenhuma lista foi compartilhada com você ainda.</p>
+           </div>`
+        : `<div class="empty-state">
         <span class="empty-emoji">📝</span>
         <p>Nenhuma lista encontrada.</p>
-      </div>
-    `;
+           </div>`;
+
+    containerElement.innerHTML = emptyMessage;
 
     if (paginationContainer) {
       paginationContainer.style.display = "none";
@@ -414,7 +474,7 @@ function renderListsForCurrentPage() {
     const actionButtons = document.createElement("div");
     actionButtons.className = "swipe-actions";
 
-    // verifica as permissões do usuário atual antes de renderizar os botões de swipe
+    // Verifica as permissões do usuário atual antes de renderizar os botões de swipe
     const currentUserName = localStorage.getItem("marketUserName");
     const isOwnerOfThisList = list.userName === currentUserName;
 
@@ -440,6 +500,15 @@ function renderListsForCurrentPage() {
       cardElement.ontouchend = window.handleTouchEnd;
     }
 
+    // Badge de compartilhamento exibido em listas da aba "Compartilhadas"
+    const sharedByBadgeHTML =
+      !isOwnerOfThisList
+        ? `<div class="shared-by-badge">
+            <ion-icon name="people-outline"></ion-icon>
+            <span>De: ${list.userName}</span>
+           </div>`
+        : "";
+
     cardElement.innerHTML = `
         <div class="list-master-header dashboard-header">
             <span class="list-master-title">${list.listName}</span>
@@ -448,6 +517,7 @@ function renderListsForCurrentPage() {
             <span class="item-count">${totalItemsCount} ${totalItemsCount === 1 ? "item" : "itens"}</span>
             </div>
         </div>
+        ${sharedByBadgeHTML}
         <div class="location-text" style="font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 2px;">
             <ion-icon name="location-outline" style="color: var(--primary); font-size: 14px; vertical-align: middle;"></ion-icon> 
             ${list.location || "Local não informado"}
@@ -482,7 +552,7 @@ function renderListsForCurrentPage() {
 
 /**
  * Função principal de renderização das listas
- * Aplica filtros de busca, ordenação e configura paginação
+ * Aplica filtros de busca, ordenação, aba ativa e configura paginação
  */
 window.renderMarketLists = function () {
   const searchInputElement = document.getElementById("search-input");
@@ -490,8 +560,11 @@ window.renderMarketLists = function () {
     ? window.normalizeString(searchInputElement.value)
     : "";
 
-  // Se não houver dados, mostra estado vazio e desabilita busca
-  if (window.marketListData.length === 0) {
+  // Obtém apenas as listas da aba ativa (próprias ou compartilhadas)
+  const tabFilteredLists = getListsForActiveTab();
+
+  // Se não houver dados na aba ativa, mostra estado vazio e desabilita busca
+  if (tabFilteredLists.length === 0) {
     if (searchInputElement) {
       searchInputElement.disabled = true;
     }
@@ -499,7 +572,16 @@ window.renderMarketLists = function () {
     const paginationContainer = document.getElementById("pagination-container");
 
     if (containerElement) {
+      // Mensagem diferenciada por aba
+      if (activeListsTab === "shared") {
+        containerElement.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-emoji">🤝</span>
+            <p>Nenhuma lista foi compartilhada com você ainda.</p>
+          </div>`;
+      } else {
       containerElement.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
+      }
     }
 
     if (paginationContainer) {
@@ -513,7 +595,7 @@ window.renderMarketLists = function () {
   }
 
   // Ordenação por data (descendente)
-  const sortedListData = [...window.marketListData].sort(
+  const sortedListData = [...tabFilteredLists].sort(
     (firstList, secondList) => {
       return new Date(secondList.date) - new Date(firstList.date);
     },

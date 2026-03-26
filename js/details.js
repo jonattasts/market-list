@@ -2,7 +2,11 @@
    RENDERIZAÇÃO DE DETALHES COM BUSCA
    ========================================================================== */
 window.openListDetails = function (index) {
+  // Armazena o ID estável da lista ao abrir, evitando que reordenações
+  // posteriores do onSnapshot causem perda de referência durante a navegação
+  window.currentListId = window.marketListData[index].id;
   window.currentListIndex = index;
+
   if (!window.marketListData[window.currentListIndex].categories) {
     const oldItems = window.marketListData[window.currentListIndex].items || [];
     window.marketListData[window.currentListIndex].categories = [
@@ -20,8 +24,18 @@ window.exitDetailsScreen = function () {
 };
 
 window.renderListDetails = function () {
+  // Resolve o índice pelo ID estável antes de renderizar,
+  // garantindo que o onSnapshot não cause perda de referência da lista aberta
+  const resolvedIndex = window.resolveCurrentListIndex
+    ? window.resolveCurrentListIndex()
+    : window.currentListIndex;
+
   window.listItemsContainer.innerHTML = "";
-  const currentList = window.marketListData[window.currentListIndex];
+  const currentList = window.marketListData[resolvedIndex];
+
+  // Se a lista não for encontrada pelo ID, aborta a renderização
+  if (!currentList) return;
+
   document.getElementById("main-list-title").innerText = currentList.listName;
 
   // Obtém as permissões do usuário atual para esta lista
@@ -187,7 +201,13 @@ function applyPermissionsToActionButtons(userPermissions) {
 }
 
 window.updateDashboard = function () {
-  const list = window.marketListData[window.currentListIndex];
+  const resolvedIndex = window.resolveCurrentListIndex
+    ? window.resolveCurrentListIndex()
+    : window.currentListIndex;
+
+  const list = window.marketListData[resolvedIndex];
+  if (!list) return;
+
   let totalItems = 0,
     purchasedItems = 0,
     subtotalGeral = 0,
@@ -223,11 +243,13 @@ window.updateDashboard = function () {
 };
 
 window.toggleItemStatus = async function (catIdx, itemIdx) {
+  const resolvedIndex = window.resolveCurrentListIndex
+    ? window.resolveCurrentListIndex()
+    : window.currentListIndex;
+
   // Altera o estado local primeiro para feedback instantâneo
   const item =
-    window.marketListData[window.currentListIndex].categories[catIdx].items[
-      itemIdx
-    ];
+    window.marketListData[resolvedIndex].categories[catIdx].items[itemIdx];
   item.checked = !item.checked;
 
   // Sincroniza a alteração com o Firebase
@@ -238,8 +260,11 @@ window.toggleItemStatus = async function (catIdx, itemIdx) {
 };
 
 window.deleteCategory = async function (catIdx) {
-  const category =
-    window.marketListData[window.currentListIndex].categories[catIdx];
+  const resolvedIndex = window.resolveCurrentListIndex
+    ? window.resolveCurrentListIndex()
+    : window.currentListIndex;
+
+  const category = window.marketListData[resolvedIndex].categories[catIdx];
 
   // UX: Validação de segurança para não apagar dados por erro
   if (
@@ -252,7 +277,7 @@ window.deleteCategory = async function (catIdx) {
   }
 
   // Remove do array local
-  window.marketListData[window.currentListIndex].categories.splice(catIdx, 1);
+  window.marketListData[resolvedIndex].categories.splice(catIdx, 1);
 
   // Persiste a exclusão no Firestore
   await window.saveAndSync();
@@ -263,16 +288,19 @@ window.deleteCategory = async function (catIdx) {
 };
 
 window.confirmDeleteItem = async function (catIdx, itemIdx) {
+  const resolvedIndex = window.resolveCurrentListIndex
+    ? window.resolveCurrentListIndex()
+    : window.currentListIndex;
+
   const item =
-    window.marketListData[window.currentListIndex].categories[catIdx].items[
-      itemIdx
-    ];
+    window.marketListData[resolvedIndex].categories[catIdx].items[itemIdx];
 
   if (confirm(`Deseja remover "${item.name}" definitivamente?`)) {
     // Remove o item específico da categoria
-    window.marketListData[window.currentListIndex].categories[
-      catIdx
-    ].items.splice(itemIdx, 1);
+    window.marketListData[resolvedIndex].categories[catIdx].items.splice(
+      itemIdx,
+      1,
+    );
 
     // Sincroniza com o Firebase
     await window.saveAndSync();

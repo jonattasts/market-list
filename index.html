@@ -210,6 +210,24 @@
           </div>
         </div>
 
+        <!-- Abas: Minhas Listas / Compartilhadas -->
+        <div class="lists-tabs-container">
+          <button
+            id="tab-button-owned-lists"
+            class="lists-tab-button lists-tab-active"
+            onclick="switchListsTab('owned')">
+            <ion-icon name="list-outline"></ion-icon>
+            Minhas Listas
+          </button>
+          <button
+            id="tab-button-shared-lists"
+            class="lists-tab-button"
+            onclick="switchListsTab('shared')">
+            <ion-icon name="people-outline"></ion-icon>
+            Compartilhadas
+          </button>
+        </div>
+
         <!-- Wrapper para conteúdo com scroll (apenas as listas) -->
         <div class="lists-content-wrapper">
 

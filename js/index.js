@@ -34,6 +34,13 @@ window.toastIcon = document.getElementById("toast-icon");
 
 // Expondo variáveis de controle ao escopo global para outros módulos
 window.currentListIndex = 0;
+
+// Identificador estável da lista aberta.
+// Substitui o uso direto de currentListIndex em operações de leitura/escrita,
+// pois o índice posicional muda sempre que o marketListData é reordenado pelo
+// onSnapshot — causando referência a listas erradas após sincronização.
+window.currentListId = null;
+
 window.editingItemIndex = null;
 window.editingCategoryIndex = null;
 window.isEditingListMode = false;
@@ -140,6 +147,28 @@ window.formatCurrencyInput = function (input) {
   input.value = value;
 };
 
+/**
+ * Resolve o índice posicional atual da lista aberta usando o currentListId estável.
+ * Deve ser chamado no início de qualquer operação que precise de currentListIndex,
+ * garantindo que o índice reflita a posição real no array após reordenações do onSnapshot.
+ *
+ * @returns {number} Índice atual da lista no marketListData, ou o currentListIndex anterior se não encontrado
+ */
+window.resolveCurrentListIndex = function () {
+  if (!window.currentListId) return window.currentListIndex;
+
+  const resolvedIndex = window.marketListData.findIndex(
+    (list) => list.id === window.currentListId,
+  );
+
+  // Atualiza o currentListIndex para manter compatibilidade com módulos externos
+  if (resolvedIndex !== -1) {
+    window.currentListIndex = resolvedIndex;
+  }
+
+  return resolvedIndex !== -1 ? resolvedIndex : window.currentListIndex;
+};
+
 /* ==========================================================================
    SISTEMA DE VALIDAÇÃO - FUNÇÕES CORE
    ========================================================================== */
@@ -201,15 +230,15 @@ async function validateDatabaseConnection() {
 
     // Erros que indicam falha real de conexão ou permissão
     const connectionErrorCodes = [
-      "permission-denied",    // Sem permissão de acesso
-      "unavailable",          // Serviço indisponível
+      "permission-denied",      // Sem permissão de acesso
+      "unavailable",            // Serviço indisponível
       "network-request-failed", // Sem conexão de rede
-      "resource-exhausted",   // Quota excedida
-      "unauthenticated",      // Não autenticado
-      "internal",             // Erro interno do Firebase
-      "unknown",              // Erro desconhecido
-      "invalid-argument",     // Argumento inválido (ex: projectId malformado)
-      "not-found",            // Projeto não encontrado no Firebase
+      "resource-exhausted",     // Quota excedida
+      "unauthenticated",        // Não autenticado
+      "internal",               // Erro interno do Firebase
+      "unknown",                // Erro desconhecido
+      "invalid-argument",       // Argumento inválido (ex: projectId malformado)
+      "not-found",              // Projeto não encontrado no Firebase
     ];
 
     // Se o código do erro está na lista de erros críticos, considera falha
@@ -444,7 +473,10 @@ function handleValidationResult(screenIdentifier, validationResult) {
    PERSISTÊNCIA FIREBASE
    ========================================================================== */
 window.saveAndSync = async function () {
-  const currentList = window.marketListData[window.currentListIndex];
+  // Resolve o índice pelo ID estável antes de qualquer operação,
+  // evitando que uma reordenação do onSnapshot aponte para a lista errada
+  const resolvedIndex = window.resolveCurrentListIndex();
+  const currentList = window.marketListData[resolvedIndex];
   if (!currentList || !currentList.id) return;
 
   try {
@@ -455,7 +487,9 @@ window.saveAndSync = async function () {
       date: currentList.date,
       categories: currentList.categories,
       updatedAt: serverTimestamp(),
-      userName: localStorage.getItem("marketUserName"),
+      // Preserva o userName original do documento — não sobrescreve com o usuário logado,
+      // pois listas compartilhadas pertencem ao dono original, não ao usuário que editou
+      userName: currentList.userName,
     });
   } catch (e) {
     console.error("Erro ao atualizar Firestore:", e);
@@ -874,6 +908,7 @@ function initFirebaseListener(userName) {
             .getElementById("market-list-screen-details")
             .classList.contains("screen-hidden")
         ) {
+          window.resolveCurrentListIndex();
           window.renderListDetails();
         }
       }
