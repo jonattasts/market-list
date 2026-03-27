@@ -134,9 +134,13 @@ window.deactivateDetailsRealtimeListener = function () {
  * Trata o cenário em que o compartilhamento da lista foi revogado enquanto
  * o usuário compartilhado estava com a lista aberta ou na aba de listas compartilhadas.
  *
- * - Remove a lista do marketListData local para o usuário compartilhado
- * - Exibe toast informativo se o usuário estiver na tela de detalhes ou na aba compartilhadas
- * - Redireciona para a tela de listas
+ * Fluxo corrigido:
+ * 1. Cancela o listener de tempo real imediatamente para evitar re-disparos
+ * 2. Remove a lista do marketListData local do usuário compartilhado
+ * 3. Navega diretamente para a tela de listas via executeScreenNavigation,
+ *    evitando o ciclo de validação do showScreen que causava o sumiço dos elementos
+ * 4. Exibe o toast informativo APÓS a navegação e renderização estarem concluídas,
+ *    garantindo que a aba "Compartilhadas" reflita o estado correto sem aparecer vazia
  *
  * @param {string} listIdentifier - ID do documento da lista que teve o acesso revogado
  */
@@ -162,17 +166,47 @@ function handleSharedAccessRevoked(listIdentifier) {
     listsScreenElement &&
     !listsScreenElement.classList.contains("screen-hidden");
 
-  // Toast exibido somente se o usuário estiver nas telas relevantes
-  // (tela de detalhes da lista ou aba de listas compartilhadas)
   if (isOnDetailsScreen || isOnListsScreen) {
+    // Navega imediatamente para a tela de listas sem validação
+    const allScreenIdentifiers = [
+      "onboarding-screen",
+      "home-screen",
+      "market-lists-screen",
+      "market-list-screen-details",
+      "new-list-screen",
+      "new-category-screen",
+      "new-item-screen",
+      "dashboard-screen",
+    ];
+
+    allScreenIdentifiers.forEach((screenId) => {
+      const screenElement = document.getElementById(screenId);
+      if (screenElement) {
+        screenElement.classList.remove("screen-fade-out");
+        screenElement.classList.toggle(
+          "screen-hidden",
+          screenId !== "market-lists-screen",
+        );
+        screenElement.style.display =
+          screenId === "market-lists-screen" ? "flex" : "none";
+      }
+    });
+
+    if (window.searchInput) {
+      window.searchInput.value = "";
+    }
+
+    if (window.renderMarketLists) {
+      window.renderMarketLists();
+    }
+
+    // Exibe o toast após a renderização para garantir que o usuário veja
+    // a tela de listas já atualizada ao receber a notificação
     window.showToast(
       "Esta lista não está mais disponível para você.",
       "danger",
     );
   }
-
-  // Redireciona para a tela de listas atualizando a renderização
-  window.showScreen("market-lists-screen");
 }
 
 /* ==========================================================================
@@ -298,7 +332,7 @@ window.renderListDetails = function () {
                 <button onclick="confirmDeleteItem(${catIdx}, ${itemIdx})" style="background: var(--danger); width: 75px;">
                     <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
                 </button>
-            `;
+              `;
         }
 
         const card = document.createElement("div");

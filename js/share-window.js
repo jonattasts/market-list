@@ -140,7 +140,7 @@ function getSharedUsersListTemplate(sharedUsers) {
 
   return `
     <div class="share-window-users-section">
-      <span class="share-window-emoji">👥</span>
+      <span class="share-window-emoji">🫂</span>
       <div class="share-window-users-list">
         ${usersItemsHTML}
       </div>
