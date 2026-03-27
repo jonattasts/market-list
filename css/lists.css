@@ -68,6 +68,43 @@
 }
 
 /* ==========================================================================
+   BOTÃO DE LIMPAR CAMPO DE BUSCA
+   Aparece à direita dentro do search-group, simulando estar embutido no input
+   ========================================================================== */
+
+.search-clear-button {
+  /* Remove estilo padrão de botão */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  /* Dimensões fixas para manter o alinhamento dentro do input */
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Cor e tamanho do ícone */
+  color: var(--text-secondary);
+  font-size: 18px;
+  /* Transição suave para hover e aparecimento */
+  transition: color 0.15s ease, opacity 0.15s ease;
+  border-radius: 50%;
+  /* Previne que o clique no botão acione eventos de toque do container */
+  touch-action: none;
+}
+
+.search-clear-button:hover {
+  color: var(--text-main);
+}
+
+.search-clear-button:active {
+  opacity: 0.6;
+}
+
+/* ==========================================================================
    ABAS: MINHAS LISTAS / COMPARTILHADAS
    ========================================================================== */
 

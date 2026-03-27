@@ -732,7 +732,13 @@ function executeScreenNavigation(screenIdentifier) {
   if (screenIdentifier === "market-lists-screen") {
     window.searchInput.value = "";
 
+    if (window.clearListsSearch) window.clearListsSearch();
+
     if (window.showListsSkeleton) window.showListsSkeleton();
+  }
+
+  if (screenIdentifier === "market-list-screen-details") {
+    if (window.clearItemSearch) window.clearItemSearch();
   }
 
   if (screenIdentifier === "dashboard-screen") {

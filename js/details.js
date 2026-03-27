@@ -543,3 +543,47 @@ window.confirmDeleteItem = async function (catIdx, itemIdx) {
     window.showToast("Item removido!", "success");
   }
 };
+
+/* ==========================================================================
+   BUSCA DE ITENS — BOTÃO DE LIMPAR
+   ========================================================================== */
+
+/**
+ * Atualiza a visibilidade do botão de limpar busca da tela de detalhes.
+ * Exibe o botão apenas quando o campo de busca de itens possui conteúdo digitado.
+ */
+function updateItemSearchClearButtonVisibility() {
+  const itemSearchInputElement = document.getElementById("item-search-input");
+  const clearButtonElement = document.getElementById(
+    "item-search-clear-button",
+  );
+
+  if (!itemSearchInputElement || !clearButtonElement) return;
+
+  const hasContent = itemSearchInputElement.value.length > 0;
+  clearButtonElement.classList.toggle("screen-hidden", !hasContent);
+}
+
+window.handleItemSearchInput = function () {
+  updateItemSearchClearButtonVisibility();
+
+  window.renderListDetails();
+};
+
+/**
+ * Limpa o campo de busca de itens e re-renderiza os detalhes da lista.
+ * Exposto globalmente para ser chamado pelo botão de limpar no HTML.
+ */
+window.clearItemSearch = function () {
+  const itemSearchInputElement = document.getElementById("item-search-input");
+
+  if (!itemSearchInputElement) return;
+
+  itemSearchInputElement.value = "";
+
+  // Aciona o handler para ocultar o botão e re-renderizar
+  window.handleItemSearchInput();
+
+  // Retorna o foco ao input para melhorar a UX após limpar
+  itemSearchInputElement.focus();
+};

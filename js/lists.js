@@ -628,6 +628,19 @@ window.renderMarketLists = function () {
 };
 
 /**
+ * Exibe o botão apenas quando o campo possui conteúdo digitado.
+ */
+function updateListsSearchClearButtonVisibility() {
+  const searchInputElement = document.getElementById("search-input");
+  const clearButtonElement = document.getElementById("search-clear-button");
+
+  if (!searchInputElement || !clearButtonElement) return;
+
+  const hasContent = searchInputElement.value.length > 0;
+  clearButtonElement.classList.toggle("screen-hidden", !hasContent);
+}
+
+/**
  * Handler para input de busca
  * Gerencia a interação entre busca e paginação
  */
@@ -648,8 +661,27 @@ window.handleSearchInput = function () {
     currentPageIndex = savedPageIndexBeforeSearch || 1;
   }
 
+  updateListsSearchClearButtonVisibility();
+
   // Re-renderiza com os novos filtros e paginação
   window.renderMarketLists();
+};
+
+/**
+ * Limpa o campo de busca da tela de listas e re-renderiza as listas.
+ */
+window.clearListsSearch = function () {
+  const searchInputElement = document.getElementById("search-input");
+
+  if (!searchInputElement) return;
+
+  searchInputElement.value = "";
+
+  // Aciona o handler de input para restaurar a paginação e re-renderizar
+  window.handleSearchInput();
+
+  // Retorna o foco ao input para melhorar a UX após limpar
+  searchInputElement.focus();
 };
 
 /* ==========================================================================

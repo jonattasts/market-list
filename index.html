@@ -207,6 +207,14 @@
             <input type="text" id="search-input"
               placeholder="Buscar por nome, data ou local..."
               oninput="handleSearchInput()" />
+            <!-- Botão de limpar campo de busca — visível apenas quando há texto -->
+            <button
+              id="search-clear-button"
+              class="search-clear-button screen-hidden"
+              onclick="clearListsSearch()"
+              aria-label="Limpar busca">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
           </div>
         </div>
 
@@ -531,7 +539,16 @@
             <div class="search-group item-search-inline">
               <ion-icon name="search-outline"></ion-icon>
               <input type="text" id="item-search-input"
-                placeholder="Buscar item..." />
+                placeholder="Buscar item..."
+                oninput="handleItemSearchInput()" />
+              <!-- Botão de limpar campo de busca de itens — visível apenas quando há texto -->
+              <button
+                id="item-search-clear-button"
+                class="search-clear-button screen-hidden"
+                onclick="clearItemSearch()"
+                aria-label="Limpar busca de itens">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
             </div>
 
             <!-- Container Dinâmico de Itens -->
