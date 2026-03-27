@@ -27,6 +27,13 @@ window.activateDetailsRealtimeListener = async function (listIdentifier) {
   // Cancela qualquer listener anterior antes de registrar um novo
   window.deactivateDetailsRealtimeListener();
 
+  // Registra o identificador global da lista aberta para uso no share-window.js
+  // Isso evita que o listener de listas compartilhadas sobrescreva os dados
+  // da lista atualmente aberta em detalhes durante sincronizações
+  if (window.setActiveDetailsListIdentifier) {
+    window.setActiveDetailsListIdentifier(listIdentifier);
+  }
+
   try {
     const { firestore, doc, onSnapshot } = await import("./firebase.js");
 
@@ -114,6 +121,12 @@ window.deactivateDetailsRealtimeListener = function () {
   if (activeDetailsListenerUnsubscribe) {
     activeDetailsListenerUnsubscribe();
     activeDetailsListenerUnsubscribe = null;
+  }
+
+  // Limpa o identificador global da lista aberta para permitir que o
+  // listener de listas compartilhadas gerencie normalmente os dados
+  if (window.setActiveDetailsListIdentifier) {
+    window.setActiveDetailsListIdentifier(null);
   }
 };
 

@@ -17,6 +17,10 @@ import {
 // Controla se o formulário de novo usuário está visível dentro da janela
 let isAddingNewSharedUser = false;
 
+// Identificador da lista atualmente aberta na tela de detalhes
+// Usado para evitar duplicatas no array marketListData durante sincronizações
+let activeDetailsListIdentifier = null;
+
 /* ==========================================================================
    INJEÇÃO DO HTML DA JANELA NO DOM
    ========================================================================== */
@@ -522,6 +526,28 @@ window.getCurrentUserPermissions = function (list) {
 };
 
 /* ==========================================================================
+   GETTER E SETTER PARA O IDENTIFICADOR DA LISTA ATIVA EM DETALHES
+   ========================================================================== */
+
+/**
+ * Retorna o identificador da lista atualmente aberta na tela de detalhes.
+ * Usado pelo listener de listas compartilhadas para evitar duplicatas.
+ * @returns {string|null} ID da lista aberta ou null se nenhuma estiver aberta
+ */
+window.getActiveDetailsListIdentifier = function () {
+  return activeDetailsListIdentifier;
+};
+
+/**
+ * Define o identificador da lista atualmente aberta na tela de detalhes.
+ * Deve ser chamado pelo details.js ao ativar/desativar o listener de tempo real.
+ * @param {string|null} listIdentifier - ID da lista ou null para limpar
+ */
+window.setActiveDetailsListIdentifier = function (listIdentifier) {
+  activeDetailsListIdentifier = listIdentifier;
+};
+
+/* ==========================================================================
    LISTENER PARA LISTAS COMPARTILHADAS COM O USUÁRIO ATUAL
    ========================================================================== */
 
@@ -576,15 +602,26 @@ window.initSharedListsListener = async function (currentUserName) {
         }));
 
         // IDs das listas compartilhadas recebidas neste snapshot
-        const currentSharedListIds = new Set(sharedListsData.map((list) => list.id));
+        const currentSharedListIds = new Set(
+          sharedListsData.map((list) => list.id),
+        );
 
         // Detecta listas que estavam compartilhadas e deixaram de estar
         // (presentes no snapshot anterior mas ausentes no atual)
         if (previousSharedListIds.size > 0) {
           previousSharedListIds.forEach((previousListId) => {
             if (!currentSharedListIds.has(previousListId)) {
+              // Remove a lista do cache local imediatamente ao detectar a remoção,
+              // garantindo que ela desapareça da aba de listas compartilhadas sem
+              // precisar aguardar o próximo ciclo de renderização ou ação do usuário
+              window.marketListData = window.marketListData.filter(
+                (existingList) => existingList.id !== previousListId,
+              );
+
               // Verifica se o usuário está na aba de listas compartilhadas
-              const listsScreenElement = document.getElementById("market-lists-screen");
+              const listsScreenElement = document.getElementById(
+                "market-lists-screen",
+              );
               const isOnListsScreen =
                 listsScreenElement &&
                 !listsScreenElement.classList.contains("screen-hidden");
@@ -595,6 +632,9 @@ window.initSharedListsListener = async function (currentUserName) {
                   "Uma lista compartilhada não está mais disponível para você.",
                   "danger",
                 );
+
+                // Re-renderiza imediatamente para remover a lista da tela
+                if (window.renderMarketLists) window.renderMarketLists();
               }
             }
           });
@@ -602,6 +642,11 @@ window.initSharedListsListener = async function (currentUserName) {
 
         // Atualiza o registro de IDs para o próximo ciclo de detecção
         previousSharedListIds = currentSharedListIds;
+
+        const currentlyOpenListIdentifier =
+          window.getActiveDetailsListIdentifier
+            ? window.getActiveDetailsListIdentifier()
+            : null;
 
         // Filtra para evitar duplicatas com listas próprias do usuário
         // Agrega as listas compartilhadas ao array global
@@ -612,7 +657,17 @@ window.initSharedListsListener = async function (currentUserName) {
                 (sharedList) => sharedList.id === existingList.id,
               ),
           ),
-          ...sharedListsData,
+          ...sharedListsData.filter(
+            (sharedList) => sharedList.id !== currentlyOpenListIdentifier,
+          ),
+          // Reinsere a versão atualizada pelo listener pontual para a lista aberta,
+          // mantendo os dados mais recentes recebidos diretamente do documento
+          ...(currentlyOpenListIdentifier
+            ? window.marketListData.filter(
+                (existingList) =>
+                  existingList.id === currentlyOpenListIdentifier,
+              )
+            : []),
         ];
 
         // Re-renderiza a tela de listas se estiver visível
