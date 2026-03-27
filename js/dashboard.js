@@ -417,7 +417,13 @@ function getSkeletonTemplateForTab(tabModuleName) {
 
 /**
  * Exibe o skeleton de carregamento no módulo de aba ativo
- * Salva o innerHTML original no dataset para restaurar após o carregamento
+ * Salva o innerHTML original no dataset para restaurar após o carregamento.
+ *
+ * IMPORTANTE: Não sobrescreve o originalContent se ele já foi salvo.
+ * Isso evita que uma segunda chamada (ex: via activateDashboardTab após
+ * applyDashboardSkeletonBeforeNavigation em index.js) salve o próprio
+ * skeleton como "original", corrompendo a restauração posterior e fazendo
+ * com que os elementos reais do DOM nunca sejam recuperados pelo hideTabSkeleton.
  *
  * @param {string} tabModuleName - Nome da aba sendo carregada
  */
@@ -425,10 +431,18 @@ function showTabSkeleton(tabModuleName) {
   const activeModule = document.getElementById(`tab-module-${tabModuleName}`);
   if (!activeModule) return;
 
-  // Salva o conteúdo original para restaurar após o carregamento
-  activeModule.dataset.originalContent = activeModule.innerHTML;
+  // Só salva o conteúdo original se ainda não foi salvo nesta sessão de navegação.
+  // Se originalContent já existe, significa que applyDashboardSkeletonBeforeNavigation
+  // já preservou o HTML real — reutiliza esse registro sem sobrescrevê-lo.
+  if (activeModule.dataset.originalContent === undefined) {
+    activeModule.dataset.originalContent = activeModule.innerHTML;
+  }
+
   activeModule.innerHTML = getSkeletonTemplateForTab(tabModuleName);
 }
+
+// Exporta globalmente para que index.js possa aplicar o skeleton antes da navegação
+window.showTabSkeleton = showTabSkeleton;
 
 /**
  * Remove o skeleton e restaura o conteúdo original do módulo de aba
@@ -455,7 +469,9 @@ window.hideTabSkeleton = hideTabSkeleton;
    ========================================================================== */
 
 /**
- * Ativa uma aba específica e carrega seu módulo
+ * Ativa uma aba específica e carrega seu módulo.
+ * O skeleton é aplicado ANTES do módulo se tornar visível (active),
+ * evitando o flash do conteúdo real enquanto os dados ainda não foram carregados.
  */
 window.activateDashboardTab = function (tabModuleName) {
   activeTabModule = tabModuleName;
@@ -478,12 +494,6 @@ window.activateDashboardTab = function (tabModuleName) {
     module.classList.remove("active");
   });
 
-  // Ativa o módulo selecionado
-  const activeModule = document.getElementById(`tab-module-${tabModuleName}`);
-  if (activeModule) {
-    activeModule.classList.add("active");
-  }
-
   // Carrega dados do módulo se houver função específica
   // Converte nome-da-aba para loadNomeDaAbaModule (ex: personal-inflation → loadPersonalInflationModule)
   const functionName =
@@ -494,9 +504,26 @@ window.activateDashboardTab = function (tabModuleName) {
       .join("") +
     "Module";
 
-  if (window[functionName]) {
-    // Exibe o skeleton — o conteúdo original é salvo internamente no dataset
-    showTabSkeleton(tabModuleName);
+  // Obtém o módulo alvo
+  const targetModule = document.getElementById(`tab-module-${tabModuleName}`);
+
+  if (window[functionName] && targetModule) {
+    // Verifica se o skeleton já foi aplicado antes da navegação
+    // (por applyDashboardSkeletonBeforeNavigation em index.js).
+    // Quando dataset.originalContent já existe, significa que o HTML real foi
+    // preservado e o skeleton já está visível — reaplicar causaria o piscar duplo
+    // observado exclusivamente na abertura do dashboard (não na troca de abas).
+    const skeletonAlreadyApplied =
+      targetModule.dataset.originalContent !== undefined;
+
+    if (!skeletonAlreadyApplied) {
+      // Troca de aba normal: aplica o skeleton ANTES de tornar o módulo visível,
+      // garantindo que o conteúdo real não apareça por nenhum frame antes do carregamento
+      showTabSkeleton(tabModuleName);
+    }
+
+    // Torna o módulo visível — com skeleton já no lugar em ambos os caminhos
+    targetModule.classList.add("active");
 
     // Aguarda um frame para o skeleton ser pintado pelo browser,
     // depois restaura o HTML original e carrega os dados reais
@@ -508,6 +535,9 @@ window.activateDashboardTab = function (tabModuleName) {
         window[functionName]();
       }, 350);
     });
+  } else if (targetModule) {
+    // Sem função de carregamento: apenas torna o módulo visível normalmente
+    targetModule.classList.add("active");
   }
 };
 
@@ -533,6 +563,14 @@ window.initDashboardAnalisys = function () {
     return;
   }
 
+  // Neste ponto o skeleton da aba padrão (purchase-efficiency) já foi aplicado
+  // por applyDashboardSkeletonBeforeNavigation em index.js, antes da tela ficar
+  // visível, e o módulo já está com a classe active.
+  // O bloco que adicionava classList.add("active") manualmente foi removido pois
+  // era redundante e causava um piscar duplo do skeleton ao abrir o dashboard:
+  // o módulo já chega aqui visível e com o skeleton correto no lugar —
+  // activateDashboardTab cuida de reaplicar o skeleton e carregar os dados reais.
+
   // Reseta o filtro para geral
   activeFilter = { type: "geral", value: null };
   window.activeFilter = activeFilter;
@@ -549,6 +587,8 @@ window.initDashboardAnalisys = function () {
   updateFilterButtonVisualState();
 
   // Ativa a primeira aba por padrão
+  // O skeleton já está visível desde antes da navegação — activateDashboardTab
+  // vai reaplicá-lo internamente antes de carregar os dados reais da aba
   activeTabModule = "purchase-efficiency";
   activateDashboardTab("purchase-efficiency");
 };

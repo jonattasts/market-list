@@ -230,15 +230,15 @@ async function validateDatabaseConnection() {
 
     // Erros que indicam falha real de conexão ou permissão
     const connectionErrorCodes = [
-      "permission-denied",      // Sem permissão de acesso
-      "unavailable",            // Serviço indisponível
+      "permission-denied", // Sem permissão de acesso
+      "unavailable", // Serviço indisponível
       "network-request-failed", // Sem conexão de rede
-      "resource-exhausted",     // Quota excedida
-      "unauthenticated",        // Não autenticado
-      "internal",               // Erro interno do Firebase
-      "unknown",                // Erro desconhecido
-      "invalid-argument",       // Argumento inválido (ex: projectId malformado)
-      "not-found",              // Projeto não encontrado no Firebase
+      "resource-exhausted", // Quota excedida
+      "unauthenticated", // Não autenticado
+      "internal", // Erro interno do Firebase
+      "unknown", // Erro desconhecido
+      "invalid-argument", // Argumento inválido (ex: projectId malformado)
+      "not-found", // Projeto não encontrado no Firebase
     ];
 
     // Se o código do erro está na lista de erros críticos, considera falha
@@ -426,11 +426,26 @@ async function executeScreenValidation(screenIdentifier) {
 function handleValidationResult(screenIdentifier, validationResult) {
   const configuration = screenValidationConfiguration[screenIdentifier];
 
-  // Sempre tenta esconder o skeleton existente via função específica da tela
-  if (configuration && configuration.skeletonHiderFunction) {
+  /**
+   *
+   * Para o dashboard o skeleton será restaurado e substituído pelo conteúdo real dentro de
+   * activateDashboardTab → hideTabSkeleton → loadPurchaseEfficiencyModule,
+   * chamado logo em seguida por initDashboardAnalisys.
+   *
+   * Para listas e para falhas de validação do dashboard, o hider ainda é chamado normalmente.
+   *
+   */
+  const isDashboardSuccessPath =
+    screenIdentifier === "dashboard-screen" && validationResult.isValid;
+
+  if (
+    !isDashboardSuccessPath &&
+    configuration &&
+    configuration.skeletonHiderFunction
+  ) {
     const hiderFunction = window[configuration.skeletonHiderFunction];
     if (typeof hiderFunction === "function") {
-      // Para dashboard, precisa passar o nome da aba ativa
+      // Para dashboard em falha, precisa passar o nome da aba ativa
       if (screenIdentifier === "dashboard-screen" && window.activeTabModule) {
         hiderFunction(window.activeTabModule);
       } else {
@@ -636,8 +651,34 @@ window.initializeHomeScreen = function () {
 
 /**
  *
+ * Aplica o skeleton da aba padrão do dashboard diretamente no DOM,
+ * antes da tela se tornar visível em executeScreenNavigation.
+ *
+ */
+function applyDashboardSkeletonBeforeNavigation() {
+  // A aba padrão ao abrir o dashboard é sempre "purchase-efficiency"
+  const defaultTabName = "purchase-efficiency";
+  const defaultTabModule = document.getElementById(
+    `tab-module-${defaultTabName}`,
+  );
+
+  if (!defaultTabModule) return;
+
+  // Remove a classe active de todos os módulos para garantir estado limpo
+  const allTabModules = document.querySelectorAll(".dashboard-tab-module");
+  allTabModules.forEach((module) => module.classList.remove("active"));
+
+  if (window.showTabSkeleton) {
+    window.showTabSkeleton(defaultTabName);
+  }
+
+  defaultTabModule.classList.add("active");
+}
+
+/**
+ *
  * Executa a navegação de tela sem validação (uso interno para evitar loops).
- * O render das listas deve ocorrer APENAS após a validação ser concluída (em showScreen),
+ * O render das listas deve ocorrer apenas após a validação ser concluída (em showScreen),
  * para evitar que hideListsSkeleton sobrescreva o conteúdo já renderizado.
  *
  * Para o dashboard, initDashboardAnalisys NÃO é chamado aqui quando a tela
@@ -682,6 +723,10 @@ function executeScreenNavigation(screenIdentifier) {
     window.searchInput.value = "";
 
     if (window.showListsSkeleton) window.showListsSkeleton();
+  }
+
+  if (screenIdentifier === "dashboard-screen") {
+    applyDashboardSkeletonBeforeNavigation();
   }
 
   const dashboardRequiresValidation =
@@ -749,6 +794,7 @@ window.showScreen = async function (screenIdentifier) {
 
     // Primeiro navega para a tela (que já exibe o skeleton existente)
     // Para listas: apenas mostra skeleton, SEM agendar renderMarketLists
+    // Para dashboard: aplica skeleton da aba padrão antes da tela ficar visível
     executeScreenNavigation(screenIdentifier);
 
     // Executa a validação em paralelo (durante o skeleton)
