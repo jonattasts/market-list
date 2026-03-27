@@ -680,6 +680,18 @@ window.initSharedListsListener = async function (currentUserName) {
         ) {
           if (window.renderMarketLists) window.renderMarketLists();
         }
+
+        // Re-renderiza a tela de detalhes se o usuário compartilhado estiver com ela aberta.
+        const detailsScreenElement = document.getElementById(
+          "market-list-screen-details",
+        );
+        if (
+          detailsScreenElement &&
+          !detailsScreenElement.classList.contains("screen-hidden")
+        ) {
+          window.resolveCurrentListIndex();
+          if (window.renderListDetails) window.renderListDetails();
+        }
       },
       (sharedListenerError) => {
         console.error(
