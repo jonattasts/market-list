@@ -307,6 +307,14 @@ window.handleConfirmShare = async function () {
     window.closeShareWindow();
     window.showToast(`Lista compartilhada com ${normalizedName}!`, "success");
 
+    // Ativa (ou mantém ativo) o listener em tempo real do lado do dono.
+    // Necessário para que o dono receba em tempo real as alterações feitas
+    // pelo usuário recém-adicionado ao compartilhamento, mesmo que a lista
+    // já estivesse aberta antes do compartilhamento ser criado.
+    if (window.activateDetailsRealtimeListener) {
+      window.activateDetailsRealtimeListener(currentList.id);
+    }
+
     // Re-renderiza a tela de listas atualizando cache e interface
     if (window.renderMarketLists) window.renderMarketLists();
   } catch (updateError) {
@@ -522,6 +530,17 @@ window.getCurrentUserPermissions = function (list) {
  * que estão compartilhadas com o usuário atual (campo sharedWith).
  * Mescla os resultados com o marketListData existente sem duplicar.
  *
+ * Este listener é responsável exclusivamente pela aba "Compartilhadas" da
+ * tela de listas. Detecta remoções de compartilhamento enquanto o usuário
+ * estiver navegando pela aba, exibindo toast informativo se necessário.
+ *
+ * O listener de tempo real pontual (ativado ao abrir a lista) é gerenciado
+ * separadamente em details.js via activateDetailsRealtimeListener.
+ *
+ * Quando o usuário compartilhado estiver com a tela de detalhes aberta e
+ * receber uma nova lista compartilhada via este listener, o listener pontual
+ * de detalhes já está ativo e garante a atualização em tempo real.
+ *
  * NOTA: Este listener usa a importação dinâmica para evitar dependências circulares
  * e é inicializado após o login do usuário.
  *
@@ -545,6 +564,9 @@ window.initSharedListsListener = async function (currentUserName) {
       ]),
     );
 
+    // Usado para detectar quais listas foram removidas do compartilhamento
+    let previousSharedListIds = new Set();
+
     onSnapshot(
       sharedListsQuery,
       (sharedSnapshot) => {
@@ -552,6 +574,34 @@ window.initSharedListsListener = async function (currentUserName) {
           id: sharedDoc.id,
           ...sharedDoc.data(),
         }));
+
+        // IDs das listas compartilhadas recebidas neste snapshot
+        const currentSharedListIds = new Set(sharedListsData.map((list) => list.id));
+
+        // Detecta listas que estavam compartilhadas e deixaram de estar
+        // (presentes no snapshot anterior mas ausentes no atual)
+        if (previousSharedListIds.size > 0) {
+          previousSharedListIds.forEach((previousListId) => {
+            if (!currentSharedListIds.has(previousListId)) {
+              // Verifica se o usuário está na aba de listas compartilhadas
+              const listsScreenElement = document.getElementById("market-lists-screen");
+              const isOnListsScreen =
+                listsScreenElement &&
+                !listsScreenElement.classList.contains("screen-hidden");
+
+              // Toast exibido somente se o usuário estiver na aba de listas compartilhadas
+              if (isOnListsScreen) {
+                window.showToast(
+                  "Uma lista compartilhada não está mais disponível para você.",
+                  "danger",
+                );
+              }
+            }
+          });
+        }
+
+        // Atualiza o registro de IDs para o próximo ciclo de detecção
+        previousSharedListIds = currentSharedListIds;
 
         // Filtra para evitar duplicatas com listas próprias do usuário
         // Agrega as listas compartilhadas ao array global

@@ -1,6 +1,171 @@
 /* ==========================================================================
    RENDERIZAÇÃO DE DETALHES COM BUSCA
    ========================================================================== */
+
+/* ==========================================================================
+   LISTENER DE TEMPO REAL DA LISTA ABERTA
+   ========================================================================== */
+
+// Referência à função de cancelamento do listener ativo (onSnapshot)
+// Mantida no escopo do módulo para garantir que apenas um listener esteja ativo por vez
+let activeDetailsListenerUnsubscribe = null;
+
+/**
+ * Ativa o listener em tempo real do Firestore para a lista atualmente aberta.
+ * O listener só é registrado se a lista for compartilhada (dono ou usuário compartilhado).
+ * Garante que apenas um listener esteja ativo por vez, cancelando o anterior se existir.
+ *
+ * Comportamento ao receber atualização:
+ * - Atualiza os dados locais (marketListData) com os dados mais recentes do Firestore
+ * - Re-renderiza a tela de detalhes refletindo as mudanças em tempo real para AMBOS
+ *   os lados: dono e usuário compartilhado recebem atualizações bidirecionais
+ * - Detecta remoção do compartilhamento para o usuário logado e aciona o fluxo de saída
+ *
+ * @param {string} listIdentifier - ID do documento da lista no Firestore
+ */
+window.activateDetailsRealtimeListener = async function (listIdentifier) {
+  // Cancela qualquer listener anterior antes de registrar um novo
+  window.deactivateDetailsRealtimeListener();
+
+  try {
+    const { firestore, doc, onSnapshot } = await import("./firebase.js");
+
+    const listDocumentReference = doc(firestore, "lists", listIdentifier);
+
+    // Registra o listener e armazena a função de cancelamento
+    activeDetailsListenerUnsubscribe = onSnapshot(
+      listDocumentReference,
+      (documentSnapshot) => {
+        // Se o documento foi deletado no Firestore, sai da tela de detalhes
+        if (!documentSnapshot.exists()) {
+          window.deactivateDetailsRealtimeListener();
+          window.showScreen("market-lists-screen");
+          return;
+        }
+
+        const updatedListData = {
+          id: documentSnapshot.id,
+          ...documentSnapshot.data(),
+        };
+        const currentUserName = localStorage.getItem("marketUserName");
+        const isOwnerOfList = updatedListData.userName === currentUserName;
+
+        // Verifica se o usuário compartilhado foi removido do array sharedWith
+        if (!isOwnerOfList) {
+          const sharedUsersArray = updatedListData.sharedWith || [];
+          const isStillSharedWithCurrentUser = sharedUsersArray.some(
+            (sharedUser) =>
+              window.normalizeString(sharedUser.name) ===
+              window.normalizeString(currentUserName),
+          );
+
+          if (!isStillSharedWithCurrentUser) {
+            // Aciona o fluxo de remoção do compartilhamento para o usuário atual
+            handleSharedAccessRevoked(listIdentifier);
+            return;
+          }
+        }
+
+        // Atualiza os dados locais com os dados mais recentes recebidos do Firestore.
+        // Usa busca direta pelo listIdentifier para evitar race condition com o
+        // initFirebaseListener do index.js que pode ter reordenado o marketListData
+        // entre o disparo do onSnapshot e a execução deste callback.
+        const existingListIndex = window.marketListData.findIndex(
+          (existingList) => existingList.id === listIdentifier,
+        );
+
+        if (existingListIndex !== -1) {
+          window.marketListData[existingListIndex] = updatedListData;
+
+          window.currentListId = listIdentifier;
+          window.currentListIndex = existingListIndex;
+        } else {
+          window.marketListData.push(updatedListData);
+          window.currentListId = listIdentifier;
+          window.currentListIndex = window.marketListData.length - 1;
+        }
+
+        const detailsScreenElement = document.getElementById(
+          "market-list-screen-details",
+        );
+        if (
+          detailsScreenElement &&
+          !detailsScreenElement.classList.contains("screen-hidden")
+        ) {
+          window.renderListDetails();
+        }
+      },
+      (listenerError) => {
+        console.error("Erro no listener de detalhes:", listenerError);
+      },
+    );
+  } catch (importError) {
+    console.error("Erro ao ativar listener de detalhes:", importError);
+  }
+};
+
+/**
+ * Desativa o listener em tempo real da lista aberta.
+ * Deve ser chamado sempre que o usuário sair da tela de detalhes,
+ * independentemente do destino (voltar, navegar para outra tela, etc.).
+ * Evita consumo desnecessário de recursos e conexões abertas no Firestore.
+ */
+window.deactivateDetailsRealtimeListener = function () {
+  if (activeDetailsListenerUnsubscribe) {
+    activeDetailsListenerUnsubscribe();
+    activeDetailsListenerUnsubscribe = null;
+  }
+};
+
+/**
+ * Trata o cenário em que o compartilhamento da lista foi revogado enquanto
+ * o usuário compartilhado estava com a lista aberta ou na aba de listas compartilhadas.
+ *
+ * - Remove a lista do marketListData local para o usuário compartilhado
+ * - Exibe toast informativo se o usuário estiver na tela de detalhes ou na aba compartilhadas
+ * - Redireciona para a tela de listas
+ *
+ * @param {string} listIdentifier - ID do documento da lista que teve o acesso revogado
+ */
+function handleSharedAccessRevoked(listIdentifier) {
+  window.deactivateDetailsRealtimeListener();
+
+  // Remove a lista do cache local do usuário compartilhado
+  window.marketListData = window.marketListData.filter(
+    (existingList) => existingList.id !== listIdentifier,
+  );
+
+  // Verifica se o usuário está na tela de detalhes da lista revogada
+  const detailsScreenElement = document.getElementById(
+    "market-list-screen-details",
+  );
+  const isOnDetailsScreen =
+    detailsScreenElement &&
+    !detailsScreenElement.classList.contains("screen-hidden");
+
+  // Verifica se o usuário está na aba de listas compartilhadas
+  const listsScreenElement = document.getElementById("market-lists-screen");
+  const isOnListsScreen =
+    listsScreenElement &&
+    !listsScreenElement.classList.contains("screen-hidden");
+
+  // Toast exibido somente se o usuário estiver nas telas relevantes
+  // (tela de detalhes da lista ou aba de listas compartilhadas)
+  if (isOnDetailsScreen || isOnListsScreen) {
+    window.showToast(
+      "Esta lista não está mais disponível para você.",
+      "danger",
+    );
+  }
+
+  // Redireciona para a tela de listas atualizando a renderização
+  window.showScreen("market-lists-screen");
+}
+
+/* ==========================================================================
+   ABERTURA E SAÍDA DA TELA DE DETALHES
+   ========================================================================== */
+
 window.openListDetails = function (index) {
   // Armazena o ID estável da lista ao abrir, evitando que reordenações
   // posteriores do onSnapshot causem perda de referência durante a navegação
@@ -15,11 +180,22 @@ window.openListDetails = function (index) {
     delete window.marketListData[window.currentListIndex].items;
     saveAndSync();
   }
+
   window.showScreen("market-list-screen-details");
   window.renderListDetails();
+
+  const currentList = window.marketListData[index];
+  const isSharedList =
+    (currentList.sharedWith && currentList.sharedWith.length > 0) ||
+    currentList.userName !== localStorage.getItem("marketUserName");
+
+  if (isSharedList) {
+    window.activateDetailsRealtimeListener(currentList.id);
+  }
 };
 
 window.exitDetailsScreen = function () {
+  window.deactivateDetailsRealtimeListener();
   window.showScreen("market-lists-screen");
 };
 
@@ -131,10 +307,16 @@ window.renderListDetails = function () {
           currency: "BRL",
         });
 
-        // Checkbox de marcação disponível para todos (dono e compartilhados podem marcar)
+        const checkboxOnClickAttribute = userPermissions.canEdit
+          ? `onclick="toggleItemStatus(${catIdx}, ${itemIdx})"`
+          : "";
+        const checkboxCursorStyle = userPermissions.canEdit
+          ? ""
+          : "cursor: default; opacity: 0.6;";
+
         card.innerHTML = `
                 <div class="item-info">
-                    <div class="custom-check" onclick="toggleItemStatus(${catIdx}, ${itemIdx})"></div>
+                    <div class="custom-check" ${checkboxOnClickAttribute} style="${checkboxCursorStyle}"></div>
                     <div class="text-group">
                         <span class="item-name">${item.name} <span style="font-size: 11px; color: var(--text-secondary);">(x${qtd})</span></span>
                         <span class="item-desc">${item.desc}</span>
@@ -174,10 +356,14 @@ window.renderListDetails = function () {
  * @param {{ isOwner: boolean, canEdit: boolean }} userPermissions - Permissões do usuário atual
  */
 function applyPermissionsToDetailsHeader(userPermissions) {
-  const detailsOptionsButton = document.getElementById("button-options-details");
+  const detailsOptionsButton = document.getElementById(
+    "button-options-details",
+  );
   if (detailsOptionsButton) {
     // Apenas o dono pode acessar as opções de compartilhamento e edição da lista
-    detailsOptionsButton.style.display = userPermissions.isOwner ? "flex" : "none";
+    detailsOptionsButton.style.display = userPermissions.isOwner
+      ? "flex"
+      : "none";
   }
 }
 

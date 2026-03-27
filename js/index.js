@@ -491,6 +491,7 @@ window.saveAndSync = async function () {
   // Resolve o índice pelo ID estável antes de qualquer operação,
   // evitando que uma reordenação do onSnapshot aponte para a lista errada
   const resolvedIndex = window.resolveCurrentListIndex();
+
   const currentList = window.marketListData[resolvedIndex];
   if (!currentList || !currentList.id) return;
 
@@ -685,6 +686,9 @@ function applyDashboardSkeletonBeforeNavigation() {
  * requer validação — será chamado pelo próprio módulo após a validação concluir,
  * evitando que o dashboard renderize com credenciais inválidas do firebase.js.
  *
+ * Ao navegar para fora da tela de detalhes, o listener em tempo real da lista
+ * aberta é desativado automaticamente para liberar recursos do Firestore.
+ *
  * @param {string} screenIdentifier - ID da tela de destino
  */
 function executeScreenNavigation(screenIdentifier) {
@@ -698,6 +702,12 @@ function executeScreenNavigation(screenIdentifier) {
     "new-item-screen",
     "dashboard-screen",
   ];
+
+  if (screenIdentifier !== "market-list-screen-details") {
+    if (window.deactivateDetailsRealtimeListener) {
+      window.deactivateDetailsRealtimeListener();
+    }
+  }
 
   screens.forEach((id) => {
     const element = document.getElementById(id);
