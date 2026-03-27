@@ -483,16 +483,36 @@
 }
 
 .filter-close-button {
-  background: rgba(76, 51, 230, 0.08);
-  border: none;
-  color: var(--primary);
-  width: 32px;
-  height: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-close-button ion-icon {
+  font-size: 22px;
+  color: var(--text-main);
+  transition: color 0.2s ease;
+}
+
+.filter-close-button:hover {
+  background: var(--border-color);
+  transform: scale(1.05);
+}
+
+.filter-close-button:hover ion-icon {
+  color: var(--primary);
+}
+
+.filter-close-button:active {
+  transform: scale(0.95);
 }
 
 .filter-label {

@@ -103,6 +103,7 @@
 
 .lists-tab-button ion-icon {
   font-size: 16px;
+  color: var(--text-secondary);
 }
 
 /* Estado ativo da aba */
@@ -114,8 +115,16 @@
   box-shadow: 0 3px 10px rgba(0, 122, 255, 0.25);
 }
 
+.lists-tab-button.lists-tab-active ion-icon {
+  color: #ffffff;
+}
+
 .lists-tab-button:active:not(.lists-tab-active) {
   background: var(--bg-card);
+  color: var(--text-main);
+}
+
+.lists-tab-button:active:not(.lists-tab-active) ion-icon {
   color: var(--text-main);
 }
 
@@ -499,7 +508,7 @@
 .pagination-numbers {
   display: flex;
   align-items: center;
-  padding: 4px; 
+  padding: 4px;
   min-width: 0;
   overflow: hidden;
   flex-shrink: 1;

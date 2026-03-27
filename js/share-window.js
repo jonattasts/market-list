@@ -121,7 +121,7 @@ function getSharedUsersListTemplate(sharedUsers) {
           <span class="share-user-name">${sharedUser.name}</span>
           <span class="share-user-permission">
             <span class="share-permission-badge ${sharedUser.canEdit ? "can-edit" : "read-only"}">
-              <ion-icon name="${sharedUser.canEdit ? "create-outline" : "eye-outline"}"></ion-icon>
+              <ion-icon name="${sharedUser.canEdit ? "create-outline" : "eye-outline"}" class="permission-icon"></ion-icon>
               ${sharedUser.canEdit ? "Pode editar" : "Só visualizar"}
             </span>
           </span>

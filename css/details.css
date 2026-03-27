@@ -37,6 +37,14 @@
   word-break: keep-all;
 }
 
+/* Ícone de permissão do usuário (create-outline) */
+.permission-icon {
+  color: var(--primary);
+  font-size: 18px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 /* Dashboard fixo sobre o header */
 .dashboard {
   background: var(--bg-card);
