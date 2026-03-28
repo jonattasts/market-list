@@ -583,7 +583,4 @@ window.clearItemSearch = function () {
 
   // Aciona o handler para ocultar o botão e re-renderizar
   window.handleItemSearchInput();
-
-  // Retorna o foco ao input para melhorar a UX após limpar
-  itemSearchInputElement.focus();
 };

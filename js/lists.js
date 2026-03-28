@@ -139,8 +139,14 @@ window.switchListsTab = function (tabIdentifier) {
   const sharedTabButton = document.getElementById("tab-button-shared-lists");
 
   if (ownedTabButton && sharedTabButton) {
-    ownedTabButton.classList.toggle("lists-tab-active", tabIdentifier === "owned");
-    sharedTabButton.classList.toggle("lists-tab-active", tabIdentifier === "shared");
+    ownedTabButton.classList.toggle(
+      "lists-tab-active",
+      tabIdentifier === "owned",
+    );
+    sharedTabButton.classList.toggle(
+      "lists-tab-active",
+      tabIdentifier === "shared",
+    );
   }
 
   window.renderMarketLists();
@@ -501,13 +507,12 @@ function renderListsForCurrentPage() {
     }
 
     // Badge de compartilhamento exibido em listas da aba "Compartilhadas"
-    const sharedByBadgeHTML =
-      !isOwnerOfThisList
-        ? `<div class="shared-by-badge">
+    const sharedByBadgeHTML = !isOwnerOfThisList
+      ? `<div class="shared-by-badge">
             <ion-icon name="people-outline"></ion-icon>
             <span>De: ${list.userName}</span>
            </div>`
-        : "";
+      : "";
 
     cardElement.innerHTML = `
         <div class="list-master-header dashboard-header">
@@ -580,7 +585,7 @@ window.renderMarketLists = function () {
             <p>Nenhuma lista foi compartilhada com você ainda.</p>
           </div>`;
       } else {
-      containerElement.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
+        containerElement.innerHTML = `<div class="empty-state"><span class="empty-emoji">📝</span><p>Ainda não há listas.</p></div>`;
       }
     }
 
@@ -595,11 +600,9 @@ window.renderMarketLists = function () {
   }
 
   // Ordenação por data (descendente)
-  const sortedListData = [...tabFilteredLists].sort(
-    (firstList, secondList) => {
-      return new Date(secondList.date) - new Date(firstList.date);
-    },
-  );
+  const sortedListData = [...tabFilteredLists].sort((firstList, secondList) => {
+    return new Date(secondList.date) - new Date(firstList.date);
+  });
 
   // Aplica filtro de busca
   filteredListsData = sortedListData.filter((list) => {
@@ -679,9 +682,6 @@ window.clearListsSearch = function () {
 
   // Aciona o handler de input para restaurar a paginação e re-renderizar
   window.handleSearchInput();
-
-  // Retorna o foco ao input para melhorar a UX após limpar
-  searchInputElement.focus();
 };
 
 /* ==========================================================================
