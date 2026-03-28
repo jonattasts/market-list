@@ -38,6 +38,16 @@
   --header-padding-large: 35px 16px 30px;
   --header-padding-medium: 30px 16px 25px;
   --header-padding-small: 20px 16px 15px;
+
+  /* Safe area tokens — usados por todos os headers e containers de topo.
+     O max() garante fallback mínimo de 0px em dispositivos sem notch */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Padding de header com safe area embutido — evita repetição em cada tela */
+  --header-safe-padding-large: calc(35px + env(safe-area-inset-top, 0px)) 16px 30px;
+  --header-safe-padding-medium: calc(30px + env(safe-area-inset-top, 0px)) 16px 25px;
+  --header-safe-padding-small: calc(20px + env(safe-area-inset-top, 0px)) 16px 15px;
 }
 
 /* --- Tema Dark --- */
@@ -128,11 +138,14 @@ body {
   overscroll-behavior: none;
 }
 
-/* Header base - fixo no topo */
+/* 
+* Header base - fixo no topo.
+* Usa padding com safe-area-inset-top para cobrir a notch/dynamic island 
+*/
 header {
   background-color: var(--bg-header);
   color: var(--text-on-header);
-  padding: var(--header-padding-large);
+  padding: var(--header-safe-padding-large);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -149,12 +162,12 @@ header {
 
 /* Header médio - para Home */
 header.medium {
-  padding: var(--header-padding-medium);
+  padding: var(--header-safe-padding-medium);
 }
 
 /* Header pequeno - para Lists, Forms, Details, Dashboard */
 header.small {
-  padding: var(--header-padding-small);
+  padding: var(--header-safe-padding-small);
 }
 
 header h1,

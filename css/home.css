@@ -12,18 +12,22 @@
   overflow: hidden;
 }
 
-/* --- Header da Home - Integrado ao Background Ondulado --- */
+/* --- Header da Home - Integrado ao Background Ondulado ---
+   O padding-top usa safe-area-inset-top para cobrir notch/dynamic island
+   com a cor roxa do header */
 #home-screen header {
   background-color: var(--primary);
   color: var(--text-on-header);
-  padding: 40px 20px 60px;
+  padding-top: calc(40px + env(safe-area-inset-top, 0px));
+  padding-right: 20px;
+  padding-bottom: 60px;
+  padding-left: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
   position: relative;
   z-index: 10;
-  position: relative;
   top: auto;
 }
 
@@ -366,7 +370,10 @@
   }
 
   #home-screen header {
-    padding: 30px 20px 50px;
+    padding-top: calc(30px + env(safe-area-inset-top, 0px));
+    padding-right: 20px;
+    padding-bottom: 50px;
+    padding-left: 20px;
   }
 
   .home-content-lower {

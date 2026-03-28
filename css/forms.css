@@ -16,7 +16,9 @@
 
 /* --- Header das Telas de Formulário ---
    Fica fixo no topo e nunca acompanha o scroll do conteúdo abaixo.
-   O flex-shrink: 0 impede que o header encolha quando o conteúdo cresce */
+   O flex-shrink: 0 impede que o header encolha quando o conteúdo cresce.
+   O padding-top com safe-area-inset-top garante que a cor roxa do header
+   cubra a notch/dynamic island */
 #new-list-screen header.small,
 #new-category-screen header.small,
 #new-item-screen header.small {
@@ -26,6 +28,7 @@
   /* O flex-shrink: 0 garante que o header nunca encolha quando o conteúdo cresce. */
   flex-shrink: 0;
   touch-action: none;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
 }
 
 /* --- Seção de Formulário (Wrapper Scrollável) */
@@ -38,6 +41,7 @@
   touch-action: pan-y;
   padding: 20px 20px 60px;
   display: block;
+  background-color: var(--bg-page);
 }
 
 /* --- Card do Formulário --- */

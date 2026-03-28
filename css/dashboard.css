@@ -72,10 +72,12 @@
   }
 }
 
-/* Header do dashboard */
+/* Header do dashboard — sobrescreve o padding global para incluir safe area,
+   garantindo que a cor do header cubra a notch/dynamic island corretamente */
 #dashboard-screen header.small {
   justify-content: space-between;
   padding-right: 12px;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
 }
 
 /* ======================================================================== */
@@ -96,6 +98,8 @@
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  /* flex-shrink: 0 impede que as abas encolham ao crescer o conteúdo abaixo */
+  flex-shrink: 0;
 }
 
 /* Remove scrollbar padrão */
@@ -213,6 +217,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  background-color: var(--bg-page);
 }
 
 /* Conteúdo Principal */
