@@ -148,11 +148,20 @@
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 0 16px 20px;
   /* Garante scroll suave e contido */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
+}
+
+/* Espaçador virtual no final do scroll — garante que o último item
+   não seja cortado pela barra gestual do Android nem pelo home indicator do iPhone */
+.details-content-wrapper::after {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-bottom, 0px);
+  flex-shrink: 0;
 }
 
 /* Seção de botões de ação na tela de detalhes */

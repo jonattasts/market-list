@@ -204,7 +204,15 @@
   overscroll-behavior: contain;
   /* Previne que o scroll "vaze" para o body */
   touch-action: pan-y;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Espaçador virtual no final do scroll — garante que a paginação
+   não seja cortada pela barra gestual do Android nem pelo home indicator do iPhone */
+.lists-content-wrapper::after {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-bottom, 0px);
+  flex-shrink: 0;
 }
 
 .header-action {
@@ -456,7 +464,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 20px 16px;
   margin: 0 20px 0;
   background: transparent;
   border: none;

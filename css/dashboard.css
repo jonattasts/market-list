@@ -219,10 +219,19 @@
   background-color: var(--bg-page);
 }
 
+/* Espaçador virtual no final do scroll — garante que o último card
+   não seja cortado pela barra gestual do Android nem pelo home indicator do iPhone */
+.dashboard-content-wrapper::after {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-bottom, 0px);
+  flex-shrink: 0;
+}
+
 /* Conteúdo Principal */
 .dashboard-content {
   flex: 1;
-  padding: 20px 16px calc(40px + env(safe-area-inset-bottom, 0px));
+  padding: 20px 16px 40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
