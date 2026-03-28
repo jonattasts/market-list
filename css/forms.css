@@ -23,6 +23,7 @@
   position: relative;
   top: 0;
   z-index: 10;
+  /* O flex-shrink: 0 garante que o header nunca encolha quando o conteúdo cresce. */
   flex-shrink: 0;
   touch-action: none;
 }
@@ -35,7 +36,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 20px;
+  padding: 20px 20px 60px;
   display: block;
 }
 
@@ -48,8 +49,17 @@
   text-align: center;
   width: 100%;
   max-width: 400px;
-  margin: auto !important;
-  padding: inherit !important;
+  margin: 0 auto;
+  /* Propaga o gesto de scroll vertical para o .form-section */
+  touch-action: pan-y;
+}
+
+.form-section .form-card {
+  margin-top: 0;
+}
+
+.form-card-container {
+  margin: 0 auto;
 }
 
 .form-card h2,
