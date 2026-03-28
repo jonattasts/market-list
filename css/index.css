@@ -45,9 +45,12 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 
   /* Padding de header com safe area embutido — evita repetição em cada tela */
-  --header-safe-padding-large: calc(35px + env(safe-area-inset-top, 0px)) 16px 30px;
-  --header-safe-padding-medium: calc(30px + env(safe-area-inset-top, 0px)) 16px 25px;
-  --header-safe-padding-small: calc(20px + env(safe-area-inset-top, 0px)) 16px 15px;
+  --header-safe-padding-large: calc(35px + env(safe-area-inset-top, 0px)) 16px
+    30px;
+  --header-safe-padding-medium: calc(30px + env(safe-area-inset-top, 0px)) 16px
+    25px;
+  --header-safe-padding-small: calc(20px + env(safe-area-inset-top, 0px)) 16px
+    15px;
 }
 
 /* --- Tema Dark --- */
@@ -129,13 +132,13 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* 100dvh como valor principal — considera a safe area do Safari iOS */
   height: 100dvh;
-  height: 100vh;
+  height: -webkit-fill-available;
+  height: 100%;
   position: relative;
-  /* pan-y permite capturar o scroll vertical nos wrappers internos */
   touch-action: pan-y;
   overscroll-behavior: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* 

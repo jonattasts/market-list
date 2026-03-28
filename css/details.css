@@ -155,15 +155,6 @@
   touch-action: pan-y;
 }
 
-/* Espaçador virtual no final do scroll — garante que o último item
-   não seja cortado pela barra gestual do Android nem pelo home indicator do iPhone */
-.details-content-wrapper::after {
-  content: "";
-  display: block;
-  height: env(safe-area-inset-bottom, 0px);
-  flex-shrink: 0;
-}
-
 /* Seção de botões de ação na tela de detalhes */
 .category-actions {
   display: flex;

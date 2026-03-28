@@ -206,15 +206,6 @@
   touch-action: pan-y;
 }
 
-/* Espaçador virtual no final do scroll — garante que a paginação
-   não seja cortada pela barra gestual do Android nem pelo home indicator do iPhone */
-.lists-content-wrapper::after {
-  content: "";
-  display: block;
-  height: env(safe-area-inset-bottom, 0px);
-  flex-shrink: 0;
-}
-
 .header-action {
   width: 40px;
   height: 40px;
