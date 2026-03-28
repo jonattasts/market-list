@@ -24,22 +24,19 @@
   top: 0;
   z-index: 10;
   flex-shrink: 0;
-  /* Previne que o toque no header dispare scroll */
   touch-action: none;
 }
 
 /* --- Seção de Formulário (Wrapper Scrollável) */
 .form-section {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 20px 20px 40px;
+  padding: 20px;
+  display: block;
 }
 
 /* --- Card do Formulário --- */
@@ -51,11 +48,8 @@
   text-align: center;
   width: 100%;
   max-width: 400px;
-}
-
-/* --- Compensação do margin negativo herdado da classe .dashboard (details.css) */
-.form-section .form-card {
-  margin-top: 0;
+  margin: auto !important;
+  padding: inherit !important;
 }
 
 .form-card h2,
