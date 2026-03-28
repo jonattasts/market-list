@@ -148,7 +148,7 @@
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  padding: 0 16px 20px;
+  padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
   /* Garante scroll suave e contido */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;

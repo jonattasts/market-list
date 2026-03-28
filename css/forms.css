@@ -39,7 +39,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 20px 20px 60px;
+  padding: 20px 20px calc(60px + env(safe-area-inset-bottom, 0px));
   display: block;
   background-color: var(--bg-page);
 }
