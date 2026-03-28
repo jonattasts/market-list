@@ -1,75 +1,97 @@
 /* ==========================================================================
-   TELA: ONBOARDING (IDENTIFICAÇÃO DO USUÁRIO)
+   TELA: ONBOARDING — BASE, CARROSSEL E INDICADORES
    ========================================================================== */
+
+/* Container raiz da tela de onboarding — ocupa toda a viewport */
 #onboarding-screen {
   width: 100%;
-  /* flex: 1; */
-  /* display: flex; */
-  /* flex-direction: column; */
-  /* justify-content: center; */
-  /* align-items: center; */
-  margin-top: 80px;
-  padding: 30px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
   background-color: var(--bg-page);
-  text-align: center;
+  /* display e flex são controlados pelo showScreen do index.js */
 }
 
-.onboarding-card {
-  background: var(--bg-card);
-  padding: 40px 30px;
-  border-radius: 28px;
-  box-shadow: 0 15px 35px var(--shadow-card);
+/* ==========================================================================
+   CARROSSEL: WRAPPER E TRILHO
+   ========================================================================== */
+
+/* Wrapper do carrossel — ocupa toda a tela, sem scroll nativo */
+.onboarding-carousel-wrapper {
   width: 100%;
-  max-width: 380px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-.onboarding-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-bottom: 10px;
+/* Trilho deslizante que contém as três telas lado a lado */
+.onboarding-carousel-track {
+  display: flex;
+  width: 300%; /* 3 slides × 100% */
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
 }
 
-.onboarding-subtitle {
-  font-size: 15px;
-  color: var(--text-secondary);
-  margin-bottom: 30px;
-  line-height: 1.5;
+/* Cada slide ocupa 1/3 do trilho (= 100% da viewport) */
+.onboarding-carousel-slide {
+  flex: 0 0 33.3333%;
+  width: 33.3333%;
+  height: 100%;
+  position: relative;
 }
 
-.onboarding-input-group {
-  margin-bottom: 25px;
-  text-align: left;
+/* ==========================================================================
+   INDICADORES DE CARROSSEL (DOTS)
+   ========================================================================== */
+
+/* Container dos dots — posicionado na parte inferior */
+.onboarding-carousel-indicators {
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  /* Visibilidade controlada pelo onboarding.js */
+  transition: opacity 0.3s ease;
 }
 
-.onboarding-input-group label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--primary);
-  margin-left: 4px;
-  margin-bottom: 8px;
-  display: block;
+/* Dot individual */
+.onboarding-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  transition: background-color 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
+  cursor: pointer;
 }
 
-.onboarding-input-group input {
-  width: 100%;
-  padding: 16px;
-  border-radius: 14px;
-  border: 2px solid var(--border-color);
-  font-size: 16px;
-  transition: var(--transition);
-  outline: none;
-  background-color: var(--bg-page);
-  color: var(--text-main);
+/* Dot ativo — cor primária e formato de pílula */
+.onboarding-indicator-dot.active {
+  width: 24px;
+  border-radius: 4px;
+  background-color: var(--primary);
 }
 
-.onboarding-input-group input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(76, 51, 230, 0.1);
+/* ==========================================================================
+   ESTADOS DE VISIBILIDADE DAS TELAS INTERNAS
+   As telas internas (.onboarding-start-screen etc.) são exibidas
+   pelo carrossel via posição no trilho — não por display: none.
+   ========================================================================== */
+
+/* Estado oculto das telas internas (transição de saída) */
+.onboarding-internal-screen-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* Animação de fade out para transição de telas */
+/* ==========================================================================
+   ANIMAÇÃO DE FADE OUT (USADA AO ENCERRAR O ONBOARDING)
+   ========================================================================== */
 .screen-fade-out {
   opacity: 0;
   transform: translateY(-20px);
@@ -79,7 +101,9 @@
   pointer-events: none;
 }
 
-/* Estado de loading no botão */
+/* ==========================================================================
+   ESTADO DE LOADING NO BOTÃO "COMEÇAR A USAR"
+   ========================================================================== */
 .button-start.is-loading {
   color: transparent !important;
   position: relative;
@@ -138,6 +162,7 @@
 .icon-local {
   animation: bounce 2s infinite;
 }
+
 .icon-cloud {
   animation: pulse 2s infinite;
 }
@@ -179,14 +204,18 @@
   transition: width 0.3s ease;
 }
 
-/* Keyframes para o spinner */
+/* ==========================================================================
+   KEYFRAMES
+   ========================================================================== */
+
+/* Spinner do botão de loading */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* Keyframes para o espetáculo visual */
+/* Seta animada do sync overlay */
 @keyframes moveUp {
   0% {
     transform: translateY(10px);
@@ -202,6 +231,7 @@
   }
 }
 
+/* Bounce do ícone de celular no sync overlay */
 @keyframes bounce {
   0%,
   100% {
@@ -212,6 +242,7 @@
   }
 }
 
+/* Pulse do ícone de nuvem no sync overlay */
 @keyframes pulse {
   0%,
   100% {

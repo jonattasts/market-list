@@ -725,6 +725,11 @@ function executeScreenNavigation(screenIdentifier) {
 
   window.closePopover();
 
+  /* Inicializa o carrossel do onboarding ao navegar para a tela de onboarding */
+  if (screenIdentifier === "onboarding-screen") {
+    if (window.initOnboardingCarousel) window.initOnboardingCarousel();
+  }
+
   if (screenIdentifier === "home-screen") {
     window.initializeHomeScreen();
   }

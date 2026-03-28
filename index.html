@@ -26,6 +26,9 @@
 
     <link rel="stylesheet" href="css/details.css" />
     <link rel="stylesheet" href="css/onboarding.css" />
+    <link rel="stylesheet" href="css/onboarding-start.css" />
+    <link rel="stylesheet" href="css/onboarding-middle.css" />
+    <link rel="stylesheet" href="css/onboarding-finish.css" />
 
     <!-- CSS Base do Dashboard -->
     <link rel="stylesheet" href="css/dashboard.css">
@@ -70,25 +73,10 @@
 
       <!-- ============================================================= -->
       <!-- ===================== TELA DE ONBOARDING ===================== -->
+      <!-- O conteúdo do carrossel (3 telas) é injetado dinamicamente   -->
+      <!-- pelo onboarding.js via initOnboardingCarousel()               -->
       <!-- ============================================================= -->
-      <div id="onboarding-screen" class="screen-hidden">
-        <div class="onboarding-card">
-          <span class="emoji-main">👋</span>
-          <h1 class="onboarding-title">Olá!</h1>
-          <p class="onboarding-subtitle">Para organizar suas compras, como
-            gostaria de ser chamado?</p>
-
-          <div class="onboarding-input-group">
-            <label>Seu nome</label>
-            <input type="text" id="user-name-input"
-              placeholder="Digite seu nome aqui..." />
-          </div>
-
-          <button class="button-start" onclick="handleUserIdentification()">
-            Começar a usar
-          </button>
-        </div>
-      </div>
+      <div id="onboarding-screen" class="screen-hidden"></div>
 
       <!-- ============================================================= -->
       <!-- ===================== HOME SCREEN =========================== -->
@@ -889,6 +877,7 @@
 
     <!-- Módulo de tema: carregado antes dos outros scripts para evitar flash -->
     <script type="module" src="js/theme.js"></script>
+    <script type="module" src="js/onboarding.js"></script>
     <script type="module" src="js/index.js"></script>
     <script type="module" src="js/forms.js"></script>
 

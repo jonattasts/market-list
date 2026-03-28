@@ -1,0 +1,85 @@
+/* ==========================================================================
+   TELA 1 DO ONBOARDING: BOAS-VINDAS COM VÍDEO
+   ========================================================================== */
+
+/* Container principal da tela de início */
+.onboarding-start-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+/* Área superior com o vídeo */
+.onboarding-start-video-area {
+  width: 100%;
+  flex: 0 0 58%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 40px 40px;
+  background-color: #ffffff;
+}
+
+/* Vídeo em autoplay e loop cobrindo toda a área */
+.onboarding-start-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Área inferior com o conteúdo de texto */
+.onboarding-start-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  padding: 24px 32px 20px;
+  text-align: center;
+  background-color: #ffffff;
+  margin-top: -25px;
+  /* z-index garante que o conteúdo fique acima da área de vídeo na sobreposição */
+  position: relative;
+  z-index: 1;
+}
+
+/* Título principal da tela de boas-vindas */
+.onboarding-start-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+/* Linha decorativa abaixo do título (igual ao design de referência) */
+.onboarding-start-title-underline {
+  width: 48px;
+  height: 3px;
+  background-color: var(--primary);
+  border-radius: 4px;
+  margin: 0 auto 16px;
+}
+
+/* Subtítulo descritivo */
+.onboarding-start-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+@media (max-height: 700px) {
+  .onboarding-start-content-area {
+    margin-top: -40px;
+  }
+}

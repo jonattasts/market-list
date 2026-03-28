@@ -1,0 +1,135 @@
+/* ==========================================================================
+   TELA 3 DO ONBOARDING: IDENTIFICAÇÃO DO USUÁRIO (SVG + FORMULÁRIO)
+   ========================================================================== */
+
+/* Container principal da tela final */
+.onboarding-finish-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+/* Área superior com ilustração SVG */
+.onboarding-finish-image-area {
+  width: 100%;
+  flex: 0 0 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: #ffffff;
+  border-radius: 0 0 40px 40px;
+  overflow: hidden;
+}
+
+/* Imagem SVG da tela final */
+.onboarding-finish-image {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Área inferior com formulário de nome e botão */
+.onboarding-finish-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  padding: 24px 32px 32px;
+  text-align: center;
+  background-color: #ffffff;
+  margin-top: -25px;
+  position: relative;
+  /* z-index garante que o conteúdo fique acima da área de imagem na sobreposição */
+  z-index: 1;
+}
+
+/* Título da tela final */
+.onboarding-finish-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+/* Linha decorativa abaixo do título */
+.onboarding-finish-title-underline {
+  width: 48px;
+  height: 3px;
+  background-color: var(--primary);
+  border-radius: 4px;
+  margin: 0 auto 16px;
+}
+
+/* Subtítulo da tela final */
+.onboarding-finish-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 280px;
+  margin-bottom: 24px;
+}
+
+/* Grupo do campo de nome — largura total */
+.onboarding-finish-input-group {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+/* Label do campo de nome */
+.onboarding-finish-input-group label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-left: 4px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Input do campo de nome */
+.onboarding-finish-input-group input {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  font-size: 16px;
+  transition: var(--transition);
+  outline: none;
+  background-color: #ffffff;
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+/* Estado de foco no campo de nome */
+.onboarding-finish-input-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(76, 51, 230, 0.1);
+}
+
+/* Botão "Começar a usar" — largura total, estilo primário */
+.onboarding-finish-button {
+  width: 100%;
+  max-width: 320px;
+}
+
+@media (max-height: 700px) {
+  .onboarding-finish-button {
+    margin-top: -10px;
+  }
+}
