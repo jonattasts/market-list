@@ -279,7 +279,7 @@
 /* --- Botão Continue Fixo na Parte Inferior --- */
 .welcome-action-container {
   position: absolute;
-  bottom: calc(-65px + env(safe-area-inset-bottom, 0px) * -1);
+  bottom: 0;
   right: 0px;
   display: flex;
   align-items: center;
