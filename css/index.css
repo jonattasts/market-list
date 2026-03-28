@@ -76,7 +76,15 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  margin: 0;
+  padding: 0;
+  background-color: #e0e3e7;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
 body {
   font-family: "Inter", sans-serif;
   margin: 0;
@@ -84,12 +92,10 @@ body {
   display: flex;
   justify-content: center;
   background-color: #e0e3e7;
-  /* Previne scroll no body/html */
   overflow: hidden;
   height: 100%;
   width: 100%;
-  position: fixed;
-  touch-action: none; /* Previne scroll de toque no body */
+  touch-action: pan-y; /* Permite scroll para o Safari */
 }
 
 *,
@@ -113,10 +119,11 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 100dvh como valor principal — considera a safe area do Safari iOS */
+  height: 100dvh;
   height: 100vh;
-  height: 100dvh; /* Dynamic viewport height para mobile */
   position: relative;
-  /* Garante que o container capture todos os eventos de toque */
+  /* pan-y permite capturar o scroll vertical nos wrappers internos */
   touch-action: pan-y;
   overscroll-behavior: none;
 }
