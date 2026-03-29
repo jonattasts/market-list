@@ -596,14 +596,16 @@ window.initSharedListsListener = async function (currentUserName) {
     onSnapshot(
       sharedListsQuery,
       (sharedSnapshot) => {
-        const sharedListsData = sharedSnapshot.docs.map((sharedDoc) => ({
-          id: sharedDoc.id,
-          ...sharedDoc.data(),
-        }));
+        const sharedListsFromFirestore = sharedSnapshot.docs.map(
+          (sharedDoc) => ({
+            id: sharedDoc.id,
+            ...sharedDoc.data(),
+          }),
+        );
 
         // IDs das listas compartilhadas recebidas neste snapshot
         const currentSharedListIds = new Set(
-          sharedListsData.map((list) => list.id),
+          sharedListsFromFirestore.map((list) => list.id),
         );
 
         // Detecta listas que estavam compartilhadas e deixaram de estar
@@ -648,27 +650,67 @@ window.initSharedListsListener = async function (currentUserName) {
             ? window.getActiveDetailsListIdentifier()
             : null;
 
-        // Filtra para evitar duplicatas com listas próprias do usuário
-        // Agrega as listas compartilhadas ao array global
-        window.marketListData = [
-          ...window.marketListData.filter(
-            (existingList) =>
-              !sharedListsData.some(
-                (sharedList) => sharedList.id === existingList.id,
-              ),
-          ),
-          ...sharedListsData.filter(
-            (sharedList) => sharedList.id !== currentlyOpenListIdentifier,
-          ),
-          // Reinsere a versão atualizada pelo listener pontual para a lista aberta,
-          // mantendo os dados mais recentes recebidos diretamente do documento
-          ...(currentlyOpenListIdentifier
-            ? window.marketListData.filter(
-                (existingList) =>
-                  existingList.id === currentlyOpenListIdentifier,
-              )
-            : []),
-        ];
+        // Aplica proteção anti-regressão ao mesclar as listas compartilhadas:
+        // para cada lista recebida do Firestore, substitui o dado em memória
+        // apenas se o dado recebido for mais recente (comparação por updatedAt)
+        const sharedListsToMerge = sharedListsFromFirestore.filter(
+          (sharedList) => sharedList.id !== currentlyOpenListIdentifier,
+        );
+
+        // Remove do array global todas as listas compartilhadas que serão reprocessadas,
+        // preservando listas próprias do usuário e a lista aberta em detalhes
+        const baseMarketListData = window.marketListData.filter(
+          (existingList) =>
+            !sharedListsToMerge.some(
+              (sharedList) => sharedList.id === existingList.id,
+            ),
+        );
+
+        // Mescla com proteção anti-regressão por timestamp
+        const mergedSharedLists = sharedListsToMerge.reduce(
+          (accumulator, incomingSharedList) => {
+            const existingIndex = accumulator.findIndex(
+              (existingList) => existingList.id === incomingSharedList.id,
+            );
+
+            if (existingIndex === -1) {
+              // Lista ainda não existe em memória: insere normalmente
+              return [...accumulator, incomingSharedList];
+            }
+
+            // Lista já existe: substitui apenas se o dado recebido for mais recente
+            const existingTimestamp = extractUpdatedAtMilliseconds(
+              accumulator[existingIndex].updatedAt,
+            );
+            const incomingTimestamp = extractUpdatedAtMilliseconds(
+              incomingSharedList.updatedAt,
+            );
+
+            if (
+              incomingTimestamp === 0 ||
+              incomingTimestamp >= existingTimestamp
+            ) {
+              const updatedAccumulator = [...accumulator];
+              updatedAccumulator[existingIndex] = incomingSharedList;
+              return updatedAccumulator;
+            }
+
+            // Mantém o dado mais recente que já está em memória
+            return accumulator;
+          },
+          baseMarketListData,
+        );
+
+        // Reinsere a versão atualizada pelo listener pontual para a lista aberta,
+        // mantendo os dados mais recentes recebidos diretamente do documento
+        const preservedOpenList = currentlyOpenListIdentifier
+          ? window.marketListData.filter(
+              (existingList) =>
+                existingList.id === currentlyOpenListIdentifier,
+            )
+          : [];
+
+        window.marketListData = [...mergedSharedLists, ...preservedOpenList];
 
         // Re-renderiza a tela de listas se estiver visível
         const listsScreenElement = document.getElementById(
@@ -681,7 +723,8 @@ window.initSharedListsListener = async function (currentUserName) {
           if (window.renderMarketLists) window.renderMarketLists();
         }
 
-        // Re-renderiza a tela de detalhes se o usuário compartilhado estiver com ela aberta.
+        // Só renderiza se não houver um listener pontual ativo, pois ele é mais preciso
+        // e já garante a atualização em tempo real via onSnapshot do documento.
         const detailsScreenElement = document.getElementById(
           "market-list-screen-details",
         );
@@ -689,8 +732,12 @@ window.initSharedListsListener = async function (currentUserName) {
           detailsScreenElement &&
           !detailsScreenElement.classList.contains("screen-hidden")
         ) {
-          window.resolveCurrentListIndex();
-          if (window.renderListDetails) window.renderListDetails();
+          const hasActivePontualListener = currentlyOpenListIdentifier !== null;
+
+          if (!hasActivePontualListener) {
+            window.resolveCurrentListIndex();
+            if (window.renderListDetails) window.renderListDetails();
+          }
         }
       },
       (sharedListenerError) => {
@@ -707,6 +754,34 @@ window.initSharedListsListener = async function (currentUserName) {
     );
   }
 };
+
+/* ==========================================================================
+   UTILITÁRIO INTERNO — EXTRAÇÃO DE TIMESTAMP
+   ========================================================================== */
+
+/**
+ * Converte o campo updatedAt de um documento do Firestore para milissegundos.
+ * Versão local para uso no listener de compartilhadas, espelhando a função
+ * equivalente do index.js sem criar dependência entre módulos.
+ *
+ * @param {Object|null|undefined} updatedAt - Campo updatedAt do documento
+ * @returns {number} Tempo em milissegundos, ou 0 se inválido
+ */
+function extractUpdatedAtMilliseconds(updatedAt) {
+  if (!updatedAt) return 0;
+
+  // Timestamp do Firestore com método toMillis()
+  if (typeof updatedAt.toMillis === "function") {
+    return updatedAt.toMillis();
+  }
+
+  // Objeto com campo seconds (formato serializado do Firestore)
+  if (typeof updatedAt.seconds === "number") {
+    return updatedAt.seconds * 1000;
+  }
+
+  return 0;
+}
 
 /* ==========================================================================
    INICIALIZAÇÃO DO MÓDULO

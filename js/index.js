@@ -170,6 +170,100 @@ window.resolveCurrentListIndex = function () {
 };
 
 /* ==========================================================================
+   PROTEÇÃO ANTI-REGRESSÃO DE DADOS — COMPARAÇÃO POR TIMESTAMP
+   ========================================================================== */
+
+/**
+ *
+ * @param {Object|null|undefined} updatedAt - Campo updatedAt do documento
+ * @returns {number} Tempo em milissegundos, ou 0 se inválido
+ */
+function extractTimestampMilliseconds(updatedAt) {
+  if (!updatedAt) return 0;
+
+  // Timestamp do Firestore com método toMillis()
+  if (typeof updatedAt.toMillis === "function") {
+    return updatedAt.toMillis();
+  }
+
+  // Objeto com campo seconds (formato serializado do Firestore)
+  if (typeof updatedAt.seconds === "number") {
+    return updatedAt.seconds * 1000;
+  }
+
+  return 0;
+}
+
+/**
+ * Verifica se os dados recebidos do Firestore são mais recentes do que
+ * os dados atualmente armazenados em memória para a mesma lista.
+ *
+ * Regra: se o timestamp do dado recebido for MENOR que o do dado em memória,
+ * o dado em memória é considerado mais atual e NÃO deve ser substituído.
+ *
+ * @param {Object} incomingListData - Dados recebidos do snapshot do Firestore
+ * @param {Object|undefined} existingListData - Dados atualmente em memória para a mesma lista
+ * @returns {boolean} True se os dados recebidos são mais recentes ou iguais (pode substituir)
+ */
+function isIncomingDataMoreRecent(incomingListData, existingListData) {
+  // Se não há dado em memória, sempre aceita o dado recebido
+  if (!existingListData) return true;
+
+  const incomingTimestamp = extractTimestampMilliseconds(
+    incomingListData.updatedAt,
+  );
+  const existingTimestamp = extractTimestampMilliseconds(
+    existingListData.updatedAt,
+  );
+
+  // Aceita dado sem timestamp (documentos antigos sem o campo updatedAt)
+  if (incomingTimestamp === 0) return true;
+
+  // Só substitui se o dado recebido for mais recente ou igual ao que está em memória
+  return incomingTimestamp >= existingTimestamp;
+}
+
+/**
+ * Mescla uma lista de documentos recebidos do Firestore com o marketListData atual,
+ * aplicando proteção anti-regressão por timestamp em cada item individualmente.
+ *
+ * Para cada documento recebido:
+ * - Se não existe em memória: insere normalmente
+ * - Se já existe em memória: substitui APENAS se o dado recebido for mais recente
+ *
+ * @param {Array} currentMarketListData - Array atual do marketListData
+ * @param {Array} incomingDocuments - Documentos recebidos do snapshot
+ * @returns {Array} Novo array mesclado com proteção anti-regressão
+ */
+function mergeListDataWithTimestampProtection(
+  currentMarketListData,
+  incomingDocuments,
+) {
+  const mergedData = [...currentMarketListData];
+
+  incomingDocuments.forEach((incomingDocument) => {
+    const existingIndex = mergedData.findIndex(
+      (existingList) => existingList.id === incomingDocument.id,
+    );
+
+    if (existingIndex === -1) {
+      // Lista ainda não existe em memória: insere normalmente
+      mergedData.push(incomingDocument);
+    } else {
+      // Lista já existe: substitui apenas se o dado recebido for mais recente
+      if (
+        isIncomingDataMoreRecent(incomingDocument, mergedData[existingIndex])
+      ) {
+        mergedData[existingIndex] = incomingDocument;
+      }
+      // Caso contrário, mantém o dado mais recente que já está em memória
+    }
+  });
+
+  return mergedData;
+}
+
+/* ==========================================================================
    SISTEMA DE VALIDAÇÃO - FUNÇÕES CORE
    ========================================================================== */
 
@@ -929,22 +1023,35 @@ function initFirebaseListener(userName) {
   onSnapshot(
     q,
     (snapshot) => {
-      // Preserva as listas compartilhadas já carregadas pelo
-      // initSharedListsListener ao atualizar as listas próprias do usuário.
-      const ownedLists = snapshot.docs.map((firestoreDoc) => ({
+      // Mapeia os documentos recebidos do Firestore para objetos de lista
+      const ownedListsFromFirestore = snapshot.docs.map((firestoreDoc) => ({
         id: firestoreDoc.id,
         ...firestoreDoc.data(),
       }));
 
-      // Mantém no array global apenas as listas compartilhadas (não-próprias),
-      // depois insere as listas próprias atualizadas no início
+      // Preserva as listas compartilhadas já carregadas pelo initSharedListsListener
+      // ao atualizar as listas próprias do usuário.
+      // Filtra do array global apenas as listas que não são próprias do usuário.
       const sharedListsAlreadyLoaded = window.marketListData.filter(
         (existingList) =>
-          !ownedLists.some((ownedList) => ownedList.id === existingList.id) &&
-          existingList.userName !== userName,
+          !ownedListsFromFirestore.some(
+            (ownedList) => ownedList.id === existingList.id,
+          ) && existingList.userName !== userName,
       );
 
-      window.marketListData = [...ownedLists, ...sharedListsAlreadyLoaded];
+      // Aplica proteção anti-regressão ao mesclar as listas próprias:
+      // substitui cada lista própria em memória apenas se o dado recebido do Firestore
+      // for mais recente (baseado em updatedAt).
+      const mergedOwnedLists = mergeListDataWithTimestampProtection(
+        // Passa apenas as listas próprias que já estão em memória como base
+        window.marketListData.filter(
+          (existingList) => existingList.userName === userName,
+        ),
+        ownedListsFromFirestore,
+      );
+
+      // Reconstrói o marketListData: listas próprias mescladas + compartilhadas preservadas
+      window.marketListData = [...mergedOwnedLists, ...sharedListsAlreadyLoaded];
 
       if (isFirstLoad) {
         window.showScreen("home-screen");
@@ -975,8 +1082,14 @@ function initFirebaseListener(userName) {
             .getElementById("market-list-screen-details")
             .classList.contains("screen-hidden")
         ) {
-          window.resolveCurrentListIndex();
-          window.renderListDetails();
+          const hasActivePontualListener =
+            window.getActiveDetailsListIdentifier &&
+            window.getActiveDetailsListIdentifier() !== null;
+
+          if (!hasActivePontualListener) {
+            window.resolveCurrentListIndex();
+            window.renderListDetails();
+          }
         }
       }
     },
