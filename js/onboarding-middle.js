@@ -19,7 +19,7 @@ export function createOnboardingMiddleScreen() {
     <div class="onboarding-middle-image-area">
       <img
         class="onboarding-middle-image"
-        src="../assets/onboarding-finish.svg"
+        src="../assets/onboarding-middle.svg"
         alt="Ilustração de organização de compras"
         draggable="false" />
     </div>
