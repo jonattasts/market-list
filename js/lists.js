@@ -454,14 +454,16 @@ function renderListsForCurrentPage() {
 
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
+        let price = item.price || item.totalValue;
         totalItemsCount++;
+
         if (item.checked) purchasedItemsCount++;
-        const unitPrice = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
+
+        price = parseFloat(price.replace(/\./g, "").replace(",", "."));
+
         const quantity = item.quantity || 1;
-        if (!isNaN(unitPrice)) {
-          const totalItemValue = unitPrice * quantity;
+        if (!isNaN(price)) {
+          const totalItemValue = price * quantity;
           subtotalValue += totalItemValue;
           if (item.checked) totalCheckedValue += totalItemValue;
         }

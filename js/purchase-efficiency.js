@@ -33,6 +33,70 @@ window.loadPurchaseEfficiencyModule = function () {
 };
 
 /**
+ * Obtém o valor numérico do preço unitário de um item
+ * Retorna null se o preço não estiver definido ou for inválido
+ *
+ * @param {Object} item - Objeto do item
+ * @returns {number|null} Valor numérico do preço unitário ou null
+ */
+function getItemUnitPriceNumericValue(item) {
+  if (!item.price || item.price === null || item.price.trim() === "") {
+    return null;
+  }
+  const numericValue = parseFloat(
+    item.price.replace(/\./g, "").replace(",", "."),
+  );
+  return isNaN(numericValue) ? null : numericValue;
+}
+
+/**
+ * Obtém o valor numérico do valor total de um item
+ * Retorna null se o valor total não estiver definido ou for inválido
+ *
+ * @param {Object} item - Objeto do item
+ * @returns {number|null} Valor numérico do valor total ou null
+ */
+function getItemTotalValueNumericValue(item) {
+  if (
+    !item.totalValue ||
+    item.totalValue === null ||
+    item.totalValue.trim() === ""
+  ) {
+    return null;
+  }
+  const numericValue = parseFloat(
+    item.totalValue.replace(/\./g, "").replace(",", "."),
+  );
+  return isNaN(numericValue) ? null : numericValue;
+}
+
+/**
+ * Calcula o valor efetivo de um item para métricas financeiras
+ * Prioriza o valor total informado, senão calcula (preço unitário × quantidade)
+ * Se não houver preço unitário, usa o valor total como fallback
+ *
+ * @param {Object} item - Objeto do item
+ * @returns {number} Valor efetivo do item para cálculos financeiros
+ */
+function calculateEffectiveItemValueForMetrics(item) {
+  // Se valor total foi informado, usa ele diretamente
+  const totalValueNumeric = getItemTotalValueNumericValue(item);
+  if (totalValueNumeric !== null) {
+    return totalValueNumeric;
+  }
+
+  // Se não há valor total mas há preço unitário, calcula
+  const unitPriceNumeric = getItemUnitPriceNumericValue(item);
+  const itemQuantity = item.quantity || 1;
+  if (unitPriceNumeric !== null) {
+    return unitPriceNumeric * itemQuantity;
+  }
+
+  // Se não há nenhum valor, retorna 0
+  return 0;
+}
+
+/**
  * Processa dados de eficiência de compra
  */
 function processPurchaseEfficiencyData(filteredLists, allLists) {
@@ -58,17 +122,14 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
         // Conta 1 por linha de produto (não pela quantidade)
         totalItemsAdded += 1;
 
-        const unitValue = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-        const quantity = item.quantity || 1;
-        const totalItemValue = unitValue * quantity;
+        const effectiveItemValue = calculateEffectiveItemValueForMetrics(item);
+        const itemQuantity = item.quantity || 1;
 
-        if (item.checked) {
+        if (item.checked && effectiveItemValue > 0) {
           // Conta 1 por linha de produto marcado (não pela quantidade)
           totalItemsChecked += 1;
-          categoryTotals[category.name] += totalItemValue;
-          totalSpentInPeriod += totalItemValue;
+          categoryTotals[category.name] += effectiveItemValue;
+          totalSpentInPeriod += effectiveItemValue;
         }
       });
     });
@@ -103,13 +164,14 @@ function calculateMonthlyConversionRate(allLists) {
   if (!container) return;
 
   const currentFilterKey = JSON.stringify(window.activeFilter);
+
   if (
     window.cachedDashboardData.conversionRateItems &&
     window.cachedDashboardData.lastFilter === currentFilterKey
   ) {
     window.renderPaginatedList(
       container,
-      cachedDashboardData.conversionRateItems,
+      window.cachedDashboardData.conversionRateItems,
       "conversionRate",
       (item) => `
         <div class="conversion-month-info">

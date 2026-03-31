@@ -366,7 +366,6 @@
       <!-- ===================== NEW ITEM SCREEN ================== -->
       <!-- ============================================================= -->
       <div id="new-item-screen" class="screen-hidden">
-
         <header class="small">
 
           <div class="header-action"
@@ -413,11 +412,32 @@
                 min="1" />
             </div>
 
+            <!-- Valor Total -->
+            <div class="input-field mt-20">
+              <label>Valor Total (R$)</label>
+              <input type="text" id="item-total-value-input" placeholder="0,00"
+                oninput="formatCurrencyInput(this)" />
+              <span class="input-hint">
+                💡 Informe quando o item não for precificável unitariamente (ex:
+                frutas/legumes por peso)
+              </span>
+            </div>
+
             <!-- Categoria -->
             <div class="input-field mt-20">
               <label>Categoria</label>
               <select id="item-category-select"
                 class="category-select-input"></select>
+            </div>
+
+            <!-- Toggle: Já foi pego -->
+            <div class="input-field mt-20">
+              <div class="toggle-container" onclick="toggleItemPickedStatus()">
+                <span class="toggle-label">Já foi pego</span>
+                <div class="toggle-switch" id="item-picked-toggle">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
             </div>
 
             <!-- Botão Salvar Item -->

@@ -246,6 +246,71 @@ window.exitDetailsScreen = function () {
   window.showScreen("market-lists-screen");
 };
 
+/**
+ * Obtém o valor numérico do preço unitário de um item
+ * Retorna null se o preço não estiver definido ou for inválido
+ *
+ * @param {Object} item - Objeto do item
+ * @returns {number|null} Valor numérico do preço unitário ou null
+ */
+function getUnitPriceNumericValue(item) {
+  if (!item.price || item.price === null || item.price.trim() === "") {
+    return null;
+  }
+  const numericValue = parseFloat(
+    item.price.replace(/\./g, "").replace(",", "."),
+  );
+  return isNaN(numericValue) ? null : numericValue;
+}
+
+/**
+ * Obtém o valor numérico do valor total de um item
+ * Retorna null se o valor total não estiver definido ou for inválido
+ *
+ * @param {Object} item - Objeto do item
+ * @returns {number|null} Valor numérico do valor total ou null
+ */
+function getTotalValueNumericValue(item) {
+  if (
+    !item.totalValue ||
+    item.totalValue === null ||
+    item.totalValue.trim() === ""
+  ) {
+    return null;
+  }
+  const numericValue = parseFloat(
+    item.totalValue.replace(/\./g, "").replace(",", "."),
+  );
+  return isNaN(numericValue) ? null : numericValue;
+}
+
+/**
+ * Calcula o valor total efetivo de um item para exibição e métricas
+ * Prioriza o valor total informado, senão calcula (preço unitário × quantidade)
+ * Se não houver preço unitário, usa o valor total como fallback
+ *
+ * @param {Object} item - Objeto do item
+ * @returns {number} Valor total efetivo do item
+ */
+function calculateEffectiveItemTotalValue(item) {
+  const itemQuantity = item.quantity || 1;
+
+  // Se valor total foi informado, usa ele diretamente
+  const totalValueNumeric = getTotalValueNumericValue(item);
+  if (totalValueNumeric !== null) {
+    return totalValueNumeric;
+  }
+
+  // Se não há valor total mas há preço unitário, calcula
+  const unitPriceNumeric = getUnitPriceNumericValue(item);
+  if (unitPriceNumeric !== null) {
+    return unitPriceNumeric * itemQuantity;
+  }
+
+  // Se não há nenhum valor, retorna 0
+  return 0;
+}
+
 window.renderListDetails = function () {
   // Resolve o índice pelo ID estável antes de renderizar,
   // garantindo que o onSnapshot não cause perda de referência da lista aberta
@@ -273,12 +338,33 @@ window.renderListDetails = function () {
     ? window.normalizeString(window.itemSearchInput.value)
     : "";
 
-  currentList.categories.forEach((category, catIdx) => {
+  // Cria uma cópia das categorias preservando o índice real de cada uma no array original.
+  const categoriesWithOriginalIndexes = currentList.categories.map(
+    (category, originalCategoryIndex) => ({
+      category,
+      originalCategoryIndex,
+    }),
+  );
+
+  // Ordena alfabeticamente pelo nome da categoria apenas para exibição visual
+  const sortedCategoriesWithIndexes = [...categoriesWithOriginalIndexes].sort(
+    (categoryEntryA, categoryEntryB) =>
+      categoryEntryA.category.name.localeCompare(
+        categoryEntryB.category.name,
+        "pt-BR",
+        { sensitivity: "base" },
+      ),
+  );
+
+  sortedCategoriesWithIndexes.forEach(({ category, originalCategoryIndex }) => {
     const filteredItems = category.items.filter((item) => {
       const nameMatch = window.normalizeString(item.name).includes(term);
       const descMatch = window.normalizeString(item.desc).includes(term);
-      const priceMatch = item.price.includes(term);
-      return nameMatch || descMatch || priceMatch;
+      const priceMatch = item.price ? item.price.includes(term) : false;
+      const totalValueMatch = item.totalValue
+        ? item.totalValue.includes(term)
+        : false;
+      return nameMatch || descMatch || priceMatch || totalValueMatch;
     });
 
     if (term !== "" && filteredItems.length === 0) return;
@@ -290,8 +376,8 @@ window.renderListDetails = function () {
     const categoryActionsHTML = userPermissions.canEdit
       ? `
         <div style="display: flex; gap: 15px; align-items: center;">
-          <ion-icon name="create-outline" onclick="openEditCategoryForm(${catIdx})" style="color: var(--primary); font-size: 20px;"></ion-icon>
-          <ion-icon name="trash-outline" onclick="deleteCategory(${catIdx})" style="color: var(--danger); font-size: 18px;"></ion-icon>
+          <ion-icon name="create-outline" onclick="openEditCategoryForm(${originalCategoryIndex})" style="color: var(--primary); font-size: 20px;"></ion-icon>
+          <ion-icon name="trash-outline" onclick="deleteCategory(${originalCategoryIndex})" style="color: var(--danger); font-size: 18px;"></ion-icon>
         </div>
       `
       : "";
@@ -326,10 +412,10 @@ window.renderListDetails = function () {
 
         if (userPermissions.canEdit) {
           actionButtons.innerHTML = `
-                <button onclick="enterEditMode(${catIdx}, ${itemIdx})" style="background: var(--primary); width: 75px;">
+                <button onclick="enterEditMode(${originalCategoryIndex}, ${itemIdx})" style="background: var(--primary); width: 75px;">
                     <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
                 </button>
-                <button onclick="confirmDeleteItem(${catIdx}, ${itemIdx})" style="background: var(--danger); width: 75px;">
+                <button onclick="confirmDeleteItem(${originalCategoryIndex}, ${itemIdx})" style="background: var(--danger); width: 75px;">
                     <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
                 </button>
               `;
@@ -345,17 +431,16 @@ window.renderListDetails = function () {
           card.ontouchend = window.handleTouchEnd;
         }
 
-        const valorUnitario = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
-        const qtd = item.quantity || 1;
-        const totalItemExibido = (valorUnitario * qtd).toLocaleString("pt-BR", {
+        const displayTotalValue = calculateEffectiveItemTotalValue(item);
+        const itemQuantity = item.quantity || 1;
+
+        const formattedTotalValue = displayTotalValue.toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
         });
 
         const checkboxOnClickAttribute = userPermissions.canEdit
-          ? `onclick="toggleItemStatus(${catIdx}, ${itemIdx})"`
+          ? `onclick="toggleItemStatus(${originalCategoryIndex}, ${itemIdx})"`
           : "";
         const checkboxCursorStyle = userPermissions.canEdit
           ? ""
@@ -365,12 +450,12 @@ window.renderListDetails = function () {
                 <div class="item-info">
                     <div class="custom-check" ${checkboxOnClickAttribute} style="${checkboxCursorStyle}"></div>
                     <div class="text-group">
-                        <span class="item-name">${item.name} <span style="font-size: 11px; color: var(--text-secondary);">(x${qtd})</span></span>
+                        <span class="item-name">${item.name} <span style="font-size: 11px; color: var(--text-secondary);">(x${itemQuantity})</span></span>
                         <span class="item-desc">${item.desc}</span>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="item-price">${totalItemExibido}</span>
+                    <span class="item-price">${formattedTotalValue}</span>
                 </div>
             `;
         swipeContainer.appendChild(actionButtons);
@@ -450,15 +535,12 @@ window.updateDashboard = function () {
     cat.items.forEach((item) => {
       totalItems++;
       if (item.checked) purchasedItems++;
-      const valorUnitario = parseFloat(
-        item.price.replace(/\./g, "").replace(",", "."),
-      );
-      const qtd = item.quantity || 1;
 
-      if (!isNaN(valorUnitario)) {
-        const valorTotalItem = valorUnitario * qtd;
-        subtotalGeral += valorTotalItem;
-        if (item.checked) totalMarcado += valorTotalItem;
+      const itemTotalValue = calculateEffectiveItemTotalValue(item);
+
+      if (!isNaN(itemTotalValue) && itemTotalValue > 0) {
+        subtotalGeral += itemTotalValue;
+        if (item.checked) totalMarcado += itemTotalValue;
       }
     });
   });

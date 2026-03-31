@@ -9,6 +9,7 @@
  * Busca em TODAS as listas (até 3 meses atrás) e exibe o item
  * quando encontrar pelo menos 2 ocorrências em listas diferentes.
  * Compara sempre a última ocorrência com a penúltima ocorrência do item.
+ * Considera apenas itens que possuem preço unitário.
  */
 window.loadPersonalInflationModule = function () {
   const data = window.marketListData;
@@ -79,6 +80,27 @@ function updateInflationEconomyCard(cpiItems) {
 }
 
 /**
+ * Obtém o valor numérico do preço unitário de uma ocorrência de item
+ * Retorna null se o preço não estiver definido ou for inválido
+ *
+ * @param {Object} occurrence - Objeto da ocorrência do item
+ * @returns {number|null} Valor numérico do preço ou null
+ */
+function getOccurrenceUnitPriceNumericValue(occurrence) {
+  if (
+    !occurrence.price ||
+    occurrence.price === null ||
+    occurrence.price.trim() === ""
+  ) {
+    return null;
+  }
+  const numericValue = parseFloat(
+    occurrence.price.replace(/\./g, "").replace(",", "."),
+  );
+  return isNaN(numericValue) ? null : numericValue;
+}
+
+/**
  * Processa dados de inflação pessoal e renderiza a interface
  */
 function processPersonalInflationData(filteredLists) {
@@ -140,13 +162,15 @@ function processPersonalInflationData(filteredLists) {
       .map((occurrence) => ({
         ...occurrence,
         dateObj: window.parseDateLocal(occurrence.date),
-        valorNumerico: parseFloat(
-          occurrence.price.replace(/\./g, "").replace(",", "."),
-        ),
+        valorNumerico: getOccurrenceUnitPriceNumericValue(occurrence),
       }))
+      .filter((occurrence) => occurrence.valorNumerico !== null)
       .sort(
         (occurrenceA, occurrenceB) => occurrenceB.dateObj - occurrenceA.dateObj,
       );
+
+    // Se não há ocorrências com preço unitário válido, ignora o item
+    if (sortedOccurrences.length < 2) return;
 
     // Pega a última e a penúltima ocorrência (de listas diferentes)
     const lastOccurrence = sortedOccurrences[0];
@@ -193,7 +217,7 @@ function processPersonalInflationData(filteredLists) {
   });
 
   if (cpiItems.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
+    container.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente com preço unitário encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
     return;
   }
 

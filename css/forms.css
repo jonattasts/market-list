@@ -111,3 +111,66 @@
 .header-title-left {
   text-align: start;
 }
+
+/* ==========================================================================
+   TOGGLE SWITCH
+   ========================================================================== */
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  background-color: var(--bg-secondary);
+  border-radius: 14px;
+  transition: background-color 0.3s ease;
+  border: 2px solid var(--border-color);
+}
+
+.toggle-switch.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(22px);
+}
+
+/* ==========================================================================
+   INPUT HINT - Observação abaixo do campo
+   ========================================================================== */
+
+.input-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.4;
+}

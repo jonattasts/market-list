@@ -290,6 +290,8 @@ window.meetsRecurrenceCriteria = meetsRecurrenceCriteria;
 /**
  * Extrai dados de recorrência de uma lista de compras
  * Retorna mapa de itens com suas listIds e lastPurchaseDate
+ *
+ * Ignora o item quando preço unitário é null
  */
 function extractRecurringData(lists) {
   const itemsData = {};
@@ -297,7 +299,7 @@ function extractRecurringData(lists) {
   lists.forEach((list) => {
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
-        if (!item.checked) return;
+        if (!item.checked && !item.price) return;
 
         const normalizedName = window.normalizeString(item.name);
 

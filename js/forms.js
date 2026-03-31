@@ -169,15 +169,63 @@ window.handleSaveCategory = async function () {
   window.renderListDetails();
 };
 
+/**
+ * Estado do toggle "Já foi pego" para novo item
+ */
+window.isItemPickedStatus = false;
+
+/**
+ * Atualiza visualmente o toggle e o estado interno
+ */
+window.toggleItemPickedStatus = function () {
+  window.isItemPickedStatus = !window.isItemPickedStatus;
+  const toggleElement = document.getElementById("item-picked-toggle");
+  if (toggleElement) {
+    toggleElement.classList.toggle("active", window.isItemPickedStatus);
+  }
+};
+
+/**
+ * Reseta o estado do toggle "Já foi pego"
+ */
+window.resetItemPickedToggle = function () {
+  window.isItemPickedStatus = false;
+  const toggleElement = document.getElementById("item-picked-toggle");
+  if (toggleElement) {
+    toggleElement.classList.remove("active");
+  }
+};
+
+/**
+ * Define o estado do toggle "Já foi pego" baseado em um valor booleano
+ *
+ * @param {boolean} isPicked - Estado desejado do toggle
+ */
+window.setItemPickedToggleState = function (isPicked) {
+  window.isItemPickedStatus = isPicked;
+  const toggleElement = document.getElementById("item-picked-toggle");
+  if (toggleElement) {
+    toggleElement.classList.toggle("active", isPicked);
+  }
+};
+
 window.openNewItemForm = async function () {
   window.editingItemIndex = null;
   window.editingCategoryIndex = null;
+
+  window.resetItemPickedToggle();
 
   document.getElementById("item-form-title").innerText = "Novo Item";
   window.itemNameInput.value = "";
   window.itemDescInput.value = "";
   window.itemPriceInput.value = "";
   window.itemQuantityInput.value = "1";
+
+  const totalValueInput = document.getElementById("item-total-value-input");
+  if (totalValueInput) {
+    totalValueInput.value = "";
+  }
+
   window.itemCategorySelect.innerHTML = "";
 
   const categories = window.marketListData[window.currentListIndex].categories;
@@ -210,11 +258,19 @@ window.enterEditMode = function (catIdx, itemIdx) {
   window.editingItemIndex = itemIdx;
   window.editingCategoryIndex = catIdx;
 
+  window.setItemPickedToggleState(item.checked || false);
+
   document.getElementById("item-form-title").innerText = "Editar Item";
   window.itemNameInput.value = item.name;
   window.itemDescInput.value = item.desc;
-  window.itemPriceInput.value = item.price;
+  window.itemPriceInput.value = item.price || "";
   window.itemQuantityInput.value = item.quantity || 1;
+
+  const totalValueInput = document.getElementById("item-total-value-input");
+  if (totalValueInput) {
+    totalValueInput.value = item.totalValue || "";
+  }
+
   window.itemCategorySelect.innerHTML = "";
 
   window.marketListData[window.currentListIndex].categories.forEach(
@@ -230,53 +286,129 @@ window.enterEditMode = function (catIdx, itemIdx) {
   window.showScreen("new-item-screen");
 };
 
+/**
+ * Converte uma string de valor monetário formatado (BRL) para número
+ * Remove pontos de milhar e substitui vírgula decimal por ponto
+ *
+ * @param {string} formattedValue - Valor formatado (ex: "1.234,56")
+ * @returns {number} Valor numérico (ex: 1234.56)
+ */
+function parseFormattedCurrencyToNumber(formattedValue) {
+  if (!formattedValue || formattedValue.trim() === "") {
+    return 0;
+  }
+  const sanitizedValue = formattedValue.replace(/\./g, "").replace(",", ".");
+  return parseFloat(sanitizedValue) || 0;
+}
+
+/**
+ * Formata um número para string de moeda BRL
+ *
+ * @param {number} numericValue - Valor numérico
+ * @returns {string} Valor formatado em BRL (ex: "1.234,56")
+ */
+function formatNumberToCurrencyString(numericValue) {
+  return numericValue.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Verifica se uma string de valor monetário está preenchida e válida
+ *
+ * @param {string} value - Valor a ser verificado
+ * @returns {boolean} True se o valor for válido e maior que zero
+ */
+function isValidCurrencyValue(value) {
+  if (!value || value.trim() === "" || value === "0,00") {
+    return false;
+  }
+  const numericValue = parseFormattedCurrencyToNumber(value);
+  return numericValue > 0;
+}
+
 window.handleSaveItem = async function () {
   const name = window.capitalize(window.itemNameInput.value);
-  let desc = window.capitalize(window.itemDescInput.value);
-  if (!desc) desc = "Unidade";
+  let description = window.capitalize(window.itemDescInput.value);
+  if (!description) description = "Unidade";
 
-  const price = window.itemPriceInput.value.trim() || "0,00";
+  const unitPriceRawInput = window.itemPriceInput.value.trim();
   const quantity = parseInt(window.itemQuantityInput.value) || 1;
-  const catIdx = parseInt(window.itemCategorySelect.value);
+  const categoryIndex = parseInt(window.itemCategorySelect.value);
+
+  const totalValueInputElement = document.getElementById(
+    "item-total-value-input",
+  );
+  const totalValueRawInput = totalValueInputElement
+    ? totalValueInputElement.value.trim()
+    : "";
+
+  const isChecked = window.isItemPickedStatus;
+  let unitPrice = null;
+  let itemTotalValue = null;
 
   if (!name) {
     window.showToast("O nome do produto é obrigatório", "danger");
     return;
   }
 
+  if (isValidCurrencyValue(unitPriceRawInput)) {
+    unitPrice = unitPriceRawInput;
+  }
+
+  if (isValidCurrencyValue(totalValueRawInput)) {
+    itemTotalValue = totalValueRawInput;
+  }
+
+  // Regras de cálculo entre preço unitário e valor total:
+  // - Preço unitário informado, total vazio → calcula o total (unitário × quantidade)
+  // - Total informado, preço unitário vazio → mantém total; preço unitário permanece null
+  // - Ambos informados → mantém ambos como o usuário digitou
+  // - Nenhum informado → ambos ficam null
+  if (unitPrice && !itemTotalValue) {
+    const unitPriceNumeric = parseFormattedCurrencyToNumber(unitPrice);
+    const calculatedTotalValue = unitPriceNumeric * quantity;
+    itemTotalValue = formatNumberToCurrencyString(calculatedTotalValue);
+  }
+
   if (window.editingItemIndex !== null) {
-    if (catIdx !== window.editingCategoryIndex) {
+    if (categoryIndex !== window.editingCategoryIndex) {
       const item = window.marketListData[window.currentListIndex].categories[
         window.editingCategoryIndex
       ].items.splice(window.editingItemIndex, 1)[0];
 
       item.name = name;
-      item.desc = desc;
-      item.price = price;
+      item.desc = description;
+      item.price = unitPrice;
       item.quantity = quantity;
+      item.totalValue = itemTotalValue;
+      item.checked = isChecked;
       window.marketListData[window.currentListIndex].categories[
-        catIdx
+        categoryIndex
       ].items.push(item);
     } else {
       const item =
-        window.marketListData[window.currentListIndex].categories[catIdx].items[
-          window.editingItemIndex
-        ];
+        window.marketListData[window.currentListIndex].categories[categoryIndex]
+          .items[window.editingItemIndex];
       item.name = name;
-      item.desc = desc;
-      item.price = price;
+      item.desc = description;
+      item.price = unitPrice;
       item.quantity = quantity;
+      item.totalValue = itemTotalValue;
+      item.checked = isChecked;
     }
     window.showToast("Item atualizado!", "success");
   } else {
     window.marketListData[window.currentListIndex].categories[
-      catIdx
+      categoryIndex
     ].items.push({
       name,
-      desc,
-      price,
+      desc: description,
+      price: unitPrice,
       quantity,
-      checked: false,
+      totalValue: itemTotalValue,
+      checked: isChecked,
     });
     window.showToast("Item adicionado!", "success");
   }
