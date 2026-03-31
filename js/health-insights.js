@@ -46,6 +46,9 @@ function processHealthInsightsData(filteredLists) {
  * Soma o valor total gasto (preço x quantidade) de itens comprados (checked)
  * em cada categoria de saúde: saudável, processado e outros.
  *
+ * Itens sem preço ou valor total cadastrado (null/undefined/vazio) são ignorados
+ * no cálculo de valor monetário.
+ *
  * @param {Array} filteredLists - Listas filtradas pelo filtro ativo
  */
 function calculateHealthRatio(filteredLists) {
@@ -295,15 +298,19 @@ function calculateHealthRatio(filteredLists) {
   filteredLists.forEach((list) => {
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
-        // Considera apenas itens efetivamente comprados (checked)
-        if (!item.checked) return;
+        // Considera apenas itens efetivamente comprados (checked) e com valor monetário válido (preço ou valor total)
+        if (!item.checked || (!item.price && !item.totalValue)) return;
 
         const normalizedItemName = window.normalizeString(item.name);
-        const unitValue = parseFloat(
-          item.price.replace(/\./g, "").replace(",", "."),
-        );
+        let price = item.price || item.totalValue;
+
+        price = parseFloat(price.replace(/\./g, "").replace(",", "."));
+
+        // Ignora valores que não puderam ser convertidos para número válido
+        if (isNaN(price)) return;
+
         const quantity = item.quantity || 1;
-        const totalItemValue = unitValue * quantity;
+        const totalItemValue = price * quantity;
 
         // Classifica o item pelo seu nome individualmente
         const isHealthy = itemClassification.healthy.some((keyword) =>
@@ -336,11 +343,15 @@ function renderHealthRatioChart(healthy, processed, others) {
      para garantir que a cor da legenda seja correta desde o início,
      independente de o tema dark ou light estar ativo */
   const isDark = document.body.getAttribute("data-theme") === "dark";
-  const currentLegendColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(20, 24, 27, 0.7)";
+  const currentLegendColor = isDark
+    ? "rgba(255,255,255,0.7)"
+    : "rgba(20, 24, 27, 0.7)";
 
   /* CORRIGIDO: Cor de "Outros" alterada de rgba(20, 24, 27, 0.3) — invisível no dark —
      para uma cor neutra visível nos dois temas (cinza médio com boa opacidade) */
-  const othersSliceColor = isDark ? "rgba(180, 180, 195, 0.5)" : "rgba(120, 120, 140, 0.4)";
+  const othersSliceColor = isDark
+    ? "rgba(180, 180, 195, 0.5)"
+    : "rgba(120, 120, 140, 0.4)";
 
   window.chartHealthProfile = new Chart(ctx, {
     type: "pie",
