@@ -749,6 +749,11 @@ window.initializeHomeScreen = function () {
  * Aplica o skeleton da aba padrão do dashboard diretamente no DOM,
  * antes da tela se tornar visível em executeScreenNavigation.
  *
+ * Além de preparar o skeleton e o módulo ativo, reseta o estado visual
+ * dos botões de aba para garantir que o botão da aba padrão apareça
+ * marcado como active desde o primeiro frame — evitando o flash da última
+ * aba visitada antes de initDashboardAnalisys atualizar os botões.
+ *
  */
 function applyDashboardSkeletonBeforeNavigation() {
   // A aba padrão ao abrir o dashboard é sempre "purchase-efficiency"
@@ -762,6 +767,18 @@ function applyDashboardSkeletonBeforeNavigation() {
   // Remove a classe active de todos os módulos para garantir estado limpo
   const allTabModules = document.querySelectorAll(".dashboard-tab-module");
   allTabModules.forEach((module) => module.classList.remove("active"));
+
+  // Reseta o estado visual dos botões de aba ANTES da tela ficar visível,
+  // evitando o flash da última aba visitada enquanto initDashboardAnalisys
+  // ainda não foi chamado para atualizar os botões via activateDashboardTab
+  const allTabButtons = document.querySelectorAll(".dashboard-tab-button");
+  allTabButtons.forEach((tabButton) => {
+    if (tabButton.getAttribute("data-tab") === defaultTabName) {
+      tabButton.classList.add("active");
+    } else {
+      tabButton.classList.remove("active");
+    }
+  });
 
   if (window.showTabSkeleton) {
     window.showTabSkeleton(defaultTabName);
