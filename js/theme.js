@@ -82,6 +82,20 @@ function toggleTheme() {
 }
 
 /**
+ * Reseta o tema para o padrão light e remove a preferência salva no
+ * localStorage. Deve ser chamado durante o logout para garantir que a
+ * tela de onboarding e as demais telas sejam exibidas com o tema correto,
+ * independente da preferência que o usuário tinha antes de sair.
+ */
+function resetThemeToLight() {
+  // Remove a preferência salva para não persistir entre sessões de usuários distintos
+  localStorage.removeItem(THEME_STORAGE_KEY);
+
+  // Força o tema light imediatamente
+  applyTheme("light");
+}
+
+/**
  * 
  * Atualiza as cores dos gráficos Chart.js quando o tema muda.
  *
@@ -144,6 +158,9 @@ function initTheme() {
 window.toggleTheme = toggleTheme;
 window.applyTheme = applyTheme;
 window.updateChartsTheme = updateChartsTheme;
+
+// Expõe o reset de tema para ser chamado pelo logout no index.js
+window.resetThemeToLight = resetThemeToLight;
 
 // Inicializa o tema assim que o DOM estiver pronto
 document.addEventListener("DOMContentLoaded", initTheme);

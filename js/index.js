@@ -665,6 +665,9 @@ async function handleAuthenticatedUser(authenticatedUser) {
           }
           isHandlingAuthenticatedUser = false;
           await firebaseAuth.signOut();
+          
+          window.resetThemeToLight();
+
           executeScreenNavigation("onboarding-screen");
           setTimeout(() => {
             window.showToast(
@@ -1161,6 +1164,8 @@ window.handleLogout = async function () {
     window.marketListData = [];
     isFirstLoad = true;
     isHandlingAuthenticatedUser = false;
+
+    window.resetThemeToLight();
 
     executeScreenNavigation("onboarding-screen");
   } catch (logoutError) {

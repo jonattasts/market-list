@@ -276,3 +276,20 @@
   line-height: 1.5;
   margin: 0;
 }
+
+/* ==========================================================================
+   ESTADO DE LOADING NOS BOTÕES DO MODAL (CADASTRO / LOGIN)
+   Cancela a transição global de `color` herdada do index.css (*{ transition })
+   para que o texto desapareça instantaneamente ao adicionar .is-loading,
+   em vez de fazer um fade suave indesejado antes do spinner aparecer.
+   ========================================================================== */
+
+.button-start.is-loading {
+  /* Cancela apenas color e opacity — mantém as demais transições intactas */
+  transition:
+    background-color 0.7s ease,
+    border-color 0.7s ease,
+    box-shadow 0.7s ease,
+    color 0s,
+    opacity 0s !important;
+}
