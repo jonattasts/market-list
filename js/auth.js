@@ -137,6 +137,11 @@ window.closeAuthEmailModal = function () {
     const inputElement = document.getElementById(inputId);
     if (inputElement) inputElement.value = "";
   });
+
+  // Remove o estado de loading de todos os botões do modal ao fechar,
+  // garantindo que o spinner não persista entre aberturas do modal
+  const allModalButtons = modalOverlay.querySelectorAll("button");
+  allModalButtons.forEach((button) => button.classList.remove("is-loading"));
 };
 
 /**
@@ -250,7 +255,7 @@ window.handleEmailSignup = async function () {
     // Tratamento de mensagens de erro
     const friendlyErrorMessages = {
       "auth/email-already-in-use":
-        "Este e-mail já está cadastrado. Use a aba \"Entrar\".",
+        'Este e-mail já está cadastrado. Use a aba "Entrar".',
       "auth/invalid-email": "E-mail inválido. Verifique e tente novamente.",
       "auth/weak-password": "Senha muito fraca. Use pelo menos 6 caracteres.",
       "auth/network-request-failed": "Sem conexão. Verifique sua internet.",
@@ -270,6 +275,9 @@ window.handleEmailSignup = async function () {
 
 /**
  * Processa o login de usuário existente com e-mail e senha.
+ * Exibe um spinner no botão Entrar durante o processo de autenticação.
+ * Remove o spinner explicitamente em caso de erro; em caso de sucesso,
+ * o closeAuthEmailModal garante a limpeza ao fechar o modal.
  */
 window.handleEmailLogin = async function () {
   const emailInput = document.getElementById("auth-login-email-input");
@@ -292,9 +300,11 @@ window.handleEmailLogin = async function () {
     // Realiza o login — onAuthStateChanged cuida do restante
     await signInWithEmailAndPassword(firebaseAuth, email, password);
 
-    // Fecha o modal após login bem-sucedido
-    window.closeAuthEmailModal();
+    setTimeout(() => {
+      window.closeAuthEmailModal();
+    }, 750);
   } catch (loginError) {
+    // Remove o spinner explicitamente em caso de erro para restaurar o botão
     if (submitButton) submitButton.classList.remove("is-loading");
 
     console.error("Erro no login:", loginError);

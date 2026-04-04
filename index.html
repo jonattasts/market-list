@@ -207,11 +207,6 @@
 
           <!-- Header Integrado -->
           <header>
-            <!-- Espaço vazio à esquerda para centralizar -->
-            <div class="header-action"></div>
-
-            <h1>Market List</h1>
-
             <!-- Botão de alternância de tema -->
             <div class="header-action theme-toggle-button"
               onclick="toggleTheme()" aria-label="Alternar tema">
@@ -220,6 +215,16 @@
               <ion-icon name="sunny-outline"
                 class="theme-icon-dark screen-hidden"></ion-icon>
             </div>
+
+            <h1>Market List</h1>
+
+            <!-- Botão de logout —  encerra a sessão sem apagar dados no banco -->
+            <div class="header-action"
+              onclick="handleLogout()"
+              aria-label="Sair da conta">
+              <ion-icon name="log-out-outline"></ion-icon>
+            </div>
+
           </header>
 
           <!-- Conteúdo de Boas-Vindas -->

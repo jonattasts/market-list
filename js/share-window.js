@@ -11,6 +11,7 @@ import {
   collection,
   query,
   where,
+  onSnapshot,
   serverTimestamp,
 } from "./firebase.js";
 
@@ -140,12 +141,13 @@ function getShareFormTemplate() {
  */
 function getSharedUsersListTemplate(sharedUsers) {
   const usersItemsHTML = sharedUsers
-    .map(
-      (sharedUser, userIndex) => {
-        // Sanitiza o displayName antes de injetar no HTML
-        const safeDisplayName = sanitizeHtmlInput(sharedUser.displayName || sharedUser.name || "");
+    .map((sharedUser, userIndex) => {
+      // Sanitiza o displayName antes de injetar no HTML
+      const safeDisplayName = sanitizeHtmlInput(
+        sharedUser.displayName || sharedUser.name || "",
+      );
 
-        return `
+      return `
           <div class="share-user-item" id="share-user-item-${userIndex}">
             <ion-icon name="person-circle-outline" class="share-user-icon"></ion-icon>
             <div class="share-user-info">
@@ -166,8 +168,7 @@ function getSharedUsersListTemplate(sharedUsers) {
             </button>
           </div>
         `;
-      },
-    )
+    })
     .join("");
 
   return `
@@ -301,7 +302,7 @@ function extractUidsFromSharedUsersArray(sharedUsersArray) {
 /**
  * Trata o nome da pessoa a ser adicionada ao compartilhamento,
  * buscando pelo displayName no Firestore e linkando pelo UID.
- * Valida os dados, persiste no Firebase e atualiza os dados em cache. 
+ * Valida os dados, persiste no Firebase e atualiza os dados em cache.
  */
 window.handleConfirmShare = async function () {
   const nameInputElement = document.getElementById("share-user-name-input");
@@ -334,7 +335,10 @@ window.handleConfirmShare = async function () {
     window.normalizeString(normalizedDisplayName) ===
     window.normalizeString(currentUser.displayName || "")
   ) {
-    window.showToast("Você não pode compartilhar a lista com você mesmo.", "danger");
+    window.showToast(
+      "Você não pode compartilhar a lista com você mesmo.",
+      "danger",
+    );
     return;
   }
 
@@ -386,12 +390,12 @@ window.handleConfirmShare = async function () {
 
   // Extrai o array auxiliar de UIDs para permitir a query array-contains
   // no initSharedListsListener sem depender de match exato de objetos completos
-  const updatedSharedUidsArray = extractUidsFromSharedUsersArray(updatedSharedUsersArray);
+  const updatedSharedUidsArray = extractUidsFromSharedUsersArray(
+    updatedSharedUsersArray,
+  );
 
   const ownerDisplayName =
-    currentList.ownerDisplayName ||
-    currentUser.displayName ||
-    "";
+    currentList.ownerDisplayName || currentUser.displayName || "";
 
   try {
     // Persiste a nova lista de compartilhados no Firestore.
@@ -404,13 +408,19 @@ window.handleConfirmShare = async function () {
     });
 
     // Atualiza os dados em cache local para refletir imediatamente
-    window.marketListData[window.currentListIndex].sharedWith = updatedSharedUsersArray;
-    window.marketListData[window.currentListIndex].sharedUids = updatedSharedUidsArray;
-    window.marketListData[window.currentListIndex].ownerDisplayName = ownerDisplayName;
+    window.marketListData[window.currentListIndex].sharedWith =
+      updatedSharedUsersArray;
+    window.marketListData[window.currentListIndex].sharedUids =
+      updatedSharedUidsArray;
+    window.marketListData[window.currentListIndex].ownerDisplayName =
+      ownerDisplayName;
 
     // Fecha a janela e re-renderiza a tela de listas
     window.closeShareWindow();
-    window.showToast(`Lista compartilhada com ${normalizedDisplayName}!`, "success");
+    window.showToast(
+      `Lista compartilhada com ${normalizedDisplayName}!`,
+      "success",
+    );
 
     // Ativa (ou mantém ativo) o listener em tempo real do lado do dono.
     // Necessário para que o dono receba em tempo real as alterações feitas
@@ -461,7 +471,9 @@ window.handleRemoveSharedUser = async function (userIndex) {
   );
 
   // Mantém o campo auxiliar "sharedUids" sincronizado após a remoção
-  const updatedSharedUidsArray = extractUidsFromSharedUsersArray(updatedSharedUsersArray);
+  const updatedSharedUidsArray = extractUidsFromSharedUsersArray(
+    updatedSharedUsersArray,
+  );
 
   try {
     // Persiste a remoção no Firestore mantendo sharedUids sincronizado
@@ -473,8 +485,10 @@ window.handleRemoveSharedUser = async function (userIndex) {
     });
 
     // Atualiza os dados em cache local
-    window.marketListData[window.currentListIndex].sharedWith = updatedSharedUsersArray;
-    window.marketListData[window.currentListIndex].sharedUids = updatedSharedUidsArray;
+    window.marketListData[window.currentListIndex].sharedWith =
+      updatedSharedUsersArray;
+    window.marketListData[window.currentListIndex].sharedUids =
+      updatedSharedUidsArray;
 
     const safeRemovedName = sanitizeHtmlInput(
       userToRemove.displayName || userToRemove.name || "",
@@ -671,6 +685,10 @@ window.setActiveDetailsListIdentifier = function (listIdentifier) {
  * O listener de tempo real pontual (ativado ao abrir a lista) é gerenciado
  * separadamente em details.js via activateDetailsRealtimeListener.
  *
+ * A função de unsubscribe é exposta via window.unsubscribeSharedListsListener
+ * para que o handleLogout no index.js possa cancelá-la antes do signOut,
+ * evitando o erro "Missing or insufficient permissions" após o logout.
+ *
  * NOTA: Este listener usa a importação dinâmica para evitar dependências circulares
  * e é inicializado após o login do usuário.
  *
@@ -678,23 +696,19 @@ window.setActiveDetailsListIdentifier = function (listIdentifier) {
  */
 window.initSharedListsListener = async function (currentUserUid) {
   try {
-    const {
-      firestore: firestoreInstance,
-      collection: firestoreCollection,
-      query: firestoreQuery,
-      where: firestoreWhere,
-      onSnapshot,
-    } = await import("./firebase.js");
-
-    const sharedListsQuery = firestoreQuery(
-      firestoreCollection(firestoreInstance, "lists"),
-      firestoreWhere("sharedUids", "array-contains", currentUserUid),
+    const sharedListsQuery = query(
+      collection(firestore, "lists"),
+      where("sharedUids", "array-contains", currentUserUid),
     );
 
     // Usado para detectar quais listas foram removidas do compartilhamento
     let previousSharedListIds = new Set();
 
-    onSnapshot(
+    if (typeof window.unsubscribeSharedListsListener === "function") {
+      window.unsubscribeSharedListsListener();
+    }
+
+    window.unsubscribeSharedListsListener = onSnapshot(
       sharedListsQuery,
       (sharedSnapshot) => {
         const sharedListsFromFirestore = sharedSnapshot.docs.map(
@@ -711,7 +725,10 @@ window.initSharedListsListener = async function (currentUserUid) {
 
         // Detecta listas que estavam compartilhadas e deixaram de estar
         // (presentes no snapshot anterior mas ausentes no atual).
-        if (previousSharedListIds.size > 0 && !window.isDatabaseFieldMigrationInProgress) {
+        if (
+          previousSharedListIds.size > 0 &&
+          !window.isDatabaseFieldMigrationInProgress
+        ) {
           previousSharedListIds.forEach((previousListId) => {
             if (!currentSharedListIds.has(previousListId)) {
               const listInCache = window.marketListData.find(
@@ -816,8 +833,7 @@ window.initSharedListsListener = async function (currentUserUid) {
         // mantendo os dados mais recentes recebidos diretamente do documento
         const preservedOpenList = currentlyOpenListIdentifier
           ? window.marketListData.filter(
-              (existingList) =>
-                existingList.id === currentlyOpenListIdentifier,
+              (existingList) => existingList.id === currentlyOpenListIdentifier,
             )
           : [];
 
@@ -858,10 +874,10 @@ window.initSharedListsListener = async function (currentUserUid) {
         );
       },
     );
-  } catch (importError) {
+  } catch (listenerInitError) {
     console.error(
       "Erro ao inicializar listener de listas compartilhadas:",
-      importError,
+      listenerInitError,
     );
   }
 };

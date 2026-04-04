@@ -12,11 +12,13 @@ import {
   getDoc,
   getDocsFromServer,
   getDocs,
+  deleteDoc,
   query,
   orderBy,
   onSnapshot,
   where,
   limit,
+  signOut,
   onAuthStateChanged,
 } from "./firebase.js";
 
@@ -63,6 +65,8 @@ let isFirstLoad = true;
 // evitando que o onAuthStateChanged dispare múltiplas vezes enquanto
 // o fluxo de autenticação ainda está em andamento (ex: durante o overlay)
 let isHandlingAuthenticatedUser = false;
+
+let unsubscribeOwnedListsListener = null;
 
 /* ==========================================================================
    CRIPTOGRAFIA — AES-GCM COM CHAVE DERIVADA VIA PBKDF2
@@ -185,8 +189,15 @@ async function saveEncryptedUserDataToStorage(userUid, userDisplayName) {
   );
   const encryptedUid = await encryptData(userUid, encryptionKey);
 
-  // Armazena o uid em claro apenas para derivar a chave na próxima sessão.
-  localStorage.setItem("mkuid_ref", userUid);
+  // Criptografa também o uid de referência — usado para derivar a chave
+  // na próxima sessão via onAuthStateChanged. Mesmo que o uid de referência
+  // seja necessário para a descriptografia, mantê-lo criptografado impede
+  // leitura direta por extensões maliciosas ou scripts de terceiros.
+  // A descriptografia é possível pois o uid real vem do Firebase Auth SDK
+  // (onAuthStateChanged), que o entrega mesmo sem o localStorage.
+  const encryptedUidReference = await encryptData(userUid, encryptionKey);
+
+  localStorage.setItem("mkuid_ref", encryptedUidReference);
   localStorage.setItem("mku", encryptedDisplayName);
   localStorage.setItem("mkuid", encryptedUid);
 }
@@ -513,11 +524,13 @@ async function executeLegacyDataMigration(
     try {
       const legacyUserSnapshot = await getDoc(legacyUserReference);
       if (legacyUserSnapshot.exists()) {
-        const { deleteDoc: deleteDocument } = await import("./firebase.js");
-        await deleteDocument(legacyUserReference);
+        await deleteDoc(legacyUserReference);
       }
     } catch (legacyUserSnapshotError) {
-      console.error("Erro ao buscar documento legado:", legacyUserSnapshotError);
+      console.error(
+        "Erro ao buscar documento legado:",
+        legacyUserSnapshotError,
+      );
     }
 
     return true;
@@ -1107,17 +1120,48 @@ async function runSetupAnimation() {
    ========================================================================== */
 
 /**
+ * Cancela todos os listeners ativos do Firestore antes do signOut.
+ * Evita o erro "Missing or insufficient permissions" que ocorre quando
+ * o onSnapshot tenta ler dados com credenciais já invalidadas.
+ */
+function cancelActiveFirestoreListeners() {
+  // Cancela o listener das listas próprias do usuário (initFirebaseListener)
+  if (typeof unsubscribeOwnedListsListener === "function") {
+    unsubscribeOwnedListsListener();
+    unsubscribeOwnedListsListener = null;
+  }
+
+  // Cancela o listener das listas compartilhadas (initSharedListsListener no share-window.js)
+  if (typeof window.unsubscribeSharedListsListener === "function") {
+    window.unsubscribeSharedListsListener();
+    window.unsubscribeSharedListsListener = null;
+  }
+}
+
+/**
  * Realiza o logout do usuário, limpa os dados criptografados do localStorage
  * e redireciona para a tela de onboarding.
+ *
+ * Os listeners do Firestore são cancelados ANTES do signOut para evitar
+ * que o onSnapshot dispare com credenciais inválidas após a sessão ser encerrada.
  */
 window.handleLogout = async function () {
   try {
-    const { signOut } = await import("./firebase.js");
+    if (window.deactivateDetailsRealtimeListener) {
+      window.deactivateDetailsRealtimeListener();
+    }
+
+    cancelActiveFirestoreListeners();
+
+    // Realiza o logout no Firebase Auth — invalida a sessão no servidor
+    // sem alterar ou remover nenhum dado do Firestore do usuário
     await signOut(firebaseAuth);
+
     clearUserDataFromStorage();
     window.marketListData = [];
     isFirstLoad = true;
     isHandlingAuthenticatedUser = false;
+
     executeScreenNavigation("onboarding-screen");
   } catch (logoutError) {
     console.error("Erro ao fazer logout:", logoutError);
@@ -1491,6 +1535,10 @@ document.addEventListener("click", function (event) {
  * Inicializa o listener em tempo real das listas do Firestore.
  * A query agora filtra pelo uid do usuário autenticado (não mais pelo nome).
  *
+ * A função de unsubscribe retornada pelo onSnapshot é armazenada em
+ * unsubscribeOwnedListsListener para permitir cancelamento explícito
+ * no logout, evitando disparos com credenciais inválidas.
+ *
  * @param {string} userUid - UID do Firebase Auth do usuário autenticado
  */
 function initFirebaseListener(userUid) {
@@ -1500,7 +1548,8 @@ function initFirebaseListener(userUid) {
     orderBy("date", "desc"),
   );
 
-  onSnapshot(
+  // Armazena o unsubscribe para cancelar o listener antes do logout
+  unsubscribeOwnedListsListener = onSnapshot(
     q,
     (snapshot) => {
       // Mapeia os documentos recebidos do Firestore para objetos de lista

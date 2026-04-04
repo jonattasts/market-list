@@ -2,6 +2,13 @@
    RENDERIZAÇÃO DE DETALHES COM BUSCA
    ========================================================================== */
 
+import {
+  firestore,
+  firebaseAuth,
+  doc,
+  onSnapshot,
+} from "./firebase.js";
+
 /* ==========================================================================
    LISTENER DE TEMPO REAL DA LISTA ABERTA
    ========================================================================== */
@@ -35,8 +42,6 @@ window.activateDetailsRealtimeListener = async function (listIdentifier) {
   }
 
   try {
-    const { firestore, firebaseAuth, doc, onSnapshot } = await import("./firebase.js");
-
     const listDocumentReference = doc(firestore, "lists", listIdentifier);
 
     // Registra o listener e armazena a função de cancelamento
