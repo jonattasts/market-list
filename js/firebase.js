@@ -20,6 +20,16 @@ import {
   where,
   limit,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /* 🔧 FIREBASE KEYS */
 const firebaseConfig = {
@@ -33,10 +43,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
+const firebaseAuth = getAuth(app);
 
 export {
   // Instância do Firestore
   firestore,
+  // Instância do Firebase Auth
+  firebaseAuth,
   // Métodos de documento e coleção
   collection,
   doc,
@@ -50,10 +63,18 @@ export {
   deleteDoc,
   // Métodos de timestamp
   serverTimestamp,
-  // Métodos de query e consulta - AGORA EXPORTADOS DA INSTÂNCIA CONFIGURADA
+  // Métodos de query e consulta
   query,
   orderBy,
   onSnapshot,
   where,
   limit,
+  // Métodos de autenticação
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  signOut,
 };

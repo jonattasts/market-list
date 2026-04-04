@@ -35,7 +35,7 @@ window.activateDetailsRealtimeListener = async function (listIdentifier) {
   }
 
   try {
-    const { firestore, doc, onSnapshot } = await import("./firebase.js");
+    const { firestore, firebaseAuth, doc, onSnapshot } = await import("./firebase.js");
 
     const listDocumentReference = doc(firestore, "lists", listIdentifier);
 
@@ -54,16 +54,18 @@ window.activateDetailsRealtimeListener = async function (listIdentifier) {
           id: documentSnapshot.id,
           ...documentSnapshot.data(),
         };
-        const currentUserName = localStorage.getItem("marketUserName");
-        const isOwnerOfList = updatedListData.userName === currentUserName;
+
+        // Verifica a propriedade da lista pelo uid do Firebase Auth
+        const authenticatedUser = firebaseAuth.currentUser;
+        const currentUserUid = authenticatedUser ? authenticatedUser.uid : null;
+        const isOwnerOfList = updatedListData.userId === currentUserUid;
 
         // Verifica se o usuário compartilhado foi removido do array sharedWith
         if (!isOwnerOfList) {
           const sharedUsersArray = updatedListData.sharedWith || [];
+
           const isStillSharedWithCurrentUser = sharedUsersArray.some(
-            (sharedUser) =>
-              window.normalizeString(sharedUser.name) ===
-              window.normalizeString(currentUserName),
+            (sharedUser) => sharedUser.uid === currentUserUid,
           );
 
           if (!isStillSharedWithCurrentUser) {

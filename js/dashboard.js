@@ -2,6 +2,28 @@
    DASHBOARD & DATA ANALYTICS MODULE - SISTEMA DE ABAS
    ========================================================================= */
 
+/* ==========================================================================
+   SANITIZAÇÃO — DOMPARSER NATIVO
+   ========================================================================== */
+
+/**
+ * Sanitiza uma string removendo tags HTML e scripts maliciosos.
+ * Usa DOMParser nativo do browser para extrair apenas o texto em claro,
+ * eliminando qualquer tentativa de injeção de HTML/XSS via dados do Firestore.
+ *
+ * @param {string} rawInput - Texto potencialmente inseguro vindo do banco de dados
+ * @returns {string} Texto sanitizado sem tags HTML
+ */
+function sanitizeHtmlInput(rawInput) {
+  if (!rawInput) return "";
+  const documentParser = new DOMParser();
+  const parsedDocument = documentParser.parseFromString(rawInput, "text/html");
+  return parsedDocument.body.textContent || "";
+}
+
+// Exporta globalmente para uso nos módulos do dashboard
+window.sanitizeHtmlInput = sanitizeHtmlInput;
+
 // Utilitário local para formatação de moeda
 const formatCurrencyBRL = (val) =>
   val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

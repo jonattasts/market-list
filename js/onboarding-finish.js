@@ -1,16 +1,20 @@
 /* ==========================================================================
-   TELA 3 DO ONBOARDING: IDENTIFICAÇÃO DO USUÁRIO (SVG FINISH + FORMULÁRIO)
+   TELA 3 DO ONBOARDING: AUTENTICAÇÃO DO USUÁRIO (SVG FINISH + AUTH)
    Responsável por renderizar o conteúdo da terceira tela do carrossel:
-   ilustração SVG, campo de nome e botão "Começar a usar".
+   ilustração SVG e container de autenticação.
+   O container é preenchido dinamicamente pelo onboarding-auth.js via
+   window.initOnboardingAuthScreen(), que injeta os botões de Google Sign-In
+   e E-mail/Senha — além do aviso de migração para usuários com dados legados.
    Esta tela não possui indicadores de carrossel nem permite voltar.
    ========================================================================== */
 
 /**
  * Cria e retorna o elemento HTML completo da tela final do onboarding.
  * O elemento é injetado no slide 3 do carrossel pelo onboarding.js.
- * O botão "Começar a usar" chama window.handleUserIdentification ao clicar.
+ * O container #onboarding-auth-container é preenchido pelo onboarding-auth.js
+ * com os botões de autenticação Firebase (Google ou E-mail/Senha).
  *
- * @returns {HTMLElement} Elemento da tela de identificação do usuário
+ * @returns {HTMLElement} Elemento da tela de autenticação do usuário
  */
 export function createOnboardingFinishScreen() {
   const screenElement = document.createElement("div");
@@ -26,30 +30,17 @@ export function createOnboardingFinishScreen() {
         draggable="false" />
     </div>
 
-    <!-- Área de conteúdo: título, campo de nome e botão -->
+    <!-- Área de conteúdo: título e container de autenticação -->
     <div class="onboarding-finish-content-area">
       <h2 class="onboarding-finish-title">Pronto para começar?</h2>
       <div class="onboarding-finish-title-underline"></div>
       <p class="onboarding-finish-subtitle">
-        Para personalizar sua experiência, como gostaria de ser chamado?
+        Escolha como deseja entrar para salvar suas listas com segurança.
       </p>
 
-      <!-- Campo de nome do usuário — ID mantido para compatibilidade com handleUserIdentification -->
-      <div class="onboarding-finish-input-group">
-        <label for="user-name-input">Seu nome</label>
-        <input
-          type="text"
-          id="user-name-input"
-          placeholder="Digite seu nome aqui..."
-          autocomplete="given-name" />
-      </div>
-
-      <!-- Botão de início — chama handleUserIdentification do index.js -->
-      <button
-        class="button-start onboarding-finish-button"
-        onclick="handleUserIdentification()">
-        Começar a usar
-      </button>
+      <!-- Container preenchido dinamicamente pelo onboarding-auth.js
+           com botões de Google Sign-In, E-mail/Senha e aviso de migração -->
+      <div id="onboarding-auth-container"></div>
     </div>
   `;
 

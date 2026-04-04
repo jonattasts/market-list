@@ -3,12 +3,13 @@
    Controla a dinâmica de troca entre as três telas do onboarding:
    - Tela 1: Boas-vindas com vídeo                 (onboarding-start.js)
    - Tela 2: Como o app funciona (SVG MIDDLE)      (onboarding-middle.js)
-   - Tela 3: Identificação do usuário (SVG FINISH) (onboarding-finish.js)
+   - Tela 3: Autenticação do usuário (SVG FINISH)  (onboarding-finish.js)
 
    Comportamentos:
    - Swipe (touch) para esquerda/direita livre entre todos os três slides
    - Indicadores de ponto (dots) visíveis nos três slides
-   - Ao chegar na tela 3: foco automático no campo de nome
+   - Na tela 3: injeta os botões de autenticação via onboarding-auth.js
+     substituindo o campo de nome legado pelo fluxo Firebase Auth
    ========================================================================== */
 
 import { createOnboardingStartScreen } from "./onboarding-start.js";
@@ -25,7 +26,7 @@ let currentSlideIndex = 0;
 /** Total de slides no carrossel */
 const TOTAL_SLIDES = 3;
 
-/** Índice do último slide (tela de finalização) */
+/** Índice do último slide (tela de autenticação) */
 const FINISH_SLIDE_INDEX = 2;
 
 /** Limiar mínimo em pixels para considerar um swipe válido */
@@ -56,6 +57,7 @@ let indicatorDotsElements = [];
  * 2. Injeta os módulos de cada tela nos slides correspondentes
  * 3. Cria os indicadores de ponto
  * 4. Registra os listeners de swipe (touch)
+ * 5. Injeta os botões de autenticação na tela finish via onboarding-auth.js
  *
  * Deve ser chamada quando a tela de onboarding for exibida pela primeira vez.
  */
@@ -107,6 +109,12 @@ export function initOnboardingCarousel() {
   currentSlideIndex = 0;
   updateCarouselPosition(false);
   updateIndicatorDots();
+
+  /* Injeta os botões de autenticação na tela finish imediatamente após montar
+     o carrossel — garante que o container já esteja no DOM ao chamar a função */
+  if (window.initOnboardingAuthScreen) {
+    window.initOnboardingAuthScreen();
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -115,7 +123,7 @@ export function initOnboardingCarousel() {
 
 /**
  * Cria o container dos indicadores de ponto e os dots individuais.
- * Apenas dois dots são criados (slides 0 e 1) — o slide 2 não tem indicadores.
+ * Um dot é criado para cada um dos três slides do carrossel.
  *
  * @returns {HTMLElement} Container com os dots de navegação
  */
@@ -123,7 +131,6 @@ function createCarouselIndicators() {
   const indicatorsContainerElement = document.createElement("div");
   indicatorsContainerElement.className = "onboarding-carousel-indicators";
 
-  /* Cria um dot para cada slide, incluindo o slide de finalização */
   indicatorDotsElements = [];
 
   for (let dotIndex = 0; dotIndex < TOTAL_SLIDES; dotIndex++) {
@@ -165,7 +172,7 @@ function updateIndicatorDots() {
 
 /**
  * Navega para o slide de índice informado.
- * Permite navegação livre entre todos os três slides, incluindo o de finalização.
+ * Permite navegação livre entre todos os três slides, incluindo o de autenticação.
  *
  * @param {number} targetSlideIndex - Índice do slide de destino (0, 1 ou 2)
  */
@@ -180,9 +187,10 @@ function navigateToSlide(targetSlideIndex) {
   updateCarouselPosition(true);
   updateIndicatorDots();
 
-  /* Ao chegar na tela de finalização, coloca foco no campo de nome */
   if (currentSlideIndex === FINISH_SLIDE_INDEX) {
-    focusUserNameInput();
+    if (window.initOnboardingAuthScreen) {
+      window.initOnboardingAuthScreen();
+    }
   }
 }
 
@@ -237,23 +245,6 @@ function resetCarouselToFirstSlide() {
   currentSlideIndex = 0;
   updateCarouselPosition(false);
   updateIndicatorDots();
-}
-
-/* --------------------------------------------------------------------------
-   FOCO NO CAMPO DE NOME (TELA 3)
-   -------------------------------------------------------------------------- */
-
-/**
- * Coloca o foco no campo de nome do usuário após a transição para a tela 3.
- * O pequeno delay garante que a animação CSS do carrossel termine antes do foco.
- */
-function focusUserNameInput() {
-  setTimeout(() => {
-    const userNameInputElement = document.getElementById("user-name-input");
-    if (userNameInputElement) {
-      userNameInputElement.focus();
-    }
-  }, 460);
 }
 
 /* --------------------------------------------------------------------------

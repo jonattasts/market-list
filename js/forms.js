@@ -1,4 +1,10 @@
-import { firestore, collection, addDoc, serverTimestamp } from "./firebase.js";
+import {
+  firestore,
+  firebaseAuth,
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "./firebase.js";
 
 /* ==========================================================================
    CRIAÇÃO E EDIÇÃO DE LISTA
@@ -26,7 +32,11 @@ window.openNewListForm = function () {
 window.openEditListForm = function () {
   window.isEditingListMode = true;
   window.isCopyingListMode = false;
-  const list = window.marketListData[window.currentListIndex];
+
+  // Resolve o índice pelo ID estável antes de acessar os dados da lista
+  const resolvedIndex = window.resolveCurrentListIndex();
+  const list = window.marketListData[resolvedIndex];
+
   document.getElementById("form-title").innerText = "Editar Lista";
   document.getElementById("button-save-list").innerText = "Atualizar";
   document.getElementById("new-list-name").value = list.listName;
@@ -44,17 +54,27 @@ window.handleSaveNewList = async function () {
   );
   const date = document.getElementById("new-list-date").value;
 
-  const currentUserName = localStorage.getItem("marketUserName");
+  // Usa o uid do usuário autenticado como identificador no Firestore
+  const currentUser = firebaseAuth.currentUser;
+  const currentUserUid = currentUser ? currentUser.uid : null;
 
   if (!name || !date) {
     window.showToast("Por favor, preencha os campos obrigatórios", "danger");
     return;
   }
 
+  if (!currentUserUid) {
+    window.showToast("Usuário não autenticado.", "danger");
+    return;
+  }
+
   if (window.isEditingListMode) {
-    window.marketListData[window.currentListIndex].listName = name;
-    window.marketListData[window.currentListIndex].location = location;
-    window.marketListData[window.currentListIndex].date = date;
+    // Resolve o índice pelo ID estável antes de modificar os dados
+    const resolvedIndex = window.resolveCurrentListIndex();
+
+    window.marketListData[resolvedIndex].listName = name;
+    window.marketListData[resolvedIndex].location = location;
+    window.marketListData[resolvedIndex].date = date;
 
     await window.saveAndSync();
 
@@ -69,7 +89,9 @@ window.handleSaveNewList = async function () {
     }
     window.showToast("Lista atualizada!", "success");
   } else if (window.isCopyingListMode) {
-    const original = window.marketListData[window.currentListIndex];
+    // Resolve o índice pelo ID estável antes de acessar a lista original
+    const resolvedIndex = window.resolveCurrentListIndex();
+    const original = window.marketListData[resolvedIndex];
 
     if (date === original.date) {
       window.showToast(
@@ -89,8 +111,9 @@ window.handleSaveNewList = async function () {
         listName: name,
         location,
         date,
-        userName: currentUserName,
+        userId: currentUserUid,
         categories: clonedCategories,
+        sharedWith: [],
         createdAt: serverTimestamp(),
       });
 
@@ -106,8 +129,9 @@ window.handleSaveNewList = async function () {
         listName: name,
         location,
         date,
-        userName: currentUserName,
+        userId: currentUserUid,
         categories: [{ name: "Alimentação", items: [] }],
+        sharedWith: [],
         createdAt: serverTimestamp(),
       });
 
@@ -131,10 +155,14 @@ window.openNewCategoryForm = function () {
   window.showScreen("new-category-screen");
 };
 
-window.openEditCategoryForm = function (catIdx) {
-  window.editingCategoryIndex = catIdx;
+window.openEditCategoryForm = function (categoryIndex) {
+  window.editingCategoryIndex = categoryIndex;
+
+  // Resolve o índice pelo ID estável antes de acessar os dados da categoria
+  const resolvedIndex = window.resolveCurrentListIndex();
   const category =
-    window.marketListData[window.currentListIndex].categories[catIdx];
+    window.marketListData[resolvedIndex].categories[categoryIndex];
+
   document.getElementById("category-form-title").innerText = "Editar Categoria";
   document.getElementById("button-save-category").innerText = "Atualizar";
   document.getElementById("new-category-name").value = category.name;
@@ -150,13 +178,16 @@ window.handleSaveCategory = async function () {
     return;
   }
 
+  // Resolve o índice pelo ID estável antes de modificar categorias
+  const resolvedIndex = window.resolveCurrentListIndex();
+
   if (window.editingCategoryIndex !== null) {
-    window.marketListData[window.currentListIndex].categories[
+    window.marketListData[resolvedIndex].categories[
       window.editingCategoryIndex
     ].name = name;
     window.showToast("Categoria atualizada!", "success");
   } else {
-    window.marketListData[window.currentListIndex].categories.push({
+    window.marketListData[resolvedIndex].categories.push({
       name: name,
       items: [],
     });
@@ -228,17 +259,19 @@ window.openNewItemForm = async function () {
 
   window.itemCategorySelect.innerHTML = "";
 
-  const categories = window.marketListData[window.currentListIndex].categories;
+  // Resolve o índice pelo ID estável antes de acessar categorias
+  const resolvedIndex = window.resolveCurrentListIndex();
+  const categories = window.marketListData[resolvedIndex].categories;
 
   if (categories.length === 0) {
-    window.marketListData[window.currentListIndex].categories.push({
+    window.marketListData[resolvedIndex].categories.push({
       name: "Alimentação",
       items: [],
     });
     await window.saveAndSync();
   }
 
-  window.marketListData[window.currentListIndex].categories.forEach(
+  window.marketListData[resolvedIndex].categories.forEach(
     (cat, idx) => {
       const option = document.createElement("option");
       option.value = idx;
@@ -250,13 +283,16 @@ window.openNewItemForm = async function () {
   window.showScreen("new-item-screen");
 };
 
-window.enterEditMode = function (catIdx, itemIdx) {
+window.enterEditMode = function (categoryIndex, itemIndex) {
+  // Resolve o índice pelo ID estável antes de acessar o item
+  const resolvedIndex = window.resolveCurrentListIndex();
+
   const item =
-    window.marketListData[window.currentListIndex].categories[catIdx].items[
-      itemIdx
+    window.marketListData[resolvedIndex].categories[categoryIndex].items[
+      itemIndex
     ];
-  window.editingItemIndex = itemIdx;
-  window.editingCategoryIndex = catIdx;
+  window.editingItemIndex = itemIndex;
+  window.editingCategoryIndex = categoryIndex;
 
   window.setItemPickedToggleState(item.checked || false);
 
@@ -273,12 +309,12 @@ window.enterEditMode = function (catIdx, itemIdx) {
 
   window.itemCategorySelect.innerHTML = "";
 
-  window.marketListData[window.currentListIndex].categories.forEach(
+  window.marketListData[resolvedIndex].categories.forEach(
     (cat, idx) => {
       const option = document.createElement("option");
       option.value = idx;
       option.text = cat.name;
-      if (idx === catIdx) option.selected = true;
+      if (idx === categoryIndex) option.selected = true;
       window.itemCategorySelect.appendChild(option);
     },
   );
@@ -372,9 +408,12 @@ window.handleSaveItem = async function () {
     itemTotalValue = formatNumberToCurrencyString(calculatedTotalValue);
   }
 
+  // Resolve o índice pelo ID estável antes de modificar itens
+  const resolvedIndex = window.resolveCurrentListIndex();
+
   if (window.editingItemIndex !== null) {
     if (categoryIndex !== window.editingCategoryIndex) {
-      const item = window.marketListData[window.currentListIndex].categories[
+      const item = window.marketListData[resolvedIndex].categories[
         window.editingCategoryIndex
       ].items.splice(window.editingItemIndex, 1)[0];
 
@@ -384,12 +423,12 @@ window.handleSaveItem = async function () {
       item.quantity = quantity;
       item.totalValue = itemTotalValue;
       item.checked = isChecked;
-      window.marketListData[window.currentListIndex].categories[
+      window.marketListData[resolvedIndex].categories[
         categoryIndex
       ].items.push(item);
     } else {
       const item =
-        window.marketListData[window.currentListIndex].categories[categoryIndex]
+        window.marketListData[resolvedIndex].categories[categoryIndex]
           .items[window.editingItemIndex];
       item.name = name;
       item.desc = description;
@@ -400,7 +439,7 @@ window.handleSaveItem = async function () {
     }
     window.showToast("Item atualizado!", "success");
   } else {
-    window.marketListData[window.currentListIndex].categories[
+    window.marketListData[resolvedIndex].categories[
       categoryIndex
     ].items.push({
       name,

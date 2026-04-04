@@ -3,6 +3,21 @@
    ========================================================================= */
 
 /**
+ * Sanitiza dados do Firestore usando a função global exposta pelo dashboard.js.
+ * Fallback para DOMParser nativo caso o dashboard ainda não tenha carregado.
+ *
+ * @param {string} rawInput - Texto potencialmente inseguro vindo do banco de dados
+ * @returns {string} Texto sanitizado sem tags HTML
+ */
+function sanitizeHtmlInput(rawInput) {
+  if (window.sanitizeHtmlInput) return window.sanitizeHtmlInput(rawInput);
+  if (!rawInput) return "";
+  const documentParser = new DOMParser();
+  const parsedDocument = documentParser.parseFromString(rawInput, "text/html");
+  return parsedDocument.body.textContent || "";
+}
+
+/**
  * Carrega e renderiza o módulo de Comportamento e Hábito
  * Inclui:
  * - Índice de Fidelidade de Local
@@ -148,7 +163,7 @@ function calculateLocationFidelity(filteredLists) {
     );
 
     return {
-      name: location.name,
+      name: sanitizeHtmlInput(location.name),
       count: location.count,
       percentage: percentage,
       percentageFormatted: `${percentage.toFixed(0)}%`,
@@ -276,7 +291,7 @@ function calculateEssentialItems(allLists) {
         window.getPerformanceClassByPercentage(appearancePercentage);
 
       essentialItems.push({
-        name: window.capitalize(itemData.name),
+        name: sanitizeHtmlInput(window.capitalize(itemData.name)),
         appearancePercentage: appearancePercentage,
         appearancePercentageFormatted: `${appearancePercentage.toFixed(0)}%`,
         listsCount: listsCount,
@@ -402,7 +417,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
             else frequencyText = `A cada ${Math.round(averageDays)} dias`;
 
             recurringItems.push({
-              name: window.capitalize(itemData.name),
+        name: sanitizeHtmlInput(window.capitalize(itemData.name)),
               average: Math.round(averageDays),
               frequencyText: frequencyText,
               purchases: dates.length,
@@ -548,7 +563,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
         if (daysUntilPurchase >= -7) {
           // Mostra se já passou até 7 dias (atraso) ou está no futuro
           predictionsRestocking.push({
-            name: window.capitalize(itemData.name),
+        name: sanitizeHtmlInput(window.capitalize(itemData.name)),
             cycle: Math.round(averageDays),
             nextDate: nextDate,
             lastDateStr: window.formatDateBRL(dates[dates.length - 1]),

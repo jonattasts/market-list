@@ -6,7 +6,8 @@
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover é obrigatório para que env(safe-area-inset-*)
          funcione corretamente no iOS Safari E no Chrome Android -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <title>Market List</title>
 
@@ -31,6 +32,9 @@
     <link rel="stylesheet" href="css/onboarding-start.css" />
     <link rel="stylesheet" href="css/onboarding-middle.css" />
     <link rel="stylesheet" href="css/onboarding-finish.css" />
+
+    <!-- CSS do módulo de autenticação (modal email/senha + botões Google) -->
+    <link rel="stylesheet" href="css/auth.css" />
 
     <!-- CSS Base do Dashboard -->
     <link rel="stylesheet" href="css/dashboard.css">
@@ -77,8 +81,121 @@
       <!-- ===================== TELA DE ONBOARDING ===================== -->
       <!-- O conteúdo do carrossel (3 telas) é injetado dinamicamente   -->
       <!-- pelo onboarding.js via initOnboardingCarousel()               -->
+      <!-- A tela de autenticação (onboarding-finish) exibe:            -->
+      <!--   - Aviso de migração se houver dados legados no localStorage -->
+      <!--   - Botões de Google Sign-In e E-mail/Senha para novos users  -->
       <!-- ============================================================= -->
       <div id="onboarding-screen" class="screen-hidden"></div>
+
+      <!-- ============================================================= -->
+      <!-- =========== MODAL DE AUTENTICAÇÃO POR EMAIL/SENHA =========== -->
+      <!-- Exibido quando o usuário escolhe autenticar por e-mail/senha  -->
+      <!-- ============================================================= -->
+      <div id="auth-email-modal-overlay"
+        class="auth-modal-overlay screen-hidden">
+        <div class="auth-modal-card">
+
+          <!-- Header do modal -->
+          <div class="auth-modal-header">
+            <h3 id="auth-modal-title">Criar Conta</h3>
+            <button
+              class="auth-modal-close-button"
+              onclick="window.closeAuthEmailModal()"
+              aria-label="Fechar">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- Alternância entre Login e Cadastro -->
+          <div class="auth-modal-tabs">
+            <button
+              id="auth-tab-signup"
+              class="auth-tab-button auth-tab-active"
+              onclick="window.switchAuthModalTab('signup')">
+              Criar Conta
+            </button>
+            <button
+              id="auth-tab-login"
+              class="auth-tab-button"
+              onclick="window.switchAuthModalTab('login')">
+              Entrar
+            </button>
+          </div>
+
+          <!-- Formulário de Cadastro (exibido por padrão) -->
+          <div id="auth-signup-form" class="auth-modal-form">
+
+            <!-- Nome de exibição — obrigatório no cadastro por e-mail -->
+            <div class="input-field">
+              <label>Seu nome<span class="required-mark">*</span></label>
+              <input
+                type="text"
+                id="auth-display-name-input"
+                placeholder="Ex: Maria Silva"
+                autocomplete="name" />
+              <span class="input-hint">
+                💡 Este nome será usado para identificar você nos
+                compartilhamentos
+              </span>
+            </div>
+
+            <div class="input-field mt-20">
+              <label>E-mail<span class="required-mark">*</span></label>
+              <input
+                type="email"
+                id="auth-signup-email-input"
+                placeholder="seu@email.com"
+                autocomplete="email" />
+            </div>
+
+            <div class="input-field mt-20">
+              <label>Senha<span class="required-mark">*</span></label>
+              <input
+                type="password"
+                id="auth-signup-password-input"
+                placeholder="Mínimo 6 caracteres"
+                autocomplete="new-password" />
+            </div>
+
+            <button
+              id="auth-signup-submit-button"
+              class="button-start mt-30"
+              onclick="window.handleEmailSignup()">
+              Criar Conta
+            </button>
+          </div>
+
+          <!-- Formulário de Login (oculto por padrão) -->
+          <div id="auth-login-form" class="auth-modal-form screen-hidden">
+
+            <div class="input-field">
+              <label>E-mail<span class="required-mark">*</span></label>
+              <input
+                type="email"
+                id="auth-login-email-input"
+                placeholder="seu@email.com"
+                autocomplete="email" />
+            </div>
+
+            <div class="input-field mt-20">
+              <label>Senha<span class="required-mark">*</span></label>
+              <input
+                type="password"
+                id="auth-login-password-input"
+                placeholder="Sua senha"
+                autocomplete="current-password" />
+            </div>
+
+            <button
+              id="auth-login-submit-button"
+              class="button-start mt-30"
+              onclick="window.handleEmailLogin()">
+              Entrar
+            </button>
+          </div>
+
+        </div>
+      </div>
 
       <!-- ============================================================= -->
       <!-- ===================== HOME SCREEN =========================== -->
@@ -895,11 +1012,17 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js 4.4.7 -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+      integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC"
+      crossorigin="anonymous"></script>
 
     <!-- Módulo de tema: carregado antes dos outros scripts para evitar flash -->
     <script type="module" src="js/theme.js"></script>
     <script type="module" src="js/onboarding.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/onboarding-auth.js"></script>
     <script type="module" src="js/index.js"></script>
     <script type="module" src="js/forms.js"></script>
 
@@ -918,10 +1041,17 @@
     <script type="module" src="js/purchase-efficiency.js"></script>
     <script type="module" src="js/health-insights.js"></script>
 
-    <script type="module"
-      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule
-      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <!-- Ionicons 7.1.0 -->
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"
+      integrity="sha384-xyQ/Vpt1cq1pdPYlRaT/QkcSj2vrYyWI3WOhxGBzqnP1vgvsS2yrhWXe3/wIoCr5"
+      crossorigin="anonymous"></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"
+      integrity="sha384-KAUcUASKfGZ0sxENVFRiH12jtpvd9SsVpgzvYdvv8ZMLqB99G3gX3DAts418wzIC"
+      crossorigin="anonymous"></script>
   </body>
 
 </html>

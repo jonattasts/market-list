@@ -3,6 +3,7 @@
    ========================================================================== */
 import {
   firestore,
+  firebaseAuth,
   collection,
   doc,
   updateDoc,
@@ -10,11 +11,13 @@ import {
   setDoc,
   getDoc,
   getDocsFromServer,
+  getDocs,
   query,
   orderBy,
   onSnapshot,
   where,
   limit,
+  onAuthStateChanged,
 } from "./firebase.js";
 
 window.listItemsContainer = document.getElementById("list-items-container");
@@ -55,6 +58,173 @@ window.marketListData = [];
 
 // Variável de controle para primeira carga
 let isFirstLoad = true;
+
+// Flag que sinaliza que o handleAuthenticatedUser já está em execução,
+// evitando que o onAuthStateChanged dispare múltiplas vezes enquanto
+// o fluxo de autenticação ainda está em andamento (ex: durante o overlay)
+let isHandlingAuthenticatedUser = false;
+
+/* ==========================================================================
+   CRIPTOGRAFIA — AES-GCM COM CHAVE DERIVADA VIA PBKDF2
+   ========================================================================== */
+
+// Salt fixo do app — não é segredo crítico, apenas evita ataques de rainbow table
+// O segredo real é o uid que só o Firebase Auth entrega após autenticação real
+const APPLICATION_SALT = "marketlist-salt-v1";
+
+/**
+ * Deriva uma chave AES-256-GCM a partir do uid do usuário autenticado.
+ * Usa PBKDF2 com 100.000 iterações para dificultar brute-force.
+ *
+ * @param {string} userUid - UID do Firebase Auth do usuário autenticado
+ * @returns {Promise<CryptoKey>} Chave AES-GCM derivada
+ */
+async function deriveEncryptionKeyFromUid(userUid) {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(userUid),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"],
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(APPLICATION_SALT),
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"],
+  );
+}
+
+/**
+ * Criptografa uma string usando AES-GCM com a chave derivada do uid.
+ * Gera um IV aleatório a cada chamada para garantir unicidade do cifrado.
+ *
+ * @param {string} plainText - Texto em claro a ser criptografado
+ * @param {CryptoKey} encryptionKey - Chave AES-GCM derivada
+ * @returns {Promise<string>} Objeto JSON serializado com iv e dados cifrados em base64
+ */
+async function encryptData(plainText, encryptionKey) {
+  const encoder = new TextEncoder();
+  const initializationVector = crypto.getRandomValues(new Uint8Array(12));
+
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: initializationVector },
+    encryptionKey,
+    encoder.encode(plainText),
+  );
+
+  // Serializa iv e dados cifrados como base64 para armazenamento no localStorage
+  const encryptedArray = Array.from(new Uint8Array(encryptedBuffer));
+  const ivArray = Array.from(initializationVector);
+
+  return JSON.stringify({
+    iv: btoa(String.fromCharCode(...ivArray)),
+    data: btoa(String.fromCharCode(...encryptedArray)),
+  });
+}
+
+/**
+ * Descriptografa um valor cifrado previamente por encryptData.
+ * Retorna null se a descriptografia falhar (chave errada, dado corrompido, etc.)
+ *
+ * @param {string} encryptedJson - JSON serializado com iv e dados em base64
+ * @param {CryptoKey} encryptionKey - Chave AES-GCM derivada
+ * @returns {Promise<string|null>} Texto em claro ou null em caso de falha
+ */
+async function decryptData(encryptedJson, encryptionKey) {
+  try {
+    const { iv, data } = JSON.parse(encryptedJson);
+
+    const initializationVector = new Uint8Array(
+      atob(iv)
+        .split("")
+        .map((char) => char.charCodeAt(0)),
+    );
+    const encryptedBuffer = new Uint8Array(
+      atob(data)
+        .split("")
+        .map((char) => char.charCodeAt(0)),
+    );
+
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: initializationVector },
+      encryptionKey,
+      encryptedBuffer,
+    );
+
+    return new TextDecoder().decode(decryptedBuffer);
+  } catch (decryptionError) {
+    console.error(
+      "Erro ao descriptografar dado do localStorage:",
+      decryptionError,
+    );
+    return null;
+  }
+}
+
+/**
+ * Salva os dados do usuário autenticado no localStorage de forma criptografada.
+ * A chave de criptografia é derivada do uid via PBKDF2 — nunca exposta em claro.
+ *
+ * @param {string} userUid - UID do Firebase Auth
+ * @param {string} userDisplayName - Nome de exibição do usuário
+ */
+async function saveEncryptedUserDataToStorage(userUid, userDisplayName) {
+  const encryptionKey = await deriveEncryptionKeyFromUid(userUid);
+  const encryptedDisplayName = await encryptData(
+    userDisplayName,
+    encryptionKey,
+  );
+  const encryptedUid = await encryptData(userUid, encryptionKey);
+
+  // Armazena o uid em claro apenas para derivar a chave na próxima sessão.
+  localStorage.setItem("mkuid_ref", userUid);
+  localStorage.setItem("mku", encryptedDisplayName);
+  localStorage.setItem("mkuid", encryptedUid);
+}
+
+/**
+ * Lê e descriptografa os dados do usuário do localStorage.
+ * Requer o uid como parâmetro para derivar a chave correta.
+ *
+ * @param {string} userUid - UID do Firebase Auth (vem do onAuthStateChanged)
+ * @returns {Promise<{displayName: string|null, uid: string|null}>} Dados descriptografados
+ */
+async function readDecryptedUserDataFromStorage(userUid) {
+  const encryptedDisplayName = localStorage.getItem("mku");
+  const encryptedUid = localStorage.getItem("mkuid");
+
+  if (!encryptedDisplayName || !encryptedUid) {
+    return { displayName: null, uid: null };
+  }
+
+  const encryptionKey = await deriveEncryptionKeyFromUid(userUid);
+
+  const displayName = await decryptData(encryptedDisplayName, encryptionKey);
+  const uid = await decryptData(encryptedUid, encryptionKey);
+
+  return { displayName, uid };
+}
+
+/**
+ * Limpa todos os dados do usuário do localStorage.
+ * Chamado no logout ou em caso de erro de autenticação.
+ */
+function clearUserDataFromStorage() {
+  localStorage.removeItem("mku");
+  localStorage.removeItem("mkuid");
+  localStorage.removeItem("mkuid_ref");
+  // Remove chave legada de versões anteriores sem criptografia
+  localStorage.removeItem("marketUserName");
+}
 
 /* ==========================================================================
    SISTEMA DE VALIDAÇÃO DE DEPENDÊNCIAS - INTEGRADO AO SKELETON EXISTENTE
@@ -264,6 +434,300 @@ function mergeListDataWithTimestampProtection(
 }
 
 /* ==========================================================================
+   MIGRAÇÃO AUTOMÁTICA — NOME → UID
+   ========================================================================== */
+
+/**
+ * Busca os IDs das listas legadas após a autenticação do usuário.
+ *
+ * Retorna diretamente o array de IDs — sem passar por localStorage,
+ * evitando problemas de sincronização entre pré e pós autenticação.
+ *
+ * @param {string} legacyUserName - Nome legado do usuário (ex: "Jhon")
+ * @returns {Promise<Array<string>>} Array de IDs de listas encontradas
+ */
+async function fetchLegacyListIdsAfterAuth(legacyUserName) {
+  try {
+    const legacyQuery = query(
+      collection(firestore, "lists"),
+      where("userId", "==", legacyUserName),
+    );
+    const legacySnapshot = await getDocs(legacyQuery);
+    return legacySnapshot.docs.map((firestoreDoc) => firestoreDoc.id);
+  } catch (fetchError) {
+    console.warn(
+      "Não foi possível buscar listas legadas:",
+      fetchError.code,
+      fetchError.message,
+    );
+    return [];
+  }
+}
+
+/**
+ * Executa a migração dos dados legados (nome → UID) usando os IDs
+ * obtidos por fetchLegacyListIdsAfterAuth após a autenticação.
+ *
+ * @param {Object} authenticatedUser - Objeto user do Firebase Auth
+ * @param {string} legacyUserName - Nome salvo no localStorage antes da migração
+ * @param {Array<string>} legacyListIds - IDs das listas legadas a migrar
+ * @param {string} resolvedDisplayName - displayName já resolvido (inclui pendingEmailSignupDisplayName)
+ * @returns {Promise<boolean>} True se migração bem-sucedida
+ */
+async function executeLegacyDataMigration(
+  authenticatedUser,
+  legacyUserName,
+  legacyListIds,
+  resolvedDisplayName,
+) {
+  try {
+    // Força refresh do token para garantir que as Security Rules
+    // recebam credenciais válidas e atualizadas antes das operações no Firestore
+    await authenticatedUser.getIdToken(true);
+
+    // Etapa 1: cria o documento users/{uid} individualmente
+    const newUserReference = doc(firestore, "users", authenticatedUser.uid);
+    await setDoc(newUserReference, {
+      uid: authenticatedUser.uid,
+      displayName: resolvedDisplayName,
+      email: authenticatedUser.email || null,
+      createdAt: serverTimestamp(),
+      migratedAt: serverTimestamp(),
+    });
+
+    // Etapa 2: atualiza cada lista individualmente por ID
+    const migrationPromises = legacyListIds.map((listId) => {
+      const listReference = doc(firestore, "lists", listId);
+      return updateDoc(listReference, {
+        userId: authenticatedUser.uid,
+        sharedWith: [],
+        updatedAt: serverTimestamp(),
+      });
+    });
+
+    await Promise.all(migrationPromises);
+
+    // Etapa 3: remove o documento legado users/{nomeNormalizado}
+    const legacyUserId = legacyUserName.toLowerCase().replace(/\s/g, "");
+    const legacyUserReference = doc(firestore, "users", legacyUserId);
+    try {
+      const legacyUserSnapshot = await getDoc(legacyUserReference);
+      if (legacyUserSnapshot.exists()) {
+        const { deleteDoc: deleteDocument } = await import("./firebase.js");
+        await deleteDocument(legacyUserReference);
+      }
+    } catch (legacyUserSnapshotError) {
+      console.error("Erro ao buscar documento legado:", legacyUserSnapshotError);
+    }
+
+    return true;
+  } catch (migrationError) {
+    console.error(
+      "Erro na migração de dados:",
+      migrationError.code,
+      migrationError.message,
+    );
+    return false;
+  }
+}
+
+/**
+ * Cria o documento de usuário no Firestore para um novo usuário autenticado
+ * que não possui dados legados no sistema.
+ *
+ * @param {Object} authenticatedUser - Objeto user do Firebase Auth
+ * @param {string} resolvedDisplayName - displayName já resolvido com fallback ao pending flag
+ * @returns {Promise<void>}
+ */
+async function createNewUserDocument(authenticatedUser, resolvedDisplayName) {
+  const userReference = doc(firestore, "users", authenticatedUser.uid);
+  await setDoc(userReference, {
+    uid: authenticatedUser.uid,
+    displayName: resolvedDisplayName,
+    email: authenticatedUser.email || null,
+    createdAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Verifica se o usuário autenticado já possui documento no Firestore.
+ * Executa migração se necessário, controlando o fluxo de telas corretamente.
+ *
+ * Fluxo com dados legados:
+ *   1. Overlay inicia com "Migrando seus dados..."
+ *   2. Migração executa DENTRO da animação
+ *   3. Se sucesso → overlay termina → home-screen → toast de sucesso
+ *   4. Se erro → overlay termina → logout → onboarding → toast de erro
+ *
+ * Fluxo sem dados legados (usuário novo):
+ *   1. Overlay inicia com "Preparando seu ambiente..."
+ *   2. Cria documento no Firestore
+ *   3. Overlay termina → home-screen
+ *
+ * Fluxo de login (documento já existe):
+ *   1. Vai direto para home-screen via initFirebaseListener
+ *
+ * @param {Object} authenticatedUser - Objeto user do Firebase Auth
+ */
+async function handleAuthenticatedUser(authenticatedUser) {
+  // Impede execuções paralelas do fluxo de autenticação
+  if (isHandlingAuthenticatedUser) return;
+  isHandlingAuthenticatedUser = true;
+
+  try {
+    const resolvedDisplayName =
+      window.pendingEmailSignupDisplayName ||
+      authenticatedUser.displayName ||
+      "";
+
+    // Limpa o flag após consumir — evita que reutilizações acidentais ocorram
+    window.pendingEmailSignupDisplayName = null;
+
+    // Verifica se o documento users/{uid} já existe (usuário já migrado ou logado antes)
+    const userDocumentReference = doc(
+      firestore,
+      "users",
+      authenticatedUser.uid,
+    );
+    const userDocumentSnapshot = await getDoc(userDocumentReference);
+
+    if (!userDocumentSnapshot.exists()) {
+      // Primeiro login com este uid — verifica se há dados legados para migrar
+      const legacyUserName = localStorage.getItem("marketUserName");
+
+      if (legacyUserName) {
+        // --- FLUXO COM DADOS LEGADOS ---
+        const overlayElement = document.getElementById("sync-overlay");
+        const progressBarElement = document.getElementById("sync-progress-bar");
+        const syncTextElement = document.querySelector(".sync-text");
+        const syncSubtextElement = document.querySelector(".sync-subtext");
+
+        // Esconde todas as telas e exibe apenas o overlay de migração,
+        // evitando que a tela de onboarding-finish apareça durante o processo
+        const allScreens = document.querySelectorAll(
+          ".app-container > div[id$='-screen']",
+        );
+        allScreens.forEach((screen) => {
+          screen.classList.add("screen-hidden");
+          screen.style.display = "none";
+        });
+
+        // Exibe o overlay imediatamente
+        if (overlayElement) {
+          overlayElement.style.display = "flex";
+          await new Promise((r) => setTimeout(r, 50));
+          overlayElement.classList.add("active");
+        }
+
+        if (syncTextElement)
+          syncTextElement.innerText = "Migrando seus dados...";
+        if (syncSubtextElement) {
+          syncSubtextElement.innerText =
+            "Atualizando suas listas para o novo sistema seguro.";
+        }
+
+        // Etapa 1 (33%): busca os IDs das listas com o usuário já autenticado
+        // A query funciona agora porque request.auth != null é true
+        if (progressBarElement) progressBarElement.style.width = "33%";
+        const legacyListIds = await fetchLegacyListIdsAfterAuth(legacyUserName);
+        await new Promise((r) => setTimeout(r, 400));
+
+        // Etapa 2 (66%): executa a migração com os IDs encontrados
+        if (progressBarElement) progressBarElement.style.width = "66%";
+        const migrationSucceeded = await executeLegacyDataMigration(
+          authenticatedUser,
+          legacyUserName,
+          legacyListIds,
+          resolvedDisplayName,
+        );
+        await new Promise((r) => setTimeout(r, 400));
+
+        if (!migrationSucceeded) {
+          // Migração falhou — fecha overlay, faz logout e volta ao onboarding
+          if (progressBarElement) progressBarElement.style.width = "0%";
+          if (overlayElement) {
+            overlayElement.classList.remove("active");
+            await new Promise((r) => setTimeout(r, 500));
+            overlayElement.style.display = "none";
+          }
+          isHandlingAuthenticatedUser = false;
+          await firebaseAuth.signOut();
+          executeScreenNavigation("onboarding-screen");
+          setTimeout(() => {
+            window.showToast(
+              "Erro ao migrar dados. Tente novamente.",
+              "danger",
+            );
+          }, 400);
+          return;
+        }
+
+        // Etapa 3 (100%): migração concluída — fecha overlay e vai para home
+        if (progressBarElement) progressBarElement.style.width = "100%";
+        await new Promise((r) => setTimeout(r, 600));
+
+        if (overlayElement) {
+          overlayElement.classList.remove("active");
+          await new Promise((r) => setTimeout(r, 500));
+          overlayElement.style.display = "none";
+        }
+
+        // Remove chave legada após migração bem-sucedida
+        localStorage.removeItem("marketUserName");
+
+        // Salva dados criptografados e inicializa o listener
+        // initFirebaseListener → isFirstLoad → showScreen("home-screen")
+        await saveEncryptedUserDataToStorage(
+          authenticatedUser.uid,
+          resolvedDisplayName,
+        );
+
+        isFirstLoad = true;
+        isHandlingAuthenticatedUser = false;
+        initFirebaseListener(authenticatedUser.uid);
+
+        // Toast de sucesso exibido após a home estar visível
+        setTimeout(() => {
+          window.showToast("Dados migrados com sucesso!", "success");
+        }, 900);
+
+        return;
+      } else {
+        // Exibe o overlay com mensagem de preparação do ambiente antes de ir para home.
+        const allScreens = document.querySelectorAll(
+          ".app-container > div[id$='-screen']",
+        );
+        allScreens.forEach((screen) => {
+          screen.classList.add("screen-hidden");
+          screen.style.display = "none";
+        });
+
+        await runSetupAnimation(resolvedDisplayName);
+        await createNewUserDocument(authenticatedUser, resolvedDisplayName);
+      }
+    }
+
+    // Salva dados criptografados no localStorage
+    const displayNameToStore =
+      resolvedDisplayName || authenticatedUser.displayName || "";
+    await saveEncryptedUserDataToStorage(
+      authenticatedUser.uid,
+      displayNameToStore,
+    );
+
+    // Inicializa o listener do Firebase com o uid
+    isFirstLoad = true;
+    isHandlingAuthenticatedUser = false;
+    initFirebaseListener(authenticatedUser.uid);
+  } catch (authHandlingError) {
+    console.error("Erro ao processar usuário autenticado:", authHandlingError);
+    isHandlingAuthenticatedUser = false;
+    window.showToast("Falha na comunicação com o Servidor!", "danger");
+    executeScreenNavigation("home-screen");
+  }
+}
+
+/* ==========================================================================
    SISTEMA DE VALIDAÇÃO - FUNÇÕES CORE
    ========================================================================== */
 
@@ -280,11 +744,10 @@ function mergeListDataWithTimestampProtection(
  */
 async function validateDatabaseConnection() {
   try {
-    const userName = localStorage.getItem("marketUserName");
+    const currentUser = firebaseAuth.currentUser;
 
-    // Se não há usuário logado
-    if (!userName) {
-      console.warn("Database validation: No user name found in localStorage");
+    if (!currentUser) {
+      console.warn("Database validation: No authenticated user found");
       return false;
     }
 
@@ -301,10 +764,9 @@ async function validateDatabaseConnection() {
       }, 5000);
     });
 
-    // Cria a query normalmente — o filtro garante escopo correto do usuário
     const listsQuery = query(
       collection(firestore, "lists"),
-      where("userName", "==", userName),
+      where("userId", "==", currentUser.uid),
       limit(1),
     );
 
@@ -597,9 +1059,8 @@ window.saveAndSync = async function () {
       date: currentList.date,
       categories: currentList.categories,
       updatedAt: serverTimestamp(),
-      // Preserva o userName original do documento — não sobrescreve com o usuário logado,
-      // pois listas compartilhadas pertencem ao dono original, não ao usuário que editou
-      userName: currentList.userName,
+      // Preserva o userId original do documento — não sobrescreve com o usuário logado,
+      userId: currentList.userId,
     });
   } catch (e) {
     console.error("Erro ao atualizar Firestore:", e);
@@ -608,19 +1069,20 @@ window.saveAndSync = async function () {
 };
 
 /* --- LÓGICA DE CONFIGURAÇÃO COM UI DE ANIMAÇÃO --- */
-async function runSetupAnimation(userName) {
+async function runSetupAnimation() {
   const overlay = document.getElementById("sync-overlay");
   const progressBar = document.getElementById("sync-progress-bar");
   const syncText = document.querySelector(".sync-text");
-  const syncSubtext = document.querySelector(".sync-subtext"); // Ativa a Overlay Visual
+  const syncSubtext = document.querySelector(".sync-subtext");
 
+  // Ativa a Overlay Visual
   if (overlay) {
     overlay.style.display = "flex";
     await new Promise((r) => setTimeout(r, 50));
     overlay.classList.add("active");
   }
 
-  if (syncText) syncText.innerText = "Configurando seu espaço...";
+  if (syncText) syncText.innerText = "Preparando seu ambiente...";
   if (syncSubtext)
     syncSubtext.innerText =
       "Preparando sua nuvem e organizando as prateleiras.";
@@ -641,58 +1103,25 @@ async function runSetupAnimation(userName) {
 }
 
 /* ==========================================================================
-   IDENTIFICAÇÃO DE USUÁRIO
+   LOGOUT
    ========================================================================== */
-window.handleUserIdentification = async function () {
-  const nameInput = document.getElementById("user-name-input");
-  const buttonStart = document.querySelector(".button-start");
-  const onboardingScreen = document.getElementById("onboarding-screen");
 
-  const name = window.capitalize(nameInput.value);
-  const userId = name.toLowerCase().replace(/\s/g, "");
-
-  if (!name || name.length < 3) {
-    window.showToast("O nome deve ter pelo menos 3 caracteres", "danger");
-    return;
-  }
-
-  if (buttonStart) buttonStart.classList.add("is-loading");
-
+/**
+ * Realiza o logout do usuário, limpa os dados criptografados do localStorage
+ * e redireciona para a tela de onboarding.
+ */
+window.handleLogout = async function () {
   try {
-    const userRef = doc(firestore, "users", userId);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      const savedLocalName = localStorage.getItem("marketUserName");
-      if (savedLocalName !== name) {
-        if (buttonStart) buttonStart.classList.remove("is-loading");
-        window.showToast("Este nome já está em uso!", "danger");
-        return;
-      }
-    }
-
-    localStorage.setItem("marketUserName", name);
-    await setDoc(
-      userRef,
-      { name: name, lastLogin: serverTimestamp() },
-      { merge: true },
-    );
-
-    if (onboardingScreen) {
-      onboardingScreen.classList.add("screen-hidden");
-      onboardingScreen.style.display = "none";
-    }
-
-    await runSetupAnimation(name);
-
-    setTimeout(() => {
-      isFirstLoad = true;
-      initFirebaseListener(name);
-    }, 100);
-  } catch (error) {
-    if (buttonStart) buttonStart.classList.remove("is-loading");
-    console.error("Erro identificação:", error);
-    window.showToast("Falha na comunicação com o Servidor!", "danger");
+    const { signOut } = await import("./firebase.js");
+    await signOut(firebaseAuth);
+    clearUserDataFromStorage();
+    window.marketListData = [];
+    isFirstLoad = true;
+    isHandlingAuthenticatedUser = false;
+    executeScreenNavigation("onboarding-screen");
+  } catch (logoutError) {
+    console.error("Erro ao fazer logout:", logoutError);
+    window.showToast("Erro ao sair. Tente novamente.", "danger");
   }
 };
 
@@ -719,21 +1148,27 @@ window.getGreetingByTimeOfDay = function () {
 
 /**
  * Atualiza o título de boas-vindas com a saudação baseada na hora do dia
- * e o nome do usuário armazenado.
- * Busca no localStorage pela key 'marketUserName'.
+ * e o nome do usuário descriptografado do localStorage.
  */
-window.updateWelcomeTitle = function () {
+window.updateWelcomeTitle = async function () {
   const welcomeTitleElement = document.getElementById("welcome-user-title");
-  const storedUserName = localStorage.getItem("marketUserName");
   const greeting = window.getGreetingByTimeOfDay();
 
-  if (welcomeTitleElement) {
-    if (storedUserName && storedUserName.trim() !== "") {
-      welcomeTitleElement.textContent = `${greeting}, ${storedUserName.trim()}!`;
-    } else {
-      welcomeTitleElement.textContent = `${greeting}!`;
+  if (!welcomeTitleElement) return;
+
+  // Tenta ler o displayName descriptografado usando o uid do usuário autenticado
+  const currentUser = firebaseAuth.currentUser;
+  if (currentUser) {
+    const { displayName } = await readDecryptedUserDataFromStorage(
+      currentUser.uid,
+    );
+    if (displayName && displayName.trim() !== "") {
+      welcomeTitleElement.textContent = `${greeting}, ${displayName.trim()}!`;
+      return;
     }
   }
+
+  welcomeTitleElement.textContent = `${greeting}!`;
 };
 
 /**
@@ -801,8 +1236,14 @@ function applyDashboardSkeletonBeforeNavigation() {
  * aberta é desativado automaticamente para liberar recursos do Firestore.
  *
  * @param {string} screenIdentifier - ID da tela de destino
+ * @param {boolean} isReturnFromDetails - Indica se a navegação vem da tela de detalhes.
+ *   Quando true, suprime o skeleton e o clearListsSearch na tela de listas.
+ *   O conteúdo já está em memória e é re-renderizado diretamente por showScreen.
  */
-function executeScreenNavigation(screenIdentifier) {
+function executeScreenNavigation(
+  screenIdentifier,
+  isReturnFromDetails = false,
+) {
   const screens = [
     "onboarding-screen",
     "home-screen",
@@ -846,11 +1287,13 @@ function executeScreenNavigation(screenIdentifier) {
   }
 
   if (screenIdentifier === "market-lists-screen") {
-    window.searchInput.value = "";
+    if (!isReturnFromDetails) {
+      window.searchInput.value = "";
 
-    if (window.clearListsSearch) window.clearListsSearch();
+      if (window.clearListsSearch) window.clearListsSearch();
 
-    if (window.showListsSkeleton) window.showListsSkeleton();
+      if (window.showListsSkeleton) window.showListsSkeleton();
+    }
   }
 
   if (screenIdentifier === "market-list-screen-details") {
@@ -883,9 +1326,11 @@ const screensThatResetPagination = new Set(["home-screen", "dashboard-screen"]);
 
 /**
  *
- * Regra de paginação ao entrar na tela de listas:
- * - Vindo de home-screen ou dashboard-screen: reseta para página 1
- * - Vindo de market-list-screen-details: preserva a página atual
+ * Regra de validação ao entrar na tela de listas:
+ * - Vindo de home-screen ou dashboard-screen: executa validação completa (banco + funções)
+ *   e exibe skeleton durante a validação
+ * - Vindo de market-list-screen-details: navega diretamente sem validação nem skeleton,
+ *   pois os dados já estão em memória — evita o flash e o sumiço das listas
  *
  * @param {string} screenIdentifier - ID da tela de destino
  */
@@ -894,7 +1339,7 @@ window.showScreen = async function (screenIdentifier) {
     screenValidationConfiguration.hasOwnProperty(screenIdentifier);
 
   // Captura a tela atualmente visível antes de navegar,
-  // para usar como referência na decisão de reset de paginação
+  // para usar como referência na decisão de reset de paginação e de validação
   const currentlyVisibleScreen = [
     "home-screen",
     "market-lists-screen",
@@ -908,6 +1353,17 @@ window.showScreen = async function (screenIdentifier) {
     const element = document.getElementById(screenId);
     return element && !element.classList.contains("screen-hidden");
   });
+
+  const isReturnFromDetailsToLists =
+    screenIdentifier === "market-lists-screen" &&
+    currentlyVisibleScreen === "market-list-screen-details";
+
+  if (isReturnFromDetailsToLists) {
+    executeScreenNavigation(screenIdentifier, true);
+
+    if (window.renderMarketLists) window.renderMarketLists();
+    return;
+  }
 
   if (requiresValidation) {
     // Marca que está validando para controlar o fluxo
@@ -1030,10 +1486,17 @@ document.addEventListener("click", function (event) {
 /* ==========================================================================
    FIREBASE LISTENER E PERSISTÊNCIA
    ========================================================================== */
-function initFirebaseListener(userName) {
+
+/**
+ * Inicializa o listener em tempo real das listas do Firestore.
+ * A query agora filtra pelo uid do usuário autenticado (não mais pelo nome).
+ *
+ * @param {string} userUid - UID do Firebase Auth do usuário autenticado
+ */
+function initFirebaseListener(userUid) {
   const q = query(
     collection(firestore, "lists"),
-    where("userName", "==", userName),
+    where("userId", "==", userUid),
     orderBy("date", "desc"),
   );
 
@@ -1053,7 +1516,7 @@ function initFirebaseListener(userName) {
         (existingList) =>
           !ownedListsFromFirestore.some(
             (ownedList) => ownedList.id === existingList.id,
-          ) && existingList.userName !== userName,
+          ) && existingList.userId !== userUid,
       );
 
       // Aplica proteção anti-regressão ao mesclar as listas próprias:
@@ -1062,22 +1525,25 @@ function initFirebaseListener(userName) {
       const mergedOwnedLists = mergeListDataWithTimestampProtection(
         // Passa apenas as listas próprias que já estão em memória como base
         window.marketListData.filter(
-          (existingList) => existingList.userName === userName,
+          (existingList) => existingList.userId === userUid,
         ),
         ownedListsFromFirestore,
       );
 
       // Reconstrói o marketListData: listas próprias mescladas + compartilhadas preservadas
-      window.marketListData = [...mergedOwnedLists, ...sharedListsAlreadyLoaded];
+      window.marketListData = [
+        ...mergedOwnedLists,
+        ...sharedListsAlreadyLoaded,
+      ];
 
       if (isFirstLoad) {
         window.showScreen("home-screen");
         isFirstLoad = false;
 
-        // Inicializa o listener de listas compartilhadas com o usuário atual
+        // Inicializa o listener de listas compartilhadas com o uid do usuário atual
         // após carregar as listas próprias (evita condição de corrida)
         if (window.initSharedListsListener) {
-          window.initSharedListsListener(userName);
+          window.initSharedListsListener(userUid);
         }
       } else {
         if (
@@ -1135,44 +1601,38 @@ function initFirebaseListener(userName) {
   );
 }
 
+/* ==========================================================================
+   INICIALIZAÇÃO DO APP — FIREBASE AUTH COMO PORTÃO DE ENTRADA
+   ========================================================================== */
+
 /**
- * Valida se o usuário ainda existe no Firebase
- * Se houver erro de conexão, exibe toast e redireciona para home-screen
+ * Inicializa o app ouvindo o estado de autenticação do Firebase.
+ * O onAuthStateChanged é o único ponto de entrada.
  *
- * @param {string} savedName - Nome do usuário salvo no localStorage
+ * Fluxo:
+ * - Usuário autenticado → handleAuthenticatedUser → initFirebaseListener
+ * - Usuário não autenticado → onboarding
+ *
+ * O guard isHandlingAuthenticatedUser impede re-disparos do
+ * onAuthStateChanged (que podem ocorrer durante o fluxo de cadastro por
+ * email/senha enquanto o updateProfile ainda está sendo executado).
  */
-async function validateUserPersistence(savedName) {
-  try {
-    const userId = savedName.toLowerCase().replace(/\s/g, "");
-    const userRef = doc(firestore, "users", userId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      localStorage.removeItem("marketUserName");
-      window.showToast("Sessão expirada ou usuário removido.", "danger");
-      // Redireciona para onboarding se usuário não existe
-      executeScreenNavigation("onboarding-screen");
-      return;
-    }
-
-    window.showScreen("home-screen");
-    initFirebaseListener(savedName);
-  } catch (error) {
-    console.error("Erro ao validar persistência:", error);
-
-    window.showToast("Falha na comunicação com o Servidor!", "danger");
-    executeScreenNavigation("home-screen");
-  }
-}
-
 async function initApp() {
-  const savedName = localStorage.getItem("marketUserName");
-
-  if (!savedName) {
-    window.showScreen("onboarding-screen");
-  } else {
-    await validateUserPersistence(savedName);
-  }
+  onAuthStateChanged(firebaseAuth, async (authenticatedUser) => {
+    if (authenticatedUser) {
+      // Usuário com sessão ativa no Firebase Auth
+      // O guard evita execuções paralelas durante o fluxo de autenticação
+      if (!isHandlingAuthenticatedUser) {
+        await handleAuthenticatedUser(authenticatedUser);
+      }
+    } else {
+      // Sem sessão ativa — exibe onboarding
+      // Só redireciona ao onboarding se não há um fluxo de autenticação em andamento
+      if (!isHandlingAuthenticatedUser) {
+        window.showScreen("onboarding-screen");
+      }
+    }
+  });
 
   const searchInputElement = document.getElementById("search-input");
   if (searchInputElement) {

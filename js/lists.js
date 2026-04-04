@@ -2,6 +2,27 @@
    TELA: LISTAS DE COMPRAS
    ========================================================================== */
 
+import { firebaseAuth } from "./firebase.js";
+
+/* ==========================================================================
+   SANITIZAÇÃO — DOMPARSER NATIVO
+   ========================================================================== */
+
+/**
+ * Sanitiza uma string removendo tags HTML e scripts maliciosos.
+ * Usa DOMParser nativo do browser para extrair apenas o texto em claro,
+ * eliminando qualquer tentativa de injeção de HTML/XSS via dados do Firestore.
+ *
+ * @param {string} rawInput - Texto potencialmente inseguro vindo do banco de dados
+ * @returns {string} Texto sanitizado sem tags HTML
+ */
+function sanitizeHtmlInput(rawInput) {
+  if (!rawInput) return "";
+  const documentParser = new DOMParser();
+  const parsedDocument = documentParser.parseFromString(rawInput, "text/html");
+  return parsedDocument.body.textContent || "";
+}
+
 /**
  * Exclui permanentemente uma lista do Firestore.
  * NÃO remove do array local - aguarda o onSnapshot atualizar automaticamente.
@@ -154,22 +175,23 @@ window.switchListsTab = function (tabIdentifier) {
 
 /**
  * Retorna o subconjunto de listas correspondente à aba atualmente ativa.
- * "owned"  → listas cujo userName é igual ao usuário logado
- * "shared" → listas cujo userName é diferente do usuário logado
+ * "owned"  → listas cujo userId é igual ao uid do usuário autenticado
+ * "shared" → listas cujo userId é diferente do uid do usuário autenticado
  *
  * @returns {Array} Subconjunto filtrado do marketListData
  */
 function getListsForActiveTab() {
-  const currentUserName = localStorage.getItem("marketUserName");
+  const currentUser = firebaseAuth.currentUser;
+  const currentUserUid = currentUser ? currentUser.uid : null;
 
   if (activeListsTab === "owned") {
     return window.marketListData.filter(
-      (list) => list.userName === currentUserName,
+      (list) => list.userId === currentUserUid,
     );
   }
 
   return window.marketListData.filter(
-    (list) => list.userName !== currentUserName,
+    (list) => list.userId !== currentUserUid,
   );
 }
 
@@ -442,6 +464,10 @@ function renderListsForCurrentPage() {
     return;
   }
 
+  // Obtém o uid do usuário autenticado para verificar propriedade das listas
+  const currentUser = firebaseAuth.currentUser;
+  const currentUserUid = currentUser ? currentUser.uid : null;
+
   pageItems.forEach((list) => {
     const originalIndex = window.marketListData.findIndex(
       (originalList) => originalList.id === list.id,
@@ -482,9 +508,7 @@ function renderListsForCurrentPage() {
     const actionButtons = document.createElement("div");
     actionButtons.className = "swipe-actions";
 
-    // Verifica as permissões do usuário atual antes de renderizar os botões de swipe
-    const currentUserName = localStorage.getItem("marketUserName");
-    const isOwnerOfThisList = list.userName === currentUserName;
+    const isOwnerOfThisList = list.userId === currentUserUid;
 
     if (isOwnerOfThisList) {
       actionButtons.innerHTML = `
@@ -508,17 +532,23 @@ function renderListsForCurrentPage() {
       cardElement.ontouchend = window.handleTouchEnd;
     }
 
+    // Sanitiza dados do Firestore antes de injetar no DOM
+    const safeListName = sanitizeHtmlInput(list.listName);
+    const safeLocation = sanitizeHtmlInput(list.location || "");
+    const safeOwnerName = sanitizeHtmlInput(list.ownerDisplayName || "");
+
     // Badge de compartilhamento exibido em listas da aba "Compartilhadas"
+    // Exibe o displayName do dono (salvo no campo ownerDisplayName) em vez do uid
     const sharedByBadgeHTML = !isOwnerOfThisList
       ? `<div class="shared-by-badge">
             <ion-icon name="people-outline"></ion-icon>
-            <span>De: ${list.userName}</span>
+            <span>De: ${safeOwnerName || "Usuário"}</span>
            </div>`
       : "";
 
     cardElement.innerHTML = `
         <div class="list-master-header dashboard-header">
-            <span class="list-master-title">${list.listName}</span>
+            <span class="list-master-title">${safeListName}</span>
             <div style="display: flex; gap: 8px; align-items: center;">
                 ${isOwnerOfThisList ? `<ion-icon name="copy-outline" onclick="copyList(event, ${originalIndex})" style="color: var(--primary); font-size: 20px;"></ion-icon>` : ""}
             <span class="item-count">${totalItemsCount} ${totalItemsCount === 1 ? "item" : "itens"}</span>
@@ -527,7 +557,7 @@ function renderListsForCurrentPage() {
         ${sharedByBadgeHTML}
         <div class="location-text" style="font-size: 13px; color: var(--primary); font-weight: 600; margin-top: 2px;">
             <ion-icon name="location-outline" style="color: var(--primary); font-size: 14px; vertical-align: middle;"></ion-icon> 
-            ${list.location || "Local não informado"}
+            ${safeLocation || "Local não informado"}
         </div>
         <div class="date-text" style="margin-top: 4px;">
             <ion-icon name="calendar-outline" style="color: var(--text-secondary); font-size: 14px; vertical-align: middle; margin-top: -4px;"></ion-icon> 
