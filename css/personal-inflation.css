@@ -3,12 +3,12 @@
    ========================================================================== */
 
 /* Card de Inflação Pessoal */
-.cpi-card {
+.personal-inflation-cpi-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
 }
 
-.cpi-card::before {
+.personal-inflation-cpi-card::before {
   background: radial-gradient(
     circle,
     rgba(76, 51, 230, 0.1) 0%,
@@ -18,14 +18,14 @@
 }
 
 /* Listas de dados CPI */
-.cpi-list {
+.personal-inflation-cpi-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 /* Item individual de CPI */
-.cpi-item {
+.personal-inflation-cpi-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -35,61 +35,50 @@
   border: 1px solid var(--border-color);
   font-size: 13px;
   transition: all 0.2s ease;
-  animation: slideInRight 0.4s ease-out backwards;
+  animation: dashboardSlideInRight 0.4s ease-out backwards;
 }
 
 /* No tema dark o fundo do cpi-item ganha mais opacidade para contrastar */
-[data-theme="dark"] .cpi-item {
+[data-theme="dark"] .personal-inflation-cpi-item {
   background: rgba(124, 111, 247, 0.06);
 }
 
-.cpi-item:nth-child(1) {
+.personal-inflation-cpi-item:nth-child(1) {
   animation-delay: 0.1s;
 }
-.cpi-item:nth-child(2) {
+.personal-inflation-cpi-item:nth-child(2) {
   animation-delay: 0.2s;
 }
-.cpi-item:nth-child(3) {
+.personal-inflation-cpi-item:nth-child(3) {
   animation-delay: 0.3s;
 }
-.cpi-item:nth-child(4) {
+.personal-inflation-cpi-item:nth-child(4) {
   animation-delay: 0.4s;
 }
-.cpi-item:nth-child(5) {
+.personal-inflation-cpi-item:nth-child(5) {
   animation-delay: 0.5s;
 }
 
-@keyframes slideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.cpi-item:hover {
+.personal-inflation-cpi-item:hover {
   background: rgba(76, 51, 230, 0.06);
   border-color: rgba(76, 51, 230, 0.25);
   transform: translateX(4px);
 }
 
 /* Variação de preço - Alta (vermelho) */
-.cpi-item.up {
+.personal-inflation-cpi-item.up {
   border-right: 3px solid #ff4757;
   background: linear-gradient(90deg, rgba(255, 71, 87, 0.05), transparent);
 }
 
 /* Variação de preço - Queda (verde) */
-.cpi-item.down {
+.personal-inflation-cpi-item.down {
   border-right: 3px solid #249689;
   background: linear-gradient(90deg, rgba(36, 150, 137, 0.05), transparent);
 }
 
 /* Badge de CPI com cores de performance */
-.cpi-badge {
+.personal-inflation-cpi-badge {
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
@@ -104,46 +93,32 @@
 }
 
 /* Excellent (>=90%) - Verde */
-.cpi-badge.excellent {
+.personal-inflation-cpi-badge.excellent {
   background: rgba(36, 150, 137, 0.7);
   box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
   border-color: rgba(36, 150, 137, 0.5);
+  animation: dashboardPulsePerformance 2s ease-in-out infinite;
 }
 
 /* Good (>=80%) - Roxo/Azul */
-.cpi-badge.good {
+.personal-inflation-cpi-badge.good {
   background: rgba(76, 51, 230, 0.6);
   box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
   border-color: rgba(76, 51, 230, 0.4);
 }
 
 /* Average (>=70%) - Laranja/Amarelo */
-.cpi-badge.average {
+.personal-inflation-cpi-badge.average {
   background: rgba(235, 156, 29, 0.6);
   box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
   border-color: rgba(235, 156, 29, 0.4);
 }
 
 /* Low (<70%) - Vermelho */
-.cpi-badge.low {
+.personal-inflation-cpi-badge.low {
   background: rgba(255, 71, 87, 0.6);
   box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
   border-color: rgba(255, 71, 87, 0.4);
-}
-
-/* Animação de pulsar para excellent */
-.cpi-badge.excellent {
-  animation: pulsePerformance 2s ease-in-out infinite;
-}
-
-@keyframes pulsePerformance {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
 }
 
 /* ==========================================================================
@@ -153,7 +128,7 @@
    ========================================================================== */
 
 /* Card de economia: ocupa a linha inteira da seção de inflação */
-.inflation-economy-card {
+.personal-inflation-economy-card {
   grid-column: 1 / -1;
   width: 100%;
   box-sizing: border-box;
@@ -162,52 +137,21 @@
 }
 
 /* Estado positivo: o usuário economizou em relação à compra anterior (verde) */
-.inflation-economy-card.economy-positive {
+.personal-inflation-economy-card.economy-positive {
   border-color: rgba(36, 150, 137, 0.4);
   box-shadow: 0 0 20px rgba(36, 150, 137, 0.12);
 }
 
-.inflation-economy-card.economy-positive .stat-value {
+.personal-inflation-economy-card.economy-positive .stat-value {
   color: #249689;
 }
 
 /* Estado negativo: o usuário gastou mais em relação à compra anterior (vermelho) */
-.inflation-economy-card.economy-negative {
+.personal-inflation-economy-card.economy-negative {
   border-color: rgba(255, 71, 87, 0.4);
   box-shadow: 0 0 20px rgba(255, 71, 87, 0.12);
 }
 
-.inflation-economy-card.economy-negative .stat-value {
+.personal-inflation-economy-card.economy-negative .stat-value {
   color: #ff4757;
-}
-
-/* ==========================================================================
-   TEXTOS GERAIS COMPARTILHADOS
-   ========================================================================== */
-
-/* Texto principal do item */
-.item-main-text {
-  font-weight: 600;
-  color: var(--text-main);
-  font-size: 14px;
-}
-
-/* Texto secundário do item */
-.item-sub-text {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-  display: block;
-}
-
-/* Estado vazio menor */
-.empty-state-minor {
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
-  font-size: 13px;
-  padding: 30px 20px;
-  background: rgba(76, 51, 230, 0.03);
-  border-radius: 16px;
-  border: 1px dashed var(--border-color);
 }

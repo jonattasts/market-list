@@ -671,12 +671,12 @@ function renderPaginatedList(
 
   // Cria wrapper para a lista
   const listWrapper = document.createElement("div");
-  listWrapper.className = "paginated-list-wrapper";
+  listWrapper.className = "dashboard-paginated-list-wrapper";
 
   // Renderiza os itens da página atual com margem inferior para espaçamento
   paginatedItems.forEach((item, index) => {
     const div = document.createElement("div");
-    div.className = "data-item";
+    div.className = "dashboard-data-item";
     div.style.cssText = `
       animation-delay: ${index * 0.1}s;
     `;
@@ -722,7 +722,7 @@ function createPaginationControls(
   renderRightContent,
 ) {
   const controls = document.createElement("div");
-  controls.className = "pagination-controls";
+  controls.className = "dashboard-pagination-controls";
   controls.style.cssText = `
     display: flex;
     justify-content: center;
@@ -739,7 +739,7 @@ function createPaginationControls(
 
   const prevBtn = document.createElement("button");
   prevBtn.innerHTML = '<ion-icon name="chevron-back-outline"></ion-icon>';
-  prevBtn.className = "pagination-button";
+  prevBtn.className = "dashboard-pagination-button";
   prevBtn.disabled = currentPage === 1;
 
   if (!prevBtn.disabled) {
@@ -775,7 +775,7 @@ function createPaginationControls(
 
   const nextBtn = document.createElement("button");
   nextBtn.innerHTML = '<ion-icon name="chevron-forward-outline"></ion-icon>';
-  nextBtn.className = "pagination-button";
+  nextBtn.className = "dashboard-pagination-button";
   nextBtn.disabled = currentPage === totalPages;
 
   if (!nextBtn.disabled) {

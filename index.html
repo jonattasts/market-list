@@ -813,7 +813,7 @@
 
                 <!-- Ticket Médio -->
                 <div class="metrics-grid">
-                  <div class="metric-card-stat info metric-card-stat-full">
+                  <div class="metric-card-stat info purchase-efficiency-metric-card-stat-full">
                     <span class="stat-label">Ticket Médio (Lista)</span>
                     <span id="metric-ticket-medio" class="stat-value">R$
                       0,00</span>
@@ -821,23 +821,25 @@
                   </div>
                 </div>
 
-                <div class="chart-card">
-                  <h3 class="card-title">Gasto por Categoria</h3>
+                <!-- Gráfico: Gasto por Categoria -->
+                <div class="dashboard-chart-card">
+                  <h3 class="dashboard-card-title">Gasto por Categoria</h3>
                   <canvas id="chart-share-wallet"></canvas>
                 </div>
 
                 <!-- Taxa de Conversão dos Últimos 3 Meses -->
-                <div class="metric-card-full conversion-rate-card">
-                  <h3 class="card-title">Taxa de Conversão (Últimos 3
+                <div class="metric-card-full purchase-efficiency-conversion-rate-card">
+                  <h3 class="dashboard-card-title">Taxa de Conversão (Últimos 3
                     Meses)</h3>
                   <div id="conversion-rate-container"
-                    class="conversion-rate-list">
-                    <div class="empty-state-minor">Sem dados suficientes</div>
+                    class="purchase-efficiency-conversion-rate-list">
+                    <div class="dashboard-empty-state-minor">Sem dados suficientes</div>
                   </div>
                 </div>
 
-                <div class="chart-card">
-                  <h3 class="card-title">Volume de Itens por Compra</h3>
+                <!-- Gráfico: Volume de Itens por Compra -->
+                <div class="dashboard-chart-card">
+                  <h3 class="dashboard-card-title">Volume de Itens por Compra</h3>
                   <canvas id="chart-volume-itens"></canvas>
                 </div>
               </div>
@@ -854,7 +856,7 @@
 
                 <!-- Economia Potencial -->
                 <!-- Exibe valor positivo (economia) ou negativo (gasto maior) com base nos recorrentes -->
-                <div class="metric-card-stat inflation-economy-card">
+                <div class="metric-card-stat personal-inflation-economy-card">
                   <span class="stat-label">Economia nos Recorrentes</span>
                   <span id="metric-economy-inflation" class="stat-value">R$
                     0,00</span>
@@ -862,10 +864,11 @@
                     recorrentes</span>
                 </div>
 
-                <div class="metric-card-full cpi-card">
-                  <h3 class="card-title">Inflação Pessoal (Recorrentes)</h3>
-                  <div id="cpi-container" class="cpi-list">
-                    <div class="empty-state-minor">Sem dados comparativos</div>
+                <!-- Card CPI -->
+                <div class="metric-card-full personal-inflation-cpi-card">
+                  <h3 class="dashboard-card-title">Inflação Pessoal (Recorrentes)</h3>
+                  <div id="cpi-container" class="personal-inflation-cpi-list">
+                    <div class="dashboard-empty-state-minor">Sem dados comparativos</div>
                   </div>
                 </div>
               </div>
@@ -898,38 +901,39 @@
                 </div>
 
                 <!-- LISTA DOS TOP 3 LOCAIS MAIS VISITADOS -->
-                <div class="metric-card-full top-locations-card">
-                  <h3 class="card-title">🏪 Locais Mais Visitados</h3>
-                  <div id="top-locations-container" class="top-locations-list">
-                    <div class="empty-state-minor">Carregando locais de
+                <div class="metric-card-full behavior-habits-top-locations-card">
+                  <h3 class="dashboard-card-title">🏪 Locais Mais Visitados</h3>
+                  <div id="top-locations-container" class="behavior-habits-top-locations-list">
+                    <div class="dashboard-empty-state-minor">Carregando locais de
                       compra...</div>
                   </div>
                 </div>
 
                 <!-- LISTA DE ITENS ESSENCIAIS -->
-                <div class="metric-card-full essentials-card">
-                  <h3 class="card-title">📋 Itens Essenciais (Top
+                <div class="metric-card-full behavior-habits-essentials-card">
+                  <h3 class="dashboard-card-title">📋 Itens Essenciais (Top
                     Recorrência)</h3>
-                  <div id="essentials-container" class="essentials-list">
-                    <div class="empty-state-minor">Carregando itens
+                  <div id="essentials-container" class="behavior-habits-essentials-list">
+                    <div class="dashboard-empty-state-minor">Carregando itens
                       essenciais...</div>
                   </div>
                 </div>
 
                 <!-- RECORRÊNCIA DE ITENS -->
                 <div class="metric-card-full">
-                  <h3 class="card-title">Recorrência de Itens (Frequência)</h3>
-                  <div id="recurrence-itens-list" class="simple-data-list">
-                    <div class="empty-state-minor">Gere mais listas para ver a
+                  <h3 class="dashboard-card-title">Recorrência de Itens (Frequência)</h3>
+                  <div id="recurrence-itens-list" class="dashboard-simple-data-list">
+                    <div class="dashboard-empty-state-minor">Gere mais listas para ver a
                       frequência.</div>
                   </div>
                 </div>
 
-                <div class="chart-card">
-                  <h3 class="card-title">Previsão de Reposição (Próximos
+                <!-- Gráfico: Previsão de Reposição -->
+                <div class="dashboard-chart-card">
+                  <h3 class="dashboard-card-title">Previsão de Reposição (Próximos
                     Itens)</h3>
-                  <div id="restock-list" class="simple-data-list">
-                    <div class="empty-state-minor">Sem histórico
+                  <div id="restock-list" class="dashboard-simple-data-list">
+                    <div class="dashboard-empty-state-minor">Sem histórico
                       suficiente</div>
                   </div>
                 </div>
@@ -944,12 +948,14 @@
               <div class="metrics-section">
                 <h2 class="section-title">Insights de Saúde</h2>
 
-                <div class="chart-card">
-                  <h3 class="card-title">Perfil de Compra (Ratio)</h3>
+                <!-- Gráfico: Perfil de Compra -->
+                <div class="dashboard-chart-card">
+                  <h3 class="dashboard-card-title">Perfil de Compra (Ratio)</h3>
                   <canvas id="chart-perfil-saude"></canvas>
                 </div>
 
-                <div class="metric-card-full sazonalidade-card">
+                <!-- Card Sazonalidade -->
+                <div class="metric-card-full health-insights-sazonalidade-card">
                   <ion-icon name="leaf-outline"></ion-icon>
                   <p id="metric-seasonality-text">Inicie suas compras para gerar
                     histórico de sazonalidade.</p>

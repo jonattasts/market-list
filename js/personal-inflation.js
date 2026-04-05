@@ -68,7 +68,7 @@ function updateInflationEconomyCard(cpiItems) {
 
   economyElement.innerText = `${totalSavings < 0 ? "-" : ""}${window.formatCurrencyBRL(Math.abs(totalSavings))}`;
 
-  const economyCard = economyElement.closest(".inflation-economy-card");
+  const economyCard = economyElement.closest(".personal-inflation-economy-card");
   if (economyCard) {
     economyCard.classList.remove("economy-positive", "economy-negative");
     if (totalSavings >= 0) {
@@ -122,11 +122,11 @@ function processPersonalInflationData(filteredLists) {
       window.cachedDashboardData.cpiItems,
       "cpi",
       (item) => `
-        <div class="item-main-text">${item.name}</div>
-        <span class="item-sub-text">Anterior: ${window.formatCurrencyBRL(item.avgPrevious)} → Atual: ${window.formatCurrencyBRL(item.avgCurrent)}</span>
+        <div class="dashboard-item-main-text">${item.name}</div>
+        <span class="dashboard-item-sub-text">Anterior: ${window.formatCurrencyBRL(item.avgPrevious)} → Atual: ${window.formatCurrencyBRL(item.avgCurrent)}</span>
       `,
       (item) => `
-        <div class="percentage-badge ${item.performanceClass}">
+        <div class="dashboard-percentage-badge ${item.performanceClass}">
           ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
         </div>
       `,
@@ -137,7 +137,7 @@ function processPersonalInflationData(filteredLists) {
   container.innerHTML = "";
 
   if (filteredLists.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Sem dados no período selecionado.</div>`;
+    container.innerHTML = `<div class="dashboard-empty-state-minor">Sem dados no período selecionado.</div>`;
     return;
   }
 
@@ -217,7 +217,7 @@ function processPersonalInflationData(filteredLists) {
   });
 
   if (cpiItems.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente com preço unitário encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
+    container.innerHTML = `<div class="dashboard-empty-state-minor">Nenhum item recorrente com preço unitário encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
     return;
   }
 
@@ -233,11 +233,11 @@ function processPersonalInflationData(filteredLists) {
     cpiItems,
     "cpi",
     (item) => `
-      <div class="item-main-text">${item.name}</div>
-      <span class="item-sub-text">Anterior: ${window.formatCurrencyBRL(item.avgPrevious)} → Atual: ${window.formatCurrencyBRL(item.avgCurrent)}</span>
+      <div class="dashboard-item-main-text">${item.name}</div>
+      <span class="dashboard-item-sub-text">Anterior: ${window.formatCurrencyBRL(item.avgPrevious)} → Atual: ${window.formatCurrencyBRL(item.avgCurrent)}</span>
     `,
     (item) => `
-      <div class="percentage-badge ${item.performanceClass}">
+      <div class="dashboard-percentage-badge ${item.performanceClass}">
         ${item.emoji} ${Math.abs(item.diff).toFixed(1)}%
       </div>
     `,
@@ -324,6 +324,6 @@ window.renderShareWalletChart = renderShareWalletChart;
 function renderPersonalInflationEmptyState() {
   const container = document.getElementById("cpi-container");
   if (container) {
-    container.innerHTML = `<div class="empty-state-minor">Crie listas para ativar a análise de inflação pessoal.</div>`;
+    container.innerHTML = `<div class="dashboard-empty-state-minor">Crie listas para ativar a análise de inflação pessoal.</div>`;
   }
 }

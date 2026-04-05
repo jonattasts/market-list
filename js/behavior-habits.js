@@ -126,17 +126,17 @@ function calculateLocationFidelity(filteredLists) {
       window.cachedDashboardData.topLocationsItems,
       "topLocations",
       (item) => `
-        <div class="location-item-info">
-          <div class="item-main-text">${item.name}</div>
-          <span class="item-sub-text">Última compra: ${item.lastPurchaseDateFormatted}</span>
+        <div class="behavior-habits-location-item-info">
+          <div class="dashboard-item-main-text">${item.name}</div>
+          <span class="dashboard-item-sub-text">Última compra: ${item.lastPurchaseDateFormatted}</span>
         </div>
       `,
       (item) => `
-        <div class="location-count-badge">
-          <div class="count-badge ${item.performanceClass}">
+        <div class="behavior-habits-location-count-badge">
+          <div class="behavior-habits-count-badge ${item.performanceClass}">
             ${item.count}
           </div>
-          <span class="item-sub-text">${item.percentageFormatted} das compras</span>
+          <span class="dashboard-item-sub-text">${item.percentageFormatted} das compras</span>
         </div>
       `,
     );
@@ -146,7 +146,7 @@ function calculateLocationFidelity(filteredLists) {
   topLocationsContainer.innerHTML = "";
 
   if (sortedLocations.length === 0) {
-    topLocationsContainer.innerHTML = `<div class="empty-state-minor">Nenhum local de compra registrado.</div>`;
+    topLocationsContainer.innerHTML = `<div class="dashboard-empty-state-minor">Nenhum local de compra registrado.</div>`;
     return;
   }
 
@@ -185,17 +185,17 @@ function calculateLocationFidelity(filteredLists) {
     topLocationsItems,
     "topLocations",
     (item) => `
-      <div class="location-item-info">
-        <div class="item-main-text">${item.name}</div>
-        <span class="item-sub-text">Última compra: ${item.lastPurchaseDateFormatted}</span>
+      <div class="behavior-habits-location-item-info">
+        <div class="dashboard-item-main-text">${item.name}</div>
+        <span class="dashboard-item-sub-text">Última compra: ${item.lastPurchaseDateFormatted}</span>
       </div>
     `,
     (item) => `
-      <div class="location-count-badge">
-        <div class="count-badge ${item.performanceClass}">
+      <div class="behavior-habits-location-count-badge">
+        <div class="behavior-habits-count-badge ${item.performanceClass}">
           ${item.count}
         </div>
-        <span class="item-sub-text">${item.percentageFormatted} das compras</span>
+        <span class="dashboard-item-sub-text">${item.percentageFormatted} das compras</span>
       </div>
     `,
   );
@@ -223,17 +223,17 @@ function calculateEssentialItems(allLists) {
       window.cachedDashboardData.essentialsItems,
       "essentials",
       (item) => `
-        <div class="essential-item-info">
-          <div class="item-main-text">${item.name}</div>
-          <span class="item-sub-text">Qtd. total comprada: ${item.totalQuantity} unid.</span>
+        <div class="behavior-habits-essential-item-info">
+          <div class="dashboard-item-main-text">${item.name}</div>
+          <span class="dashboard-item-sub-text">Qtd. total comprada: ${item.totalQuantity} unid.</span>
         </div>
       `,
       (item) => `
-        <div class="essential-percentage">
-          <div class="percentage-badge ${item.performanceClass}">
+        <div class="behavior-habits-essential-percentage">
+          <div class="behavior-habits-percentage-badge ${item.performanceClass}">
             ${item.appearancePercentageFormatted}
           </div>
-          <span class="item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
+          <span class="dashboard-item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
         </div>
       `,
     );
@@ -248,7 +248,7 @@ function calculateEssentialItems(allLists) {
   );
 
   if (recentLists.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Nenhuma lista nos últimos ${window.ESSENTIALS_CONFIG.monthsLimit} meses.</div>`;
+    container.innerHTML = `<div class="dashboard-empty-state-minor">Nenhuma lista nos últimos ${window.ESSENTIALS_CONFIG.monthsLimit} meses.</div>`;
     return;
   }
 
@@ -308,7 +308,7 @@ function calculateEssentialItems(allLists) {
   );
 
   if (essentialItems.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Nenhum item essencial encontrado (aparece em mais de ${window.ESSENTIALS_CONFIG.minPercentage}% das listas).</div>`;
+    container.innerHTML = `<div class="dashboard-empty-state-minor">Nenhum item essencial encontrado (aparece em mais de ${window.ESSENTIALS_CONFIG.minPercentage}% das listas).</div>`;
     return;
   }
 
@@ -325,17 +325,17 @@ function calculateEssentialItems(allLists) {
     essentialItems,
     "essentials",
     (item) => `
-      <div class="essential-item-info">
-        <div class="item-main-text">${item.name}</div>
-        <span class="item-sub-text">Qtd. total comprada: ${item.totalQuantity} unid.</span>
+      <div class="behavior-habits-essential-item-info">
+        <div class="dashboard-item-main-text">${item.name}</div>
+        <span class="dashboard-item-sub-text">Qtd. total comprada: ${item.totalQuantity} unid.</span>
       </div>
     `,
     (item) => `
-      <div class="essential-percentage">
-        <div class="percentage-badge ${item.performanceClass}">
+      <div class="behavior-habits-essential-percentage">
+        <div class="behavior-habits-percentage-badge ${item.performanceClass}">
           ${item.appearancePercentageFormatted}
         </div>
-        <span class="item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
+        <span class="dashboard-item-sub-text">${item.listsCount} de ${item.totalListsCount} listas</span>
       </div>
     `,
   );
@@ -377,8 +377,8 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
         "recurrence",
         (item) => `
           <div>
-            <span class="item-main-text">${item.name}</span>
-            <span class="item-sub-text">Média: ${item.average} dias | ${item.purchases} compras</span>
+            <span class="dashboard-item-main-text">${item.name}</span>
+            <span class="dashboard-item-sub-text">Média: ${item.average} dias | ${item.purchases} compras</span>
           </div>
         `,
         (item) => `
@@ -417,7 +417,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
             else frequencyText = `A cada ${Math.round(averageDays)} dias`;
 
             recurringItems.push({
-        name: sanitizeHtmlInput(window.capitalize(itemData.name)),
+              name: sanitizeHtmlInput(window.capitalize(itemData.name)),
               average: Math.round(averageDays),
               frequencyText: frequencyText,
               purchases: dates.length,
@@ -432,7 +432,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
       );
 
       if (recurringItems.length === 0) {
-        recurrenceContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
+        recurrenceContainer.innerHTML = `<div class="dashboard-empty-state-minor">Nenhum item recorrente encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
       } else {
         // Armazena em cache
         window.cachedDashboardData.recurrenceItems = recurringItems;
@@ -444,8 +444,8 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
           "recurrence",
           (item) => `
             <div>
-              <span class="item-main-text">${item.name}</span>
-              <span class="item-sub-text">Média: ${item.average} dias | ${item.purchases} compras</span>
+              <span class="dashboard-item-main-text">${item.name}</span>
+              <span class="dashboard-item-sub-text">Média: ${item.average} dias | ${item.purchases} compras</span>
             </div>
           `,
           (item) => `
@@ -489,8 +489,8 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
 
         return `
           <div>
-            <span class="item-main-text">${item.name}</span>
-            <span class="item-sub-text">Ciclo: ${item.cycle}d | Última: ${item.lastDateStr}</span>
+            <span class="dashboard-item-main-text">${item.name}</span>
+            <span class="dashboard-item-sub-text">Ciclo: ${item.cycle}d | Última: ${item.lastDateStr}</span>
           </div>
         `;
       },
@@ -513,7 +513,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
         }
 
         return `
-          <div class="restock-badge ${performanceClass}">
+          <div class="behavior-habits-restock-badge ${performanceClass}">
             ${statusText}
           </div>
         `;
@@ -525,7 +525,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
   restockContainer.innerHTML = "";
 
   if (listCount < 3) {
-    restockContainer.innerHTML = `<div class="empty-state-minor">Gere mais listas para prever reposição.</div>`;
+    restockContainer.innerHTML = `<div class="dashboard-empty-state-minor">Gere mais listas para prever reposição.</div>`;
     return;
   }
 
@@ -563,7 +563,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
         if (daysUntilPurchase >= -7) {
           // Mostra se já passou até 7 dias (atraso) ou está no futuro
           predictionsRestocking.push({
-        name: sanitizeHtmlInput(window.capitalize(itemData.name)),
+            name: sanitizeHtmlInput(window.capitalize(itemData.name)),
             cycle: Math.round(averageDays),
             nextDate: nextDate,
             lastDateStr: window.formatDateBRL(dates[dates.length - 1]),
@@ -577,7 +577,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
   predictionsRestocking.sort((a, b) => a.nextDate - b.nextDate);
 
   if (predictionsRestocking.length === 0) {
-    restockContainer.innerHTML = `<div class="empty-state-minor">Nenhum item recorrente encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
+    restockContainer.innerHTML = `<div class="dashboard-empty-state-minor">Nenhum item recorrente encontrado nos últimos ${window.RECURRENCE_CONFIG.monthsLimit} meses.</div>`;
     return;
   }
 
@@ -609,8 +609,8 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
 
       return `
         <div>
-          <span class="item-main-text">${item.name}</span>
-          <span class="item-sub-text">Ciclo: ${item.cycle}d | Última: ${item.lastDateStr}</span>
+          <span class="dashboard-item-main-text">${item.name}</span>
+          <span class="dashboard-item-sub-text">Ciclo: ${item.cycle}d | Última: ${item.lastDateStr}</span>
         </div>
       `;
     },
@@ -633,7 +633,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
       }
 
       return `
-        <div class="restock-badge ${performanceClass}">
+        <div class="behavior-habits-restock-badge ${performanceClass}">
           ${statusText}
         </div>
       `;
@@ -655,7 +655,7 @@ function renderBehaviorHabitsEmptyState() {
   containers.forEach((containerId) => {
     const container = document.getElementById(containerId);
     if (container) {
-      container.innerHTML = `<div class="empty-state-minor">Crie listas para ativar a análise de comportamento.</div>`;
+      container.innerHTML = `<div class="dashboard-empty-state-minor">Crie listas para ativar a análise de comportamento.</div>`;
     }
   });
 }

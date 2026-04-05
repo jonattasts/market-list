@@ -3,85 +3,11 @@
    ========================================================================== */
 
 /* ==========================================================================
-   CARDS DE GRÁFICOS
-   ========================================================================== */
-
-/* Cards de Gráficos Futuristas */
-.chart-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  padding: 16px;
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.chart-card::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.chart-card:hover::before {
-  opacity: 1;
-}
-
-.chart-card:hover {
-  border-color: rgba(76, 51, 230, 0.25);
-  transform: translateY(-2px);
-}
-
-.card-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 20px 0;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
-  padding-left: 12px;
-}
-
-.card-title::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 16px;
-  background: linear-gradient(180deg, var(--primary), var(--accent-green));
-  border-radius: 2px;
-}
-
-/* Canvas dos gráficos */
-.chart-card canvas {
-  max-height: 220px;
-  width: 100% !important;
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
-}
-
-/* ==========================================================================
    CARD SAZONALIDADE
    ========================================================================== */
 
 /* Card Sazonalidade */
-.sazonalidade-card {
+.health-insights-sazonalidade-card {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -98,7 +24,7 @@
   overflow: hidden;
 }
 
-.sazonalidade-card::before {
+.health-insights-sazonalidade-card::before {
   content: "";
   position: absolute;
   top: 0;
@@ -108,70 +34,15 @@
   background: linear-gradient(180deg, #249689, #2ed573);
 }
 
-.sazonalidade-card ion-icon {
+.health-insights-sazonalidade-card ion-icon {
   font-size: 32px;
   color: #2ed573;
   filter: drop-shadow(0 0 10px rgba(46, 213, 115, 0.5));
 }
 
-.sazonalidade-card p {
+.health-insights-sazonalidade-card p {
   font-size: 14px;
   color: var(--text-main);
   line-height: 1.5;
   margin: 0;
-}
-
-/* ==========================================================================
-   MÉTRICA CARD FULL
-   ========================================================================== */
-
-/* Card Métrica Full */
-.metric-card-full {
-  background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  padding: 16px;
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.metric-card-full::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.metric-card-full:hover::before {
-  opacity: 1;
-}
-
-.metric-card-full:hover {
-  border-color: rgba(76, 51, 230, 0.25);
-  transform: translateY(-2px);
-}
-
-/* Estado vazio menor */
-.empty-state-minor {
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
-  font-size: 13px;
-  padding: 30px 20px;
-  background: rgba(76, 51, 230, 0.03);
-  border-radius: 16px;
-  border: 1px dashed var(--border-color);
 }

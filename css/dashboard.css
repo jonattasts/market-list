@@ -621,6 +621,302 @@
 }
 
 /* ========================================================================
+   COMPONENTES COMPARTILHADOS ENTRE TODOS OS MÓDULOS DO DASHBOARD
+   Centralizados aqui para evitar duplicação entre os sub-arquivos CSS
+   ======================================================================== */
+
+/* Card de conteúdo expandido (largura total, sem grid) */
+.metric-card-full {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.metric-card-full::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.metric-card-full:hover::before {
+  opacity: 1;
+}
+
+.metric-card-full:hover {
+  border-color: rgba(76, 51, 230, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Cards de Gráficos — compartilhado entre purchase-efficiency e health-insights */
+.dashboard-chart-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.dashboard-chart-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(76, 51, 230, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.dashboard-chart-card:hover::before {
+  opacity: 1;
+}
+
+.dashboard-chart-card:hover {
+  border-color: rgba(76, 51, 230, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Canvas dos gráficos — usado em todos os módulos */
+.dashboard-chart-card canvas {
+  max-height: 220px;
+  width: 100% !important;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
+}
+
+/* Título de card — compartilhado entre purchase-efficiency e health-insights */
+.dashboard-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 20px 0;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  padding-left: 12px;
+}
+
+.dashboard-card-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(180deg, var(--primary), var(--accent-green));
+  border-radius: 2px;
+}
+
+/* Item individual de lista — compartilhado entre purchase-efficiency e behavior-habits */
+.dashboard-data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(76, 51, 230, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  transition: all 0.2s ease;
+  animation: dashboardSlideInRight 0.4s ease-out backwards;
+}
+
+/* No tema dark o fundo do data-item ganha mais opacidade para contrastar */
+[data-theme="dark"] .dashboard-data-item {
+  background: rgba(124, 111, 247, 0.06);
+}
+
+.dashboard-data-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.dashboard-data-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dashboard-data-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.dashboard-data-item:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.dashboard-data-item:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+@keyframes dashboardSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.dashboard-data-item:hover {
+  background: rgba(76, 51, 230, 0.06);
+  border-color: rgba(76, 51, 230, 0.25);
+  transform: translateX(4px);
+}
+
+/* Lista simples de dados — compartilhada entre purchase-efficiency e behavior-habits */
+.dashboard-simple-data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Wrapper para listas paginadas — compartilhado entre purchase-efficiency e behavior-habits */
+.dashboard-paginated-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Texto principal do item — compartilhado entre purchase-efficiency, personal-inflation e behavior-habits */
+.dashboard-item-main-text {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+/* Texto secundário do item — compartilhado entre purchase-efficiency, personal-inflation e behavior-habits */
+.dashboard-item-sub-text {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  display: block;
+}
+
+/* Estado vazio menor — compartilhado entre todos os módulos */
+.dashboard-empty-state-minor {
+  text-align: center;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 13px;
+  padding: 30px 20px;
+  background: rgba(76, 51, 230, 0.03);
+  border-radius: 16px;
+  border: 1px dashed var(--border-color);
+}
+
+/* Controles de Paginação internos dos módulos do dashboard
+   (diferente do lists.css que tem paginação com estilo próprio para listas) */
+.dashboard-pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(76, 51, 230, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.dashboard-pagination-button {
+  background: rgba(76, 51, 230, 0.4);
+  border: 1px solid rgba(76, 51, 230, 0.5);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 18px;
+}
+
+.dashboard-pagination-button:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+/* Badge de performance com cores dinâmicas — compartilhado entre behavior-habits,
+   personal-inflation e purchase-efficiency */
+.dashboard-percentage-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Excellent (>=90%) - Verde */
+.dashboard-percentage-badge.excellent {
+  background: rgba(36, 150, 137, 0.7);
+  box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
+  border-color: rgba(36, 150, 137, 0.5);
+  animation: dashboardPulsePerformance 2s ease-in-out infinite;
+}
+
+/* Good (>=80%) - Roxo/Azul */
+.dashboard-percentage-badge.good {
+  background: rgba(76, 51, 230, 0.6);
+  box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
+  border-color: rgba(76, 51, 230, 0.4);
+}
+
+/* Average (>=70%) - Laranja/Amarelo */
+.dashboard-percentage-badge.average {
+  background: rgba(235, 156, 29, 0.6);
+  box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
+  border-color: rgba(235, 156, 29, 0.4);
+}
+
+/* Low (<70%) - Vermelho */
+.dashboard-percentage-badge.low {
+  background: rgba(255, 71, 87, 0.6);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+/* Animação de pulsar compartilhada — usada por excellent em todos os módulos */
+@keyframes dashboardPulsePerformance {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ========================================================================
    SKELETON LOADING - ANIMAÇÃO DE CARREGAMENTO DE CONTEÚDO
    ======================================================================== */
 

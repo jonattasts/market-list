@@ -174,17 +174,17 @@ function calculateMonthlyConversionRate(allLists) {
       window.cachedDashboardData.conversionRateItems,
       "conversionRate",
       (item) => `
-        <div class="conversion-month-info">
-          <div class="item-main-text">${item.monthPeriod}</div>
-          <span class="item-sub-text">${item.totalLists} lista(s) | ${item.totalItemsAdded} item(ns)</span>
+        <div class="purchase-efficiency-conversion-month-info">
+          <div class="dashboard-item-main-text">${item.monthPeriod}</div>
+          <span class="dashboard-item-sub-text">${item.totalLists} lista(s) | ${item.totalItemsAdded} item(ns)</span>
         </div>
       `,
       (item) => `
-        <div class="conversion-rate-badge-container">
-          <div class="conversion-rate-badge ${item.performanceClass}">
+        <div class="purchase-efficiency-conversion-rate-badge-container">
+          <div class="purchase-efficiency-conversion-rate-badge ${item.performanceClass}">
             ${item.conversionRateFormatted}
           </div>
-          <span class="item-sub-text">${item.totalItemsChecked} de ${item.totalItemsAdded} comprados</span>
+          <span class="dashboard-item-sub-text">${item.totalItemsChecked} de ${item.totalItemsAdded} comprados</span>
         </div>
       `,
     );
@@ -218,7 +218,7 @@ function calculateMonthlyConversionRate(allLists) {
     .slice(0, window.CONVERSION_RATE_CONFIG.monthsToShow);
 
   if (sortedMonths.length === 0) {
-    container.innerHTML = `<div class="empty-state-minor">Sem dados suficientes para calcular a taxa de conversão.</div>`;
+    container.innerHTML = `<div class="dashboard-empty-state-minor">Sem dados suficientes para calcular a taxa de conversão.</div>`;
     return;
   }
 
@@ -278,17 +278,17 @@ function calculateMonthlyConversionRate(allLists) {
     conversionRateItems,
     "conversionRate",
     (item) => `
-      <div class="conversion-month-info">
-        <div class="item-main-text">${item.monthPeriod}</div>
-        <span class="item-sub-text">${item.totalLists} lista(s) | ${item.totalItemsAdded} item(ns)</span>
+      <div class="purchase-efficiency-conversion-month-info">
+        <div class="dashboard-item-main-text">${item.monthPeriod}</div>
+        <span class="dashboard-item-sub-text">${item.totalLists} lista(s) | ${item.totalItemsAdded} item(ns)</span>
       </div>
     `,
     (item) => `
-      <div class="conversion-rate-badge-container">
-        <div class="conversion-rate-badge ${item.performanceClass}">
+      <div class="purchase-efficiency-conversion-rate-badge-container">
+        <div class="purchase-efficiency-conversion-rate-badge ${item.performanceClass}">
           ${item.conversionRateFormatted}
         </div>
-        <span class="item-sub-text">${item.totalItemsChecked} de ${item.totalItemsAdded} comprados</span>
+        <span class="dashboard-item-sub-text">${item.totalItemsChecked} de ${item.totalItemsAdded} comprados</span>
       </div>
     `,
   );
@@ -374,7 +374,7 @@ function renderPurchaseEfficiencyEmptyState() {
   containers.forEach((containerId) => {
     const container = document.getElementById(containerId);
     if (container) {
-      container.innerHTML = `<div class="empty-state-minor">Crie listas para ativar a análise de eficiência.</div>`;
+      container.innerHTML = `<div class="dashboard-empty-state-minor">Crie listas para ativar a análise de eficiência.</div>`;
     }
   });
 }

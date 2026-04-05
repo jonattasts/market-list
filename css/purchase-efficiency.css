@@ -2,9 +2,8 @@
    MÓDULO: EFICIÊNCIA DA COMPRA - ESTILOS ESPECÍFICOS
    ========================================================================== */
 
-
 /* Ocupa a linha inteira dentro do metrics-grid */
-.metric-card-stat-full {
+.purchase-efficiency-metric-card-stat-full {
   grid-column: 1 / -1;
 }
 
@@ -13,19 +12,19 @@
    ========================================================================== */
 
 /* Container da lista de taxa de conversão */
-.conversion-rate-list {
+.purchase-efficiency-conversion-rate-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 /* Card específico para taxa de conversão */
-.conversion-rate-card {
+.purchase-efficiency-conversion-rate-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
 }
 
-.conversion-rate-card::before {
+.purchase-efficiency-conversion-rate-card::before {
   background: radial-gradient(
     circle,
     rgba(76, 51, 230, 0.1) 0%,
@@ -35,14 +34,14 @@
 }
 
 /* Informações do mês (lado esquerdo) */
-.conversion-month-info {
+.purchase-efficiency-conversion-month-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 /* Container da taxa (lado direito) */
-.conversion-rate-badge-container {
+.purchase-efficiency-conversion-rate-badge-container {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -50,7 +49,7 @@
 }
 
 /* Badge de taxa de conversão com cor dinâmica */
-.conversion-rate-badge {
+.purchase-efficiency-conversion-rate-badge {
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 16px;
@@ -64,247 +63,30 @@
 }
 
 /* Excellent (>=90%) - Verde */
-.conversion-rate-badge.excellent {
+.purchase-efficiency-conversion-rate-badge.excellent {
   background: rgba(36, 150, 137, 0.7);
   box-shadow: 0 0 15px rgba(36, 150, 137, 0.4);
   border-color: rgba(36, 150, 137, 0.5);
+  animation: dashboardPulsePerformance 2s ease-in-out infinite;
 }
 
 /* Good (>=80%) - Roxo/Azul */
-.conversion-rate-badge.good {
+.purchase-efficiency-conversion-rate-badge.good {
   background: rgba(76, 51, 230, 0.6);
   box-shadow: 0 0 15px rgba(76, 51, 230, 0.3);
   border-color: rgba(76, 51, 230, 0.4);
 }
 
 /* Average (>=70%) - Laranja/Amarelo */
-.conversion-rate-badge.average {
+.purchase-efficiency-conversion-rate-badge.average {
   background: rgba(235, 156, 29, 0.6);
   box-shadow: 0 0 15px rgba(235, 156, 29, 0.3);
   border-color: rgba(235, 156, 29, 0.4);
 }
 
 /* Low (<70%) - Vermelho */
-.conversion-rate-badge.low {
+.purchase-efficiency-conversion-rate-badge.low {
   background: rgba(255, 71, 87, 0.6);
   box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
   border-color: rgba(255, 71, 87, 0.4);
-}
-
-/* Animação de pulsar para excellent */
-.conversion-rate-badge.excellent {
-  animation: pulsePerformance 2s ease-in-out infinite;
-}
-
-@keyframes pulsePerformance {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-/* ==========================================================================
-   LISTAS DE DADOS GERAIS
-   ========================================================================== */
-
-/* Listas de dados simples */
-.simple-data-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Wrapper para listas paginadas */
-.paginated-list-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Item individual de dados */
-.data-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  background: rgba(76, 51, 230, 0.03);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  font-size: 13px;
-  transition: all 0.2s ease;
-  animation: slideInRight 0.4s ease-out backwards;
-}
-
-/* No tema dark o fundo do data-item ganha mais opacidade para contrastar */
-[data-theme="dark"] .data-item {
-  background: rgba(124, 111, 247, 0.06);
-}
-
-.data-item:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.data-item:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.data-item:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.data-item:nth-child(4) {
-  animation-delay: 0.4s;
-}
-.data-item:nth-child(5) {
-  animation-delay: 0.5s;
-}
-
-@keyframes slideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.data-item:hover {
-  background: rgba(76, 51, 230, 0.06);
-  border-color: rgba(76, 51, 230, 0.25);
-  transform: translateX(4px);
-}
-
-/* Texto principal do item */
-.item-main-text {
-  font-weight: 600;
-  color: var(--text-main);
-  font-size: 14px;
-}
-
-/* Texto secundário do item */
-.item-sub-text {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-  display: block;
-}
-
-/* Estado vazio menor */
-.empty-state-minor {
-  text-align: center;
-  color: var(--text-secondary);
-  font-style: italic;
-  font-size: 13px;
-  padding: 30px 20px;
-  background: rgba(76, 51, 230, 0.03);
-  border-radius: 16px;
-  border: 1px dashed var(--border-color);
-}
-
-/* Controles de Paginação */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(76, 51, 230, 0.03);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-}
-
-.pagination-button {
-  background: rgba(76, 51, 230, 0.4);
-  border: 1px solid rgba(76, 51, 230, 0.5);
-  color: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 18px;
-}
-
-.pagination-button:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-/* ==========================================================================
-   CARDS DE GRÁFICOS
-   ========================================================================== */
-
-/* Cards de Gráficos Futuristas */
-.chart-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  padding: 16px;
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.chart-card::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(76, 51, 230, 0.1) 0%,
-    transparent 70%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.chart-card:hover::before {
-  opacity: 1;
-}
-
-.chart-card:hover {
-  border-color: rgba(76, 51, 230, 0.25);
-  transform: translateY(-2px);
-}
-
-.card-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-main);
-  margin: 0 0 20px 0;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  position: relative;
-  padding-left: 12px;
-}
-
-.card-title::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 16px;
-  background: linear-gradient(180deg, var(--primary), var(--accent-green));
-  border-radius: 2px;
-}
-
-/* Canvas dos gráficos */
-.chart-card canvas {
-  max-height: 220px;
-  width: 100% !important;
-  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
 }
