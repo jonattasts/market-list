@@ -780,18 +780,30 @@ window.initSharedListsListener = async function (currentUserUid) {
 
         // Aplica proteção anti-regressão ao mesclar as listas compartilhadas:
         // para cada lista recebida do Firestore, substitui o dado em memória
-        // apenas se o dado recebido for mais recente (comparação por updatedAt)
+        // apenas se o dado recebido for mais recente (comparação por updatedAt).
         const sharedListsToMerge = sharedListsFromFirestore.filter(
           (sharedList) => sharedList.id !== currentlyOpenListIdentifier,
         );
 
-        // Remove do array global todas as listas compartilhadas que serão reprocessadas,
-        // preservando listas próprias do usuário e a lista aberta em detalhes
+        // Reconstrói a base preservando:
+        // 1. Listas próprias do usuário (gerenciadas pelo initFirebaseListener)
+        // 2. A lista aberta em detalhes (gerenciada pelo listener pontual)
+        // Remove apenas as listas compartilhadas que serão reprocessadas,
+        // evitando duplicatas ao reinserir a lista aberta via preservedOpenList.
         const baseMarketListData = window.marketListData.filter(
-          (existingList) =>
-            !sharedListsToMerge.some(
+          (existingList) => {
+            // Sempre preserva listas próprias do usuário
+            if (existingList.userId === currentUserUid) return true;
+
+            // Sempre preserva a lista atualmente aberta em detalhes
+            // (ela NÃO deve ser reprocessada por sharedListsToMerge nem duplicada)
+            if (existingList.id === currentlyOpenListIdentifier) return true;
+
+            // Remove as demais listas compartilhadas que serão reprocessadas
+            return !sharedListsToMerge.some(
               (sharedList) => sharedList.id === existingList.id,
-            ),
+            );
+          },
         );
 
         // Mescla com proteção anti-regressão por timestamp
@@ -829,15 +841,8 @@ window.initSharedListsListener = async function (currentUserUid) {
           baseMarketListData,
         );
 
-        // Reinsere a versão atualizada pelo listener pontual para a lista aberta,
-        // mantendo os dados mais recentes recebidos diretamente do documento
-        const preservedOpenList = currentlyOpenListIdentifier
-          ? window.marketListData.filter(
-              (existingList) => existingList.id === currentlyOpenListIdentifier,
-            )
-          : [];
-
-        window.marketListData = [...mergedSharedLists, ...preservedOpenList];
+        // Aplica o array mesclado ao marketListData.
+        window.marketListData = mergedSharedLists;
 
         // Re-renderiza a tela de listas se estiver visível
         const listsScreenElement = document.getElementById(
