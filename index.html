@@ -70,6 +70,14 @@
       </div>
 
       <!-- ============================================================= -->
+      <!-- ===================== OVERLAY DE TRANSIÇÃO DO LOGOUT ===================== -->
+      <!-- Cobre o app durante a transição do logout para evitar o flash  -->
+      <!-- branco que ocorre entre o signOut e a exibição do onboarding.  -->
+      <!-- Controlado via JS pelo handleLogout em index.js               -->
+      <!-- ============================================================= -->
+      <div id="logout-transition-overlay" class="logout-transition-overlay"></div>
+
+      <!-- ============================================================= -->
       <!-- ===================== TOAST ===================== -->
       <!-- ============================================================= -->
       <div id="toast" class="toast">
@@ -683,10 +691,11 @@
               </button>
             </div>
 
-            <!-- Container Dinâmico de Itens -->
-            <div class="list-container" id="list-items-container"></div>
-
           </div>
+
+          <!-- Container Dinâmico de Itens -->
+          <div class="list-container" id="list-items-container"></div>
+
         </div>
 
         <!-- Popover de opções da tela de detalhes -->

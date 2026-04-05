@@ -253,6 +253,32 @@ header h1,
   flex-shrink: 0;
 }
 
+/* ==========================================================================
+   OVERLAY DE TRANSIÇÃO DO LOGOUT
+   Cobre o app-container durante o logout para evitar o flash branco
+   que ocorre no intervalo entre o signOut e a exibição do onboarding.
+   A cor acompanha o tema ativo via var(--bg-page) para não causar
+   contraste estranho no tema dark.
+   ========================================================================== */
+.logout-transition-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-page);
+  z-index: 9999;
+  /* Começa invisível — a opacidade é animada via classe .visible */
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    background-color 0.7s ease;
+}
+
+/* Torna o overlay visível e bloqueia interações durante a transição */
+.logout-transition-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
 /* Utility classes */
 .mt-20 {
   margin-top: 20px;

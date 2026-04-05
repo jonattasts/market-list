@@ -1146,6 +1146,49 @@ function cancelActiveFirestoreListeners() {
 }
 
 /**
+ * Exibe o overlay de transição do logout para cobrir a tela
+ * durante o intervalo entre o signOut e a exibição do onboarding,
+ * eliminando o flash branco/cinza que ocorria nesse período.
+ *
+ * O overlay usa opacity para uma transição suave de entrada,
+ * e é removido apenas após o onboarding estar visível e inicializado.
+ */
+function showLogoutTransitionOverlay() {
+  const logoutOverlayElement = document.getElementById(
+    "logout-transition-overlay",
+  );
+  if (!logoutOverlayElement) return;
+
+  // Garante que o overlay esteja renderizado antes de animar a opacidade
+  logoutOverlayElement.style.display = "block";
+  requestAnimationFrame(() => {
+    logoutOverlayElement.classList.add("visible");
+  });
+}
+
+/**
+ * Remove o overlay de transição do logout com um fade-out suave.
+ * Chamado apenas após o onboarding estar visível e o carrossel inicializado,
+ * garantindo que a tela de destino já esteja pronta antes do overlay sair.
+ *
+ * O delay de 350ms antes de ocultar o display corresponde à duração
+ * da transição de opacidade definida no CSS (.logout-transition-overlay).
+ */
+function hideLogoutTransitionOverlay() {
+  const logoutOverlayElement = document.getElementById(
+    "logout-transition-overlay",
+  );
+  if (!logoutOverlayElement) return;
+
+  logoutOverlayElement.classList.remove("visible");
+
+  // Aguarda o fade-out antes de remover do fluxo visual
+  setTimeout(() => {
+    logoutOverlayElement.style.display = "none";
+  }, 350);
+}
+
+/**
  * Realiza o logout do usuário, limpa os dados criptografados do localStorage
  * e redireciona para a tela de onboarding.
  *
@@ -1154,11 +1197,17 @@ function cancelActiveFirestoreListeners() {
  *
  * O guard isLoggingOut impede que um duplo clique no botão de logout dispare
  * signOut duas vezes, evitando erros silenciosos no Firebase Auth.
+ *
+ * O overlay de transição cobre a tela durante todo o processo para eliminar
+ * o flash branco que ocorria entre o signOut e a exibição do onboarding.
  */
 window.handleLogout = async function () {
   // Guard contra duplo clique: impede que o logout seja executado duas vezes
   if (isLoggingOut) return;
   isLoggingOut = true;
+
+  // Exibe o overlay imediatamente para cobrir a transição visual
+  showLogoutTransitionOverlay();
 
   try {
     if (window.deactivateDetailsRealtimeListener) {
@@ -1179,10 +1228,21 @@ window.handleLogout = async function () {
 
     window.resetThemeToLight();
 
+    // Navega para o onboarding e aguarda o carrossel estar inicializado
+    // antes de remover o overlay, garantindo que a tela de destino já
+    // esteja pronta e visível ao usuário quando o overlay desaparecer
     executeScreenNavigation("onboarding-screen");
+
+    // Aguarda um frame extra após a navegação para garantir que o
+    // initOnboardingCarousel já renderizou o conteúdo no DOM
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    hideLogoutTransitionOverlay();
   } catch (logoutError) {
-    // Libera o guard em caso de erro para permitir nova tentativa
+    // Libera o guard e remove o overlay em caso de erro para permitir nova tentativa
     isLoggingOut = false;
+    hideLogoutTransitionOverlay();
 
     console.error("Erro ao fazer logout:", logoutError);
     window.showToast("Erro ao sair. Tente novamente.", "danger");
