@@ -71,22 +71,36 @@
 }
 
 .auth-modal-close-button {
-  background: var(--bg-secondary);
-  border: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 18px;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+}
+
+.auth-modal-close-button ion-icon {
+  font-size: 22px;
+  color: var(--text-main);
+  transition: color 0.2s ease;
+}
+
+.auth-modal-close-button:hover {
+  background: var(--border-color);
+  transform: scale(1.05);
+}
+
+.auth-modal-close-button:hover ion-icon {
+  color: var(--primary);
 }
 
 .auth-modal-close-button:active {
-  background: var(--border-color);
+  transform: scale(0.95);
 }
 
 /* ==========================================================================

@@ -1227,7 +1227,9 @@ window.updateWelcomeTitle = async function () {
       currentUser.uid,
     );
     if (displayName && displayName.trim() !== "") {
-      welcomeTitleElement.textContent = `${greeting}, ${displayName.trim()}!`;
+      // Exibe apenas o primeiro nome
+      const firstNameOnly = displayName.trim().split(" ")[0];
+      welcomeTitleElement.textContent = `${greeting}, ${firstNameOnly}!`;
       return;
     }
   }
