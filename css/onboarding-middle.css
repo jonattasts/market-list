@@ -76,3 +76,22 @@
   line-height: 1.6;
   max-width: 280px;
 }
+
+/* Abaixo de 620px os dots migram para o topo (declarado em onboarding.css) */
+@media (max-height: 619px) {
+  .onboarding-middle-screen {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Oculta a scrollbar nativa no Chrome e Safari */
+  .onboarding-middle-screen::-webkit-scrollbar {
+    display: none;
+  }
+
+  .onboarding-middle-image-area {
+    margin-top: 32px;
+  }
+}

@@ -23,11 +23,18 @@ function sanitizeHtmlInput(rawInput) {
   return parsedDocument.body.textContent || "";
 }
 
+// Flag de guard para evitar múltiplas chamadas simultâneas de exclusão de lista.
+// Impede que um duplo clique no botão acione dois deleteDoc para o mesmo documento.
+let isDeletingList = false;
+
 /**
  * Exclui permanentemente uma lista do Firestore.
  * NÃO remove do array local - aguarda o onSnapshot atualizar automaticamente.
  */
 window.confirmDeleteList = async function (listIndex) {
+  // Guard contra duplo clique: impede exclusão simultânea da mesma lista
+  if (isDeletingList) return;
+
   const listToDelete = window.marketListData[listIndex];
   const listName = listToDelete.listName;
   const listIdentifier = listToDelete.id;
@@ -37,6 +44,8 @@ window.confirmDeleteList = async function (listIndex) {
       `Deseja excluir a "${listName}"? Esta ação não pode ser desfeita na nuvem.`,
     )
   ) {
+    isDeletingList = true;
+
     try {
       // Importa ferramentas necessárias para deletar
       const { firestore, doc, deleteDoc } = await import("./firebase.js");
@@ -51,6 +60,9 @@ window.confirmDeleteList = async function (listIndex) {
     } catch (error) {
       console.error("Erro ao deletar:", error);
       window.showToast("Erro de conexão com o Servidor!", "danger");
+    } finally {
+      // Libera o guard independente de sucesso ou erro
+      isDeletingList = false;
     }
   }
 };
@@ -342,14 +354,15 @@ function updatePaginationControls() {
 
   // Botões de página numerados
   for (let pageNumber = startPage; pageNumber <= endPage; pageNumber++) {
-    const isActive = pageNumber === currentPageIndex;
-    const button = createPageNumberButton(pageNumber, isActive);
-    paginationNumbers.appendChild(button);
+    const pageButton = createPageNumberButton(
+      pageNumber,
+      pageNumber === currentPageIndex,
+    );
+    paginationNumbers.appendChild(pageButton);
   }
 
   // Botão para última página (se não estiver visível)
   if (endPage < totalPages) {
-    // Ellipsis se houver gap
     if (endPage < totalPages - 1) {
       const ellipsisElement = document.createElement("span");
       ellipsisElement.textContent = "...";
@@ -362,77 +375,78 @@ function updatePaginationControls() {
     paginationNumbers.appendChild(lastButton);
   }
 
-  // Atualiza estado dos botões de navegação
-  previousButton.disabled = currentPageIndex === 1;
-  nextButton.disabled = currentPageIndex === totalPages || totalPages === 0;
+  // Atualiza estados dos botões anterior/próximo
+  if (previousButton) {
+    previousButton.disabled = currentPageIndex <= 1;
+  }
+
+  if (nextButton) {
+    nextButton.disabled = currentPageIndex >= totalPages;
+  }
 }
 
 /**
- * Cria um botão de número de página
+ * Cria um botão de número de página para os controles de paginação
  * @param {number} pageNumber - Número da página
- * @param {boolean} isActive - Se o botão está ativo
- * @returns {HTMLElement} Elemento button configurado
+ * @param {boolean} isActive - Se é a página atual
+ * @returns {HTMLElement} Botão de página criado
  */
 function createPageNumberButton(pageNumber, isActive) {
-  const buttonElement = document.createElement("button");
-  buttonElement.className = "pagination-number-button";
-  buttonElement.textContent = pageNumber;
-  buttonElement.setAttribute("data-page", pageNumber);
-
-  if (isActive) {
-    buttonElement.classList.add("active");
-  }
-
-  buttonElement.onclick = function () {
-    navigateToPage(pageNumber);
-  };
-
-  return buttonElement;
+  const pageButton = document.createElement("button");
+  pageButton.textContent = pageNumber;
+  pageButton.className = `pagination-number ${isActive ? "active" : ""}`;
+  pageButton.onclick = () => navigateToPage(pageNumber);
+  return pageButton;
 }
 
 /**
  * Navega para uma página específica
- * @param {number} pageNumber - Número da página destino
+ * @param {number} targetPage - Número da página de destino
  */
-function navigateToPage(pageNumber) {
+function navigateToPage(targetPage) {
   const totalPages = calculateTotalPages(filteredListsData.length);
 
-  if (pageNumber < 1 || pageNumber > totalPages) {
-    return;
-  }
+  if (targetPage < 1 || targetPage > totalPages) return;
 
-  currentPageIndex = pageNumber;
-  renderListsForCurrentPage();
+  currentPageIndex = targetPage;
   updatePaginationControls();
-
-  // Scroll para o topo da lista
-  const contentWrapper = document.querySelector(".lists-content-wrapper");
-  if (contentWrapper) {
-    contentWrapper.scrollTop = 0;
-  }
+  renderListsForCurrentPage();
 }
 
 /**
  * Navega para a página anterior
  */
 window.navigateToPreviousPage = function () {
-  navigateToPage(currentPageIndex - 1);
+  if (currentPageIndex > 1) {
+    navigateToPage(currentPageIndex - 1);
+  }
 };
 
 /**
  * Navega para a próxima página
  */
 window.navigateToNextPage = function () {
-  navigateToPage(currentPageIndex + 1);
+  const totalPages = calculateTotalPages(filteredListsData.length);
+  if (currentPageIndex < totalPages) {
+    navigateToPage(currentPageIndex + 1);
+  }
 };
 
 /* ==========================================================================
-   FUNÇÕES DE RENDERIZAÇÃO
+   RENDERIZAÇÃO DE LISTAS
    ========================================================================== */
 
 /**
- * Renderiza as listas da página atual no container
- * Utiliza os dados já filtrados e paginados
+ * Formata um número para moeda BRL
+ * @param {number} value - Valor a formatar
+ * @returns {string} Valor formatado
+ */
+function formatCurrency(value) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/**
+ * Renderiza as listas da página atual no container principal
  */
 function renderListsForCurrentPage() {
   const containerElement = window.listsMasterContainer;
@@ -444,79 +458,65 @@ function renderListsForCurrentPage() {
 
   const pageItems = getItemsForCurrentPage();
 
-  if (pageItems.length === 0) {
-    const emptyMessage =
-      activeListsTab === "shared"
-        ? `<div class="empty-state">
-            <span class="empty-emoji">🤝</span>
-            <p>Nenhuma lista foi compartilhada com você ainda.</p>
-           </div>`
-        : `<div class="empty-state">
-        <span class="empty-emoji">📝</span>
-        <p>Nenhuma lista encontrada.</p>
-           </div>`;
-
-    containerElement.innerHTML = emptyMessage;
-
-    if (paginationContainer) {
-      paginationContainer.style.display = "none";
-    }
-    return;
-  }
-
-  // Obtém o uid do usuário autenticado para verificar propriedade das listas
   const currentUser = firebaseAuth.currentUser;
   const currentUserUid = currentUser ? currentUser.uid : null;
 
   pageItems.forEach((list) => {
+    // Determina o índice original da lista no array global para manter compatibilidade
+    // com funções que usam índice (openListDetails, confirmDeleteList, etc.)
     const originalIndex = window.marketListData.findIndex(
-      (originalList) => originalList.id === list.id,
+      (marketList) => marketList.id === list.id,
     );
 
-    let totalItemsCount = 0,
-      purchasedItemsCount = 0,
-      subtotalValue = 0,
-      totalCheckedValue = 0;
+    const isOwnerOfThisList = list.userId === currentUserUid;
+
+    // Calcula totais financeiros e de progresso para exibição no card
+    let subtotalValue = 0;
+    let totalCheckedValue = 0;
+    let totalItemsCount = 0;
+    let purchasedItemsCount = 0;
 
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
-        let price = item.price || item.totalValue;
         totalItemsCount++;
-
         if (item.checked) purchasedItemsCount++;
 
-        price = parseFloat(price.replace(/\./g, "").replace(",", "."));
+        let itemEffectiveTotalValue = 0;
 
-        const quantity = item.quantity || 1;
-        if (!isNaN(price)) {
-          const totalItemValue = price * quantity;
-          subtotalValue += totalItemValue;
-          if (item.checked) totalCheckedValue += totalItemValue;
+        if (item.totalValue) {
+          itemEffectiveTotalValue =
+            parseFloat(item.totalValue.replace(/\./g, "").replace(",", ".")) ||
+            0;
+        } else if (item.price) {
+          const unitPriceNumeric =
+            parseFloat(item.price.replace(/\./g, "").replace(",", ".")) || 0;
+          itemEffectiveTotalValue = unitPriceNumeric * (item.quantity || 1);
         }
+
+        subtotalValue += itemEffectiveTotalValue;
+        if (item.checked) totalCheckedValue += itemEffectiveTotalValue;
       });
     });
 
     const percentageComplete =
-      totalItemsCount > 0 ? (purchasedItemsCount / totalItemsCount) * 100 : 0;
-    const formatCurrency = (value) =>
-      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      totalItemsCount > 0
+        ? (purchasedItemsCount / totalItemsCount) * 100
+        : 0;
 
     const swipeContainer = document.createElement("div");
     swipeContainer.className = "swipe-container";
-    swipeContainer.style.marginBottom = "15px";
 
+    // Botões de swipe para editar e excluir (apenas para o dono da lista)
     const actionButtons = document.createElement("div");
     actionButtons.className = "swipe-actions";
-
-    const isOwnerOfThisList = list.userId === currentUserUid;
 
     if (isOwnerOfThisList) {
       actionButtons.innerHTML = `
         <button onclick="handleEditListFromSwipe(${originalIndex})" style="background: var(--primary); width: 75px;">
-            <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
+          <ion-icon name="create-outline" style="font-size: 20px;"></ion-icon> Editar
         </button>
         <button onclick="confirmDeleteList(${originalIndex})" style="background: var(--danger); width: 75px;">
-            <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
+          <ion-icon name="trash-outline" style="font-size: 20px;"></ion-icon> Apagar
         </button>
       `;
     }
@@ -525,7 +525,7 @@ function renderListsForCurrentPage() {
     cardElement.className = "list-master-card";
     cardElement.onclick = () => window.openListDetails(originalIndex);
 
-    // Swipe gesture apenas para o dono da lista
+    // Swipe gestures apenas para o dono
     if (isOwnerOfThisList) {
       cardElement.ontouchstart = window.handleTouchStart;
       cardElement.ontouchmove = window.handleTouchMove;

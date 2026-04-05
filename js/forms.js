@@ -46,6 +46,11 @@ window.openEditListForm = function () {
 };
 
 window.handleSaveNewList = async function () {
+  const saveListButton = document.getElementById("button-save-list");
+
+  // Guard contra duplo clique: impede nova submissão enquanto a operação está em andamento
+  if (saveListButton && saveListButton.classList.contains("is-loading")) return;
+
   const name = window.capitalize(
     document.getElementById("new-list-name").value,
   );
@@ -68,6 +73,9 @@ window.handleSaveNewList = async function () {
     return;
   }
 
+  // Ativa o estado de loading no botão para bloquear cliques duplicados
+  if (saveListButton) saveListButton.classList.add("is-loading");
+
   if (window.isEditingListMode) {
     // Resolve o índice pelo ID estável antes de modificar os dados
     const resolvedIndex = window.resolveCurrentListIndex();
@@ -77,6 +85,9 @@ window.handleSaveNewList = async function () {
     window.marketListData[resolvedIndex].date = date;
 
     await window.saveAndSync();
+
+    // Remove o estado de loading antes de navegar
+    if (saveListButton) saveListButton.classList.remove("is-loading");
 
     const detailsVisible = !document
       .getElementById("market-list-screen-details")
@@ -94,6 +105,8 @@ window.handleSaveNewList = async function () {
     const original = window.marketListData[resolvedIndex];
 
     if (date === original.date) {
+      // Remove o loading antes de exibir o toast de validação
+      if (saveListButton) saveListButton.classList.remove("is-loading");
       window.showToast(
         "Por favor insira uma data diferente da lista copiada",
         "danger",
@@ -117,10 +130,12 @@ window.handleSaveNewList = async function () {
         createdAt: serverTimestamp(),
       });
 
+      if (saveListButton) saveListButton.classList.remove("is-loading");
       window.isCopyingListMode = false;
       window.showScreen("market-lists-screen");
       window.showToast("Lista copiada!", "success");
     } catch (e) {
+      if (saveListButton) saveListButton.classList.remove("is-loading");
       window.showToast("Erro ao copiar lista", "danger");
     }
   } else {
@@ -135,9 +150,11 @@ window.handleSaveNewList = async function () {
         createdAt: serverTimestamp(),
       });
 
+      if (saveListButton) saveListButton.classList.remove("is-loading");
       window.showScreen("market-lists-screen");
       window.showToast("Lista criada!", "success");
     } catch (e) {
+      if (saveListButton) saveListButton.classList.remove("is-loading");
       window.showToast("Erro ao criar lista", "danger");
     }
   }
@@ -170,6 +187,11 @@ window.openEditCategoryForm = function (categoryIndex) {
 };
 
 window.handleSaveCategory = async function () {
+  const saveCategoryButton = document.getElementById("button-save-category");
+
+  // Guard contra duplo clique: impede nova submissão enquanto a operação está em andamento
+  if (saveCategoryButton && saveCategoryButton.classList.contains("is-loading")) return;
+
   const input = document.getElementById("new-category-name");
   const name = window.capitalize(input.value);
 
@@ -177,6 +199,9 @@ window.handleSaveCategory = async function () {
     window.showToast("Digite o nome da categoria", "danger");
     return;
   }
+
+  // Ativa o estado de loading no botão para bloquear cliques duplicados
+  if (saveCategoryButton) saveCategoryButton.classList.add("is-loading");
 
   // Resolve o índice pelo ID estável antes de modificar categorias
   const resolvedIndex = window.resolveCurrentListIndex();
@@ -195,6 +220,10 @@ window.handleSaveCategory = async function () {
   }
 
   await window.saveAndSync();
+
+  // Remove o estado de loading antes de navegar
+  if (saveCategoryButton) saveCategoryButton.classList.remove("is-loading");
+
   input.value = "";
   window.showScreen("market-list-screen-details");
   window.renderListDetails();
@@ -365,6 +394,11 @@ function isValidCurrencyValue(value) {
 }
 
 window.handleSaveItem = async function () {
+  const saveItemButton = document.getElementById("button-save-item");
+
+  // Guard contra duplo clique: impede nova submissão enquanto a operação está em andamento
+  if (saveItemButton && saveItemButton.classList.contains("is-loading")) return;
+
   const name = window.capitalize(window.itemNameInput.value);
   let description = window.capitalize(window.itemDescInput.value);
   if (!description) description = "Unidade";
@@ -388,6 +422,9 @@ window.handleSaveItem = async function () {
     window.showToast("O nome do produto é obrigatório", "danger");
     return;
   }
+
+  // Ativa o estado de loading no botão para bloquear cliques duplicados
+  if (saveItemButton) saveItemButton.classList.add("is-loading");
 
   if (isValidCurrencyValue(unitPriceRawInput)) {
     unitPrice = unitPriceRawInput;
@@ -453,6 +490,10 @@ window.handleSaveItem = async function () {
   }
 
   await window.saveAndSync();
+
+  // Remove o estado de loading antes de navegar
+  if (saveItemButton) saveItemButton.classList.remove("is-loading");
+
   window.showScreen("market-list-screen-details");
   window.renderListDetails();
 };

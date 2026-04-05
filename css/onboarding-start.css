@@ -83,3 +83,26 @@
     margin-top: -40px;
   }
 }
+
+/* Abaixo de 620px os dots migram para o topo (declarado em onboarding.css) */
+@media (max-height: 619px) {
+  .onboarding-start-screen {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Oculta a scrollbar nativa no Chrome e Safari */
+  .onboarding-start-screen::-webkit-scrollbar {
+    display: none;
+  }
+
+  .onboarding-start-video-area {
+    margin-top: 32px;
+  }
+
+  .onboarding-carousel-indicators {
+    border-bottom: 15px solid #ffffff;
+  }
+}

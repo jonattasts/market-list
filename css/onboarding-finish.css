@@ -19,6 +19,11 @@
   scrollbar-width: none;
 }
 
+/* Oculta a scrollbar nativa no Chrome e Safari */
+.onboarding-finish-screen::-webkit-scrollbar {
+  display: none;
+}
+
 /* Área superior com ilustração SVG */
 .onboarding-finish-image-area {
   width: 100%;
@@ -131,5 +136,12 @@
 @media (max-height: 700px) {
   .onboarding-finish-button {
     margin-top: -10px;
+  }
+}
+
+/* Abaixo de 620px os dots migram para o topo (declarado em onboarding.css). */
+@media (max-height: 619px) {
+  .onboarding-finish-image-area {
+    margin-top: 32px;
   }
 }

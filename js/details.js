@@ -564,7 +564,15 @@ window.updateDashboard = function () {
   document.getElementById("total-checked").innerText = format(totalMarcado);
 };
 
+// Flag de guard para evitar toggles simultâneos no mesmo item antes do saveAndSync terminar.
+// Chave: "catIdx-itemIdx", valor: true enquanto a operação estiver em andamento.
+const itemToggleInProgressMap = {};
+
 window.toggleItemStatus = async function (catIdx, itemIdx) {
+  const itemKey = `${catIdx}-${itemIdx}`;
+  if (itemToggleInProgressMap[itemKey]) return;
+  itemToggleInProgressMap[itemKey] = true;
+
   const resolvedIndex = window.resolveCurrentListIndex
     ? window.resolveCurrentListIndex()
     : window.currentListIndex;
@@ -577,11 +585,20 @@ window.toggleItemStatus = async function (catIdx, itemIdx) {
   // Sincroniza a alteração com o Firebase
   await window.saveAndSync();
 
+  // Libera o guard após a sincronização
+  delete itemToggleInProgressMap[itemKey];
+
   // Re-renderiza para atualizar o Dashboard e os estilos do card
   window.renderListDetails();
 };
 
+// Flag de guard para evitar múltiplas exclusões simultâneas de categoria
+let isDeletingCategory = false;
+
 window.deleteCategory = async function (catIdx) {
+  // Guard contra duplo clique: impede exclusão simultânea de categoria
+  if (isDeletingCategory) return;
+
   const resolvedIndex = window.resolveCurrentListIndex
     ? window.resolveCurrentListIndex()
     : window.currentListIndex;
@@ -598,18 +615,29 @@ window.deleteCategory = async function (catIdx) {
     return;
   }
 
+  isDeletingCategory = true;
+
   // Remove do array local
   window.marketListData[resolvedIndex].categories.splice(catIdx, 1);
 
   // Persiste a exclusão no Firestore
   await window.saveAndSync();
 
+  // Libera o guard após a sincronização
+  isDeletingCategory = false;
+
   // Atualiza a tela
   window.renderListDetails();
   window.showToast("Categoria removida", "success");
 };
 
+// Flag de guard para evitar múltiplas exclusões simultâneas de item
+let isDeletingItem = false;
+
 window.confirmDeleteItem = async function (catIdx, itemIdx) {
+  // Guard contra duplo clique: impede exclusão simultânea de item
+  if (isDeletingItem) return;
+
   const resolvedIndex = window.resolveCurrentListIndex
     ? window.resolveCurrentListIndex()
     : window.currentListIndex;
@@ -618,6 +646,8 @@ window.confirmDeleteItem = async function (catIdx, itemIdx) {
     window.marketListData[resolvedIndex].categories[catIdx].items[itemIdx];
 
   if (confirm(`Deseja remover "${item.name}" definitivamente?`)) {
+    isDeletingItem = true;
+
     // Remove o item específico da categoria
     window.marketListData[resolvedIndex].categories[catIdx].items.splice(
       itemIdx,
@@ -626,6 +656,9 @@ window.confirmDeleteItem = async function (catIdx, itemIdx) {
 
     // Sincroniza com o Firebase
     await window.saveAndSync();
+
+    // Libera o guard após a sincronização
+    isDeletingItem = false;
 
     // Feedback visual e atualização da lista/dashboard
     window.renderListDetails();

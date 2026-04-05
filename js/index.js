@@ -66,6 +66,10 @@ let isFirstLoad = true;
 // o fluxo de autenticação ainda está em andamento (ex: durante o overlay)
 let isHandlingAuthenticatedUser = false;
 
+// Flag que sinaliza que o handleLogout já está em execução,
+// evitando que um duplo clique no botão de logout dispare signOut duas vezes
+let isLoggingOut = false;
+
 let unsubscribeOwnedListsListener = null;
 
 /* ==========================================================================
@@ -1147,8 +1151,15 @@ function cancelActiveFirestoreListeners() {
  *
  * Os listeners do Firestore são cancelados ANTES do signOut para evitar
  * que o onSnapshot dispare com credenciais inválidas após a sessão ser encerrada.
+ *
+ * O guard isLoggingOut impede que um duplo clique no botão de logout dispare
+ * signOut duas vezes, evitando erros silenciosos no Firebase Auth.
  */
 window.handleLogout = async function () {
+  // Guard contra duplo clique: impede que o logout seja executado duas vezes
+  if (isLoggingOut) return;
+  isLoggingOut = true;
+
   try {
     if (window.deactivateDetailsRealtimeListener) {
       window.deactivateDetailsRealtimeListener();
@@ -1164,11 +1175,15 @@ window.handleLogout = async function () {
     window.marketListData = [];
     isFirstLoad = true;
     isHandlingAuthenticatedUser = false;
+    isLoggingOut = false;
 
     window.resetThemeToLight();
 
     executeScreenNavigation("onboarding-screen");
   } catch (logoutError) {
+    // Libera o guard em caso de erro para permitir nova tentativa
+    isLoggingOut = false;
+
     console.error("Erro ao fazer logout:", logoutError);
     window.showToast("Erro ao sair. Tente novamente.", "danger");
   }
@@ -1317,9 +1332,7 @@ function executeScreenNavigation(
       element.classList.toggle("screen-hidden", id !== screenIdentifier);
       element.style.display =
         id === screenIdentifier
-          ? id === "onboarding-screen"
-            ? "block"
-            : "flex"
+          ? "flex"
           : "none";
     }
   });

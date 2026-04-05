@@ -60,13 +60,26 @@
   transition: opacity 0.3s ease;
 }
 
+/* Em telas com altura abaixo de 620px os dots são reposicionados para o topo.
+   Cada tela interna reserva margin-top na image-area para que a imagem/vídeo
+   não fique escondida atrás dos dots. */
+@media (max-height: 619px) {
+  .onboarding-carousel-indicators {
+    bottom: auto;
+    top: 12px;
+  }
+}
+
 /* Dot individual */
 .onboarding-indicator-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background-color: var(--border-color);
-  transition: background-color 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    width 0.3s ease,
+    border-radius 0.3s ease;
   cursor: pointer;
 }
 
