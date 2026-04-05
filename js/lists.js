@@ -54,7 +54,13 @@ window.confirmDeleteList = async function (listIndex) {
       const listReference = doc(firestore, "lists", listIdentifier);
       await deleteDoc(listReference);
 
-      // O onSnapshot no index.js atualizará o marketListData e chamará renderMarketLists()
+      // Remoção otimista: remove imediatamente do cache local enquanto o onSnapshot ainda não atualizou
+      window.marketListData = window.marketListData.filter(
+        (existingList) => existingList.id !== listIdentifier,
+      );
+
+      // Re-renderiza a lista já sem o card removido
+      if (window.renderMarketLists) window.renderMarketLists();
 
       window.showToast("Lista removida com sucesso", "success");
     } catch (error) {

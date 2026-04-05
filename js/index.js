@@ -669,7 +669,7 @@ async function handleAuthenticatedUser(authenticatedUser) {
           }
           isHandlingAuthenticatedUser = false;
           await firebaseAuth.signOut();
-          
+
           window.resetThemeToLight();
 
           executeScreenNavigation("onboarding-screen");
@@ -1332,10 +1332,7 @@ function executeScreenNavigation(
     if (element) {
       element.classList.remove("screen-fade-out");
       element.classList.toggle("screen-hidden", id !== screenIdentifier);
-      element.style.display =
-        id === screenIdentifier
-          ? "flex"
-          : "none";
+      element.style.display = id === screenIdentifier ? "flex" : "none";
     }
   });
 
@@ -1599,9 +1596,17 @@ function initFirebaseListener(userUid) {
         ownedListsFromFirestore,
       );
 
-      // Reconstrói o marketListData: listas próprias mescladas + compartilhadas preservadas
+      const receivedOwnedListIds = new Set(
+        ownedListsFromFirestore.map((ownedList) => ownedList.id),
+      );
+
+      const sanitizedOwnedLists = mergedOwnedLists.filter((mergedList) =>
+        receivedOwnedListIds.has(mergedList.id),
+      );
+
+      // Reconstrói o marketListData: listas próprias sanitizadas + compartilhadas preservadas
       window.marketListData = [
-        ...mergedOwnedLists,
+        ...sanitizedOwnedLists,
         ...sharedListsAlreadyLoaded,
       ];
 
