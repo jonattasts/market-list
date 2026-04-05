@@ -95,16 +95,16 @@ function getShareFormTemplate() {
     <div class="share-window-form-section">
       <span class="share-window-emoji">🤝</span>
 
-      <!-- Nome de exibição do usuário a ser adicionado -->
+      <!-- E-mail do usuário a ser adicionado -->
       <div class="input-field">
-        <label>Nome da pessoa<span class="required-mark">*</span></label>
+        <label>E-mail da pessoa<span class="required-mark">*</span></label>
         <input
-          type="text"
-          id="share-user-name-input"
-          placeholder="Ex: Maria, João..."
+          type="email"
+          id="share-user-email-input"
+          placeholder="Ex: maria@email.com"
           autocomplete="off"
         />
-        <span class="input-hint">💡 Use o nome exato cadastrado no app</span>
+        <span class="input-hint">💡 Use o e-mail cadastrado no app</span>
       </div>
 
       <!-- Toggle de permissão de edição -->
@@ -258,28 +258,28 @@ window.showShareForm = function () {
    ========================================================================== */
 
 /**
- * Busca um usuário no Firestore pelo displayName exato.
- * A busca é feita na coleção "users" pelo campo displayName.
+ * Busca um usuário no Firestore pelo e-mail exato.
+ * A busca é feita na coleção "users" pelo campo "email".
  * Retorna o documento do usuário encontrado ou null se não existir.
  *
- * @param {string} displayName - Nome de exibição a ser buscado
+ * @param {string} userEmail - E-mail a ser buscado
  * @returns {Promise<Object|null>} Dados do usuário encontrado ou null
  */
-async function findUserByDisplayName(displayName) {
+async function findUserByEmail(userEmail) {
   try {
     const usersQuery = query(
       collection(firestore, "users"),
-      where("displayName", "==", displayName),
+      where("email", "==", userEmail),
     );
     const usersSnapshot = await getDocs(usersQuery);
 
     if (usersSnapshot.empty) return null;
 
-    // Retorna o primeiro usuário encontrado com esse displayName
+    // Retorna o primeiro usuário encontrado com esse e-mail
     const userDocument = usersSnapshot.docs[0];
     return { id: userDocument.id, ...userDocument.data() };
   } catch (queryError) {
-    console.error("Erro ao buscar usuário por displayName:", queryError);
+    console.error("Erro ao buscar usuário por e-mail:", queryError);
     return null;
   }
 }
@@ -300,41 +300,38 @@ function extractUidsFromSharedUsersArray(sharedUsersArray) {
 }
 
 /**
- * Trata o nome da pessoa a ser adicionada ao compartilhamento,
- * buscando pelo displayName no Firestore e linkando pelo UID.
+ * Trata o e-mail da pessoa a ser adicionada ao compartilhamento,
+ * buscando pelo e-mail no Firestore e linkando pelo UID.
+ * A janela de compartilhamento continua exibindo o displayName do usuário.
  * Valida os dados, persiste no Firebase e atualiza os dados em cache.
  */
 window.handleConfirmShare = async function () {
-  const nameInputElement = document.getElementById("share-user-name-input");
+  const emailInputElement = document.getElementById("share-user-email-input");
   const canEditToggleElement = document.getElementById("share-can-edit-toggle");
   const submitButtonElement = document.getElementById("share-submit-button");
 
-  if (!nameInputElement || !submitButtonElement) return;
+  if (!emailInputElement || !submitButtonElement) return;
 
-  const rawName = nameInputElement.value;
-  const normalizedDisplayName = window.capitalize(rawName);
+  const rawEmail = emailInputElement.value.trim().toLowerCase();
 
-  // Validação mínima: mesmo critério do onboarding (mínimo 3 caracteres)
-  if (!normalizedDisplayName || normalizedDisplayName.length < 3) {
-    window.showToast("O nome deve ter pelo menos 3 caracteres", "danger");
+  // Validação mínima: formato básico de e-mail
+  if (!rawEmail || !rawEmail.includes("@") || rawEmail.length < 5) {
+    window.showToast("Informe um e-mail válido", "danger");
     return;
   }
 
   const currentList = window.marketListData[window.currentListIndex];
   const existingSharedUsers = currentList.sharedWith || [];
 
-  // Verifica se o uid já está compartilhado (evita duplicatas por UID)
+  // Verifica se o usuário está autenticado
   const currentUser = firebaseAuth.currentUser;
   if (!currentUser) {
     window.showToast("Usuário não autenticado.", "danger");
     return;
   }
 
-  // Não permite compartilhar consigo mesmo
-  if (
-    window.normalizeString(normalizedDisplayName) ===
-    window.normalizeString(currentUser.displayName || "")
-  ) {
+  // Não permite compartilhar com o próprio e-mail do usuário logado
+  if (rawEmail === (currentUser.email || "").toLowerCase()) {
     window.showToast(
       "Você não pode compartilhar a lista com você mesmo.",
       "danger",
@@ -342,17 +339,17 @@ window.handleConfirmShare = async function () {
     return;
   }
 
-  // Busca o usuário pelo displayName no Firestore
+  // Busca o usuário pelo e-mail no Firestore
   submitButtonElement.classList.add("is-loading");
 
   let targetUserData = null;
   try {
-    targetUserData = await findUserByDisplayName(normalizedDisplayName);
+    targetUserData = await findUserByEmail(rawEmail);
 
     if (!targetUserData) {
       submitButtonElement.classList.remove("is-loading");
       window.showToast(
-        `Nenhum usuário encontrado com o nome "${normalizedDisplayName}".`,
+        `Nenhum usuário encontrado com o e-mail "${rawEmail}".`,
         "danger",
       );
       return;
@@ -380,6 +377,7 @@ window.handleConfirmShare = async function () {
 
   const canEdit = canEditToggleElement ? canEditToggleElement.checked : false;
 
+  // Mantém displayName para exibição na janela de compartilhamento
   const newSharedUserEntry = {
     uid: targetUserData.uid,
     displayName: targetUserData.displayName,
@@ -418,7 +416,7 @@ window.handleConfirmShare = async function () {
     // Fecha a janela e re-renderiza a tela de listas
     window.closeShareWindow();
     window.showToast(
-      `Lista compartilhada com ${normalizedDisplayName}!`,
+      `Lista compartilhada com ${targetUserData.displayName}!`,
       "success",
     );
 
