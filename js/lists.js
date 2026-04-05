@@ -394,7 +394,7 @@ function updatePaginationControls() {
 function createPageNumberButton(pageNumber, isActive) {
   const pageButton = document.createElement("button");
   pageButton.textContent = pageNumber;
-  pageButton.className = `pagination-number ${isActive ? "active" : ""}`;
+  pageButton.className = `pagination-number-button ${isActive ? "active" : ""}`;
   pageButton.onclick = () => navigateToPage(pageNumber);
   return pageButton;
 }
