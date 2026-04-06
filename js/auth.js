@@ -9,6 +9,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
+  sendPasswordResetEmail,
+  fetchSignInMethodsForEmail,
 } from "./firebase.js";
 
 /* ==========================================================================
@@ -324,5 +326,210 @@ window.handleEmailLogin = async function () {
       "Erro ao entrar. Verifique seus dados.";
 
     window.showToast(friendlyMessage, "danger");
+  }
+};
+
+/* ==========================================================================
+   RECUPERAÇÃO DE SENHA — MODAL DEDICADO
+   ========================================================================== */
+
+/**
+ * Abre o modal de recuperação de senha.
+ * Limpa o campo de e-mail e reseta o estado visual antes de exibir.
+ */
+window.openPasswordRecoveryModal = function () {
+  const recoveryModalOverlay = document.getElementById(
+    "password-recovery-modal-overlay",
+  );
+  if (!recoveryModalOverlay) return;
+
+  // Limpa o campo de e-mail e reseta estado do botão antes de abrir
+  const recoveryEmailInput = document.getElementById(
+    "password-recovery-email-input",
+  );
+  const recoverySubmitButton = document.getElementById(
+    "password-recovery-submit-button",
+  );
+
+  if (recoveryEmailInput) recoveryEmailInput.value = "";
+  if (recoverySubmitButton) {
+    recoverySubmitButton.classList.remove("is-loading");
+    recoverySubmitButton.disabled = false;
+  }
+
+  // Garante que o estado de feedback de sucesso esteja oculto ao abrir
+  hidePasswordRecoverySuccessState();
+
+  recoveryModalOverlay.classList.remove("screen-hidden");
+  recoveryModalOverlay.classList.add("auth-modal-visible");
+};
+
+/**
+ * Fecha o modal de recuperação de senha e limpa todos os campos.
+ */
+window.closePasswordRecoveryModal = function () {
+  const recoveryModalOverlay = document.getElementById(
+    "password-recovery-modal-overlay",
+  );
+  if (!recoveryModalOverlay) return;
+
+  recoveryModalOverlay.classList.remove("auth-modal-visible");
+  recoveryModalOverlay.classList.add("screen-hidden");
+
+  // Limpa o campo de e-mail ao fechar
+  const recoveryEmailInput = document.getElementById(
+    "password-recovery-email-input",
+  );
+  if (recoveryEmailInput) recoveryEmailInput.value = "";
+
+  // Reseta o estado do botão ao fechar
+  const recoverySubmitButton = document.getElementById(
+    "password-recovery-submit-button",
+  );
+  if (recoverySubmitButton) {
+    recoverySubmitButton.classList.remove("is-loading");
+    recoverySubmitButton.disabled = false;
+  }
+
+  // Reseta o estado de feedback de sucesso ao fechar
+  hidePasswordRecoverySuccessState();
+};
+
+/**
+ * Exibe o estado de feedback de sucesso dentro do modal de recuperação,
+ * substituindo o formulário por uma mensagem de confirmação de envio.
+ * O formulário fica oculto e a mensagem de sucesso fica visível.
+ *
+ * @param {string} emailAddress - E-mail para o qual o link foi enviado (exibido na mensagem)
+ */
+function showPasswordRecoverySuccessState(emailAddress) {
+  const recoveryForm = document.getElementById("password-recovery-form");
+  const recoverySuccessMessage = document.getElementById(
+    "password-recovery-success-message",
+  );
+  const recoverySuccessEmail = document.getElementById(
+    "password-recovery-success-email",
+  );
+
+  if (recoveryForm) recoveryForm.classList.add("screen-hidden");
+
+  if (recoverySuccessMessage) {
+    recoverySuccessMessage.classList.remove("screen-hidden");
+  }
+
+  // Exibe o e-mail de destino na mensagem de confirmação
+  if (recoverySuccessEmail) {
+    recoverySuccessEmail.textContent = emailAddress;
+  }
+}
+
+/**
+ * Reseta o estado de feedback de sucesso, restaurando o formulário
+ * e ocultando a mensagem de confirmação.
+ * Chamado ao fechar o modal ou ao reabri-lo.
+ */
+function hidePasswordRecoverySuccessState() {
+  const recoveryForm = document.getElementById("password-recovery-form");
+  const recoverySuccessMessage = document.getElementById(
+    "password-recovery-success-message",
+  );
+
+  if (recoveryForm) recoveryForm.classList.remove("screen-hidden");
+  if (recoverySuccessMessage) {
+    recoverySuccessMessage.classList.add("screen-hidden");
+  }
+}
+
+/**
+ * Verifica via Firebase Auth se o e-mail informado possui métodos de login
+ * cadastrados, confirmando se a conta existe antes de tentar o envio do link.
+ *
+ * Retorna true se o e-mail estiver associado a pelo menos um método de login,
+ * false caso contrário (conta inexistente ou sem provedores vinculados).
+ *
+ * @param {string} emailAddress - E-mail a ser verificado no banco do Firebase Auth
+ * @returns {Promise<boolean>} True se o e-mail estiver cadastrado
+ */
+async function checkIfEmailIsRegistered(emailAddress) {
+  const registeredSignInMethods = await fetchSignInMethodsForEmail(
+    firebaseAuth,
+    emailAddress,
+  );
+  return registeredSignInMethods.length > 0;
+}
+
+/**
+ * Processa o envio do e-mail de redefinição de senha via Firebase Auth.
+ *
+ * Fluxo:
+ *   1. Valida o campo de e-mail preenchido pelo usuário
+ *   2. Verifica se o e-mail está cadastrado no Firebase Auth via fetchSignInMethodsForEmail
+ *   3. Se não cadastrado: exibe toast de erro e mantém o formulário ativo
+ *   4. Se cadastrado: chama sendPasswordResetEmail e exibe confirmação de envio
+ *   5. Em caso de erro técnico: exibe toast de erro e mantém o formulário ativo
+ */
+window.handlePasswordRecovery = async function () {
+  const recoveryEmailInput = document.getElementById(
+    "password-recovery-email-input",
+  );
+  const recoverySubmitButton = document.getElementById(
+    "password-recovery-submit-button",
+  );
+
+  if (!recoveryEmailInput) return;
+
+  const emailAddress = recoveryEmailInput.value.trim();
+
+  // Validação básica do campo de e-mail
+  if (!emailAddress || !emailAddress.includes("@")) {
+    window.showToast("Informe um e-mail válido", "danger");
+    return;
+  }
+
+  if (recoverySubmitButton) {
+    recoverySubmitButton.classList.add("is-loading");
+    recoverySubmitButton.disabled = true;
+  }
+
+  try {
+    // Verifica se o e-mail está cadastrado antes de tentar o envio do link
+    const isEmailRegistered = await checkIfEmailIsRegistered(emailAddress);
+
+    if (!isEmailRegistered) {
+      // E-mail não cadastrado — informa o usuário e interrompe o fluxo
+      window.showToast(
+        "Este e-mail não está cadastrado. Verifique ou crie uma conta.",
+        "danger",
+      );
+      return;
+    }
+
+    // Envia o e-mail de redefinição de senha via Firebase Auth
+    await sendPasswordResetEmail(firebaseAuth, emailAddress);
+
+    // Exibe o estado de sucesso dentro do modal com o e-mail de destino
+    showPasswordRecoverySuccessState(emailAddress);
+  } catch (passwordResetError) {
+    console.error("Erro ao enviar e-mail de recuperação:", passwordResetError);
+
+    // Mensagens de erro amigáveis para os códigos mais comuns
+    const friendlyErrorMessages = {
+      "auth/invalid-email": "E-mail inválido. Verifique e tente novamente.",
+      "auth/network-request-failed": "Sem conexão. Verifique sua internet.",
+      "auth/too-many-requests":
+        "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+    };
+
+    const friendlyMessage =
+      friendlyErrorMessages[passwordResetError.code] ||
+      "Erro ao enviar o e-mail. Tente novamente.";
+
+    window.showToast(friendlyMessage, "danger");
+  } finally {
+    // Restaura o botão independente de sucesso ou erro
+    if (recoverySubmitButton) {
+      recoverySubmitButton.classList.remove("is-loading");
+      recoverySubmitButton.disabled = false;
+    }
   }
 };

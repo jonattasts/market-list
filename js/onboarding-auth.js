@@ -81,7 +81,6 @@ window.initOnboardingAuthScreen = function () {
         <ion-icon name="mail-outline"></ion-icon>
         Continuar com E-mail
       </button>
-
     </div>
   `;
 };

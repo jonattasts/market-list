@@ -147,6 +147,84 @@
   gap: 0;
 }
 
+/* =============================================================================
+   BOTÃO DE RECUPERAÇÃO DE SENHA — EXIBIDO APENAS NA ABA LOGIN COM EMAIL E SENHA
+   Posicionado entre o campo de senha e o botão Entrar.
+   ============================================================================= */
+
+.auth-forgot-password-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 0 0;
+  text-align: right;
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.auth-forgot-password-button:hover {
+  opacity: 0.75;
+}
+
+.auth-forgot-password-button:active {
+  opacity: 0.5;
+}
+
+/* ==========================================================================
+   MODAL DE RECUPERAÇÃO DE SENHA — DESCRIÇÃO INTRODUTÓRIA
+   Texto instrutivo exibido acima do campo de e-mail no modal de recuperação
+   ========================================================================== */
+
+.auth-recovery-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 4px;
+}
+
+/* ==========================================================================
+   MODAL DE RECUPERAÇÃO DE SENHA — ESTADO DE SUCESSO
+   Exibido após o envio bem-sucedido do e-mail de redefinição,
+   substituindo o formulário por uma mensagem de confirmação
+   ========================================================================== */
+
+.auth-recovery-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 0 8px;
+  gap: 12px;
+}
+
+.auth-recovery-success-icon {
+  font-size: 52px;
+  color: var(--success, #22c55e);
+}
+
+.auth-recovery-success-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.auth-recovery-success-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.auth-recovery-success-text strong {
+  color: var(--text-main);
+  font-weight: 600;
+  word-break: break-all;
+}
+
 /* ==========================================================================
    BOTÕES DE AUTENTICAÇÃO NO ONBOARDING
    ========================================================================== */

@@ -194,12 +194,93 @@
                 autocomplete="current-password" />
             </div>
 
+            <!-- Botão de recuperação de senha — exibido apenas na aba Login,
+                 pois usuários Google não necessitam deste fluxo -->
+            <button
+              class="auth-forgot-password-button"
+              onclick="window.openPasswordRecoveryModal()">
+              Esqueci minha senha
+            </button>
+
             <button
               id="auth-login-submit-button"
               class="button-start mt-30"
               onclick="window.handleEmailLogin()">
               Entrar
             </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- =============== MODAL DE RECUPERAÇÃO DE SENHA =============== -->
+      <!-- ============================================================= -->
+      <div id="password-recovery-modal-overlay"
+        class="auth-modal-overlay screen-hidden">
+        <div class="auth-modal-card">
+
+          <!-- Header do modal -->
+          <div class="auth-modal-header">
+            <h3>Recuperar Senha</h3>
+            <button
+              class="auth-modal-close-button"
+              onclick="window.closePasswordRecoveryModal()"
+              aria-label="Fechar">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- Formulário de recuperação — oculto após envio bem-sucedido -->
+          <div id="password-recovery-form" class="auth-modal-form">
+
+            <p class="auth-recovery-description">
+              Informe o e-mail cadastrado na sua conta. Você receberá um link
+              para redefinir sua senha.
+            </p>
+
+            <div class="input-field mt-20">
+              <label>E-mail<span class="required-mark">*</span></label>
+              <input
+                type="email"
+                id="password-recovery-email-input"
+                placeholder="seu@email.com"
+                autocomplete="email" />
+            </div>
+
+            <button
+              id="password-recovery-submit-button"
+              class="button-start mt-30"
+              onclick="window.handlePasswordRecovery()">
+              Enviar link de recuperação
+            </button>
+
+          </div>
+
+          <!-- Mensagem de confirmação — exibida após envio bem-sucedido -->
+          <!-- Oculta por padrão; exibida por showPasswordRecoverySuccessState em auth.js -->
+          <div id="password-recovery-success-message"
+            class="auth-recovery-success screen-hidden">
+
+            <ion-icon
+              name="checkmark-circle-outline"
+              class="auth-recovery-success-icon">
+            </ion-icon>
+
+            <h4 class="auth-recovery-success-title">E-mail enviado!</h4>
+
+            <p class="auth-recovery-success-text">
+              Enviamos um link de redefinição de senha para
+              <strong id="password-recovery-success-email"></strong>.
+              Verifique sua caixa de entrada e a pasta de spam.
+            </p>
+
+            <button
+              class="button-start mt-20"
+              onclick="window.closePasswordRecoveryModal()">
+              Fechar
+            </button>
+
           </div>
 
         </div>
