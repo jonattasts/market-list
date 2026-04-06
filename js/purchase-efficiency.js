@@ -97,6 +97,83 @@ function calculateEffectiveItemValueForMetrics(item) {
 }
 
 /**
+ * Renderiza gráfico de Gasto por Categoria (Pizza)
+ * Exibe o tooltip formatado em BRL ao clicar em uma categoria.
+ * Centralizado neste módulo pois o gráfico pertence à Aba 1 (Eficiência de Compra).
+ *
+ * @param {Object} categoryTotals - Objeto com totais por categoria
+ */
+function renderShareWalletChart(categoryTotals) {
+  const ctx = document.getElementById("chart-share-wallet");
+  if (!ctx) return;
+
+  if (window.chartShareWallet) window.chartShareWallet.destroy();
+
+  const labels = Object.keys(categoryTotals);
+  const data = Object.values(categoryTotals);
+
+  if (labels.length === 0) return;
+
+  /* CORRIGIDO: Lê o tema atual do body no momento da criação do gráfico
+     para garantir que a cor da legenda seja correta desde o início,
+     independente de o tema dark ou light estar ativo */
+  const isDark = document.body.getAttribute("data-theme") === "dark";
+  const currentLegendColor = isDark
+    ? "rgba(255,255,255,0.7)"
+    : "rgba(20, 24, 27, 0.7)";
+
+  window.chartShareWallet = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: [
+            "#4c33e6",
+            "#249689",
+            "#ff4757",
+            "#ffa502",
+            "#3498db",
+            "#2ed573",
+            "#eccc68",
+          ],
+          borderWidth: 0,
+          hoverOffset: 10,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: currentLegendColor,
+            font: { size: 10 },
+            padding: 15,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            // Formata o valor do tooltip exibindo em BRL ao clicar na categoria
+            label: function (tooltipItem) {
+              const value = tooltipItem.raw;
+              return " " + window.formatCurrencyBRL(value);
+            },
+          },
+        },
+      },
+      cutout: "70%",
+    },
+  });
+}
+
+// Expõe globalmente para uso pelo theme.js ao atualizar as cores dos gráficos
+window.renderShareWalletChart = renderShareWalletChart;
+
+/**
  * Processa dados de eficiência de compra
  */
 function processPurchaseEfficiencyData(filteredLists, allLists) {
@@ -140,8 +217,8 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
   document.getElementById("metric-ticket-medio").innerText =
     window.formatCurrencyBRL(averageTicket);
 
-  // Métrica 1.C: Gasto por Categoria (Gráfico Pizza) — renderizado pelo personal-inflation.js
-  window.renderShareWalletChart(categoryTotals);
+  // Métrica 1.C: Gasto por Categoria (Gráfico Pizza)
+  renderShareWalletChart(categoryTotals);
 
   // Métrica 3.B: Taxa de Conversão dos Últimos 3 Meses
   calculateMonthlyConversionRate(allLists);

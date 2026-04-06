@@ -2,20 +2,30 @@
    MÓDULO: COMPORTAMENTO E HÁBITO - ANÁLISE DE PADRÕES DE COMPRA
    ========================================================================= */
 
+/* ==========================================================================
+   UTILITÁRIO: CLASSIFICAÇÃO DE PERFORMANCE PARA RANKING DE LOCAIS
+   ========================================================================== */
+
 /**
- * Sanitiza dados do Firestore usando a função global exposta pelo dashboard.js.
- * Fallback para DOMParser nativo caso o dashboard ainda não tenha carregado.
+ * Retorna a classe de performance para ranking de top locais
+ * Regras: 1º lugar = excellent, 2º lugar = good, 3º lugar = average, demais = low
  *
- * @param {string} rawInput - Texto potencialmente inseguro vindo do banco de dados
- * @returns {string} Texto sanitizado sem tags HTML
+ * @param {number} position - Posição no ranking (1, 2, 3, etc.)
+ * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
  */
-function sanitizeHtmlInput(rawInput) {
-  if (window.sanitizeHtmlInput) return window.sanitizeHtmlInput(rawInput);
-  if (!rawInput) return "";
-  const documentParser = new DOMParser();
-  const parsedDocument = documentParser.parseFromString(rawInput, "text/html");
-  return parsedDocument.body.textContent || "";
+function getPerformanceClassForTopLocation(position) {
+  if (position === 1) {
+    return "excellent";
+  } else if (position === 2) {
+    return "good";
+  } else if (position === 3) {
+    return "average";
+  }
+  return "low";
 }
+
+// Exporta globalmente para garantir compatibilidade com outros módulos que possam referenciar
+window.getPerformanceClassForTopLocation = getPerformanceClassForTopLocation;
 
 /**
  * Carrega e renderiza o módulo de Comportamento e Hábito
@@ -158,12 +168,10 @@ function calculateLocationFidelity(filteredLists) {
 
     // Define a classe de performance baseada na posição (1º, 2º, 3º)
     // 1º lugar = excellent, 2º lugar = good, 3º lugar = average
-    const performanceClass = window.getPerformanceClassForTopLocation(
-      index + 1,
-    );
+    const performanceClass = getPerformanceClassForTopLocation(index + 1);
 
     return {
-      name: sanitizeHtmlInput(location.name),
+      name: window.sanitizeHtmlInput(location.name),
       count: location.count,
       percentage: percentage,
       percentageFormatted: `${percentage.toFixed(0)}%`,
@@ -291,7 +299,7 @@ function calculateEssentialItems(allLists) {
         window.getPerformanceClassByPercentage(appearancePercentage);
 
       essentialItems.push({
-        name: sanitizeHtmlInput(window.capitalize(itemData.name)),
+        name: window.sanitizeHtmlInput(window.capitalize(itemData.name)),
         appearancePercentage: appearancePercentage,
         appearancePercentageFormatted: `${appearancePercentage.toFixed(0)}%`,
         listsCount: listsCount,
@@ -417,7 +425,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
             else frequencyText = `A cada ${Math.round(averageDays)} dias`;
 
             recurringItems.push({
-              name: sanitizeHtmlInput(window.capitalize(itemData.name)),
+              name: window.sanitizeHtmlInput(window.capitalize(itemData.name)),
               average: Math.round(averageDays),
               frequencyText: frequencyText,
               purchases: dates.length,
@@ -563,7 +571,7 @@ function calculateItemRecurrenceAndRestock(filteredLists) {
         if (daysUntilPurchase >= -7) {
           // Mostra se já passou até 7 dias (atraso) ou está no futuro
           predictionsRestocking.push({
-            name: sanitizeHtmlInput(window.capitalize(itemData.name)),
+            name: window.sanitizeHtmlInput(window.capitalize(itemData.name)),
             cycle: Math.round(averageDays),
             nextDate: nextDate,
             lastDateStr: window.formatDateBRL(dates[dates.length - 1]),

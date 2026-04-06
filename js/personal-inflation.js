@@ -2,6 +2,33 @@
    MÓDULO: INFLAÇÃO PESSOAL (CPI) - ANÁLISE DE VARIAÇÃO DE PREÇOS
    ========================================================================= */
 
+/* ==========================================================================
+   UTILITÁRIO: CLASSIFICAÇÃO DE PERFORMANCE PARA VARIAÇÃO DE PREÇO (CPI)
+   Centralizado neste módulo pois é usado exclusivamente na aba de Inflação Pessoal
+   ========================================================================== */
+
+/**
+ * Retorna a classe de performance para variação de preço (CPI)
+ * Regras invertidas: queda é positiva, alta é negativa
+ *
+ * @param {number} diff - Diferença percentual (positivo = alta, negativo = queda)
+ * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
+ */
+function getPerformanceClassForPriceVariation(diff) {
+  // Para variação de preço: negativo (queda) é bom, positivo (alta) é ruim
+  if (diff <= -10) {
+    return "excellent"; // Queda significativa
+  } else if (diff < 0) {
+    return "good"; // Queda leve
+  } else if (diff === 0) {
+    return "average"; // Estável
+  }
+  return "low"; // Alta de preço
+}
+
+// Exporta globalmente para garantir compatibilidade com outros módulos que possam referenciar
+window.getPerformanceClassForPriceVariation = getPerformanceClassForPriceVariation;
+
 /**
  * Carrega e renderiza o módulo de Inflação Pessoal
  * Métrica 1.D: Inflação Pessoal (CPI)
@@ -243,80 +270,6 @@ function processPersonalInflationData(filteredLists) {
     `,
   );
 }
-
-/**
- * Renderiza gráfico de Gasto por Categoria (Pizza)
- * Exibe o tooltip formatado em BRL ao clicar em uma categoria
- */
-function renderShareWalletChart(categoryTotals) {
-  const ctx = document.getElementById("chart-share-wallet");
-  if (!ctx) return;
-
-  if (window.chartShareWallet) window.chartShareWallet.destroy();
-
-  const labels = Object.keys(categoryTotals);
-  const data = Object.values(categoryTotals);
-
-  if (labels.length === 0) return;
-
-  /* CORRIGIDO: Lê o tema atual do body no momento da criação do gráfico
-     para garantir que a cor da legenda seja correta desde o início,
-     independente de o tema dark ou light estar ativo */
-  const isDark = document.body.getAttribute("data-theme") === "dark";
-  const currentLegendColor = isDark
-    ? "rgba(255,255,255,0.7)"
-    : "rgba(20, 24, 27, 0.7)";
-
-  window.chartShareWallet = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          data: data,
-          backgroundColor: [
-            "#4c33e6",
-            "#249689",
-            "#ff4757",
-            "#ffa502",
-            "#3498db",
-            "#2ed573",
-            "#eccc68",
-          ],
-          borderWidth: 0,
-          hoverOffset: 10,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            color: currentLegendColor,
-            font: { size: 10 },
-            padding: 15,
-          },
-        },
-        tooltip: {
-          callbacks: {
-            // Formata o valor do tooltip exibindo em BRL ao clicar na categoria
-            label: function (tooltipItem) {
-              const value = tooltipItem.raw;
-              return " " + window.formatCurrencyBRL(value);
-            },
-          },
-        },
-      },
-      cutout: "70%",
-    },
-  });
-}
-
-// Expõe globalmente para ser chamado pelo purchase-efficiency.js
-window.renderShareWalletChart = renderShareWalletChart;
 
 /**
  * Renderiza estado vazio para o módulo de inflação pessoal

@@ -103,6 +103,7 @@ window.CONVERSION_RATE_CONFIG = CONVERSION_RATE_CONFIG;
 
 /* ==========================================================================
    UTILITÁRIO: CLASSIFICAÇÃO DE PERFORMANCE POR PERCENTUAL
+   Usado em múltiplos módulos do dashboard (purchase-efficiency, behavior-habits)
    ========================================================================== */
 
 /**
@@ -125,50 +126,6 @@ function getPerformanceClassByPercentage(percentage) {
 
 //Exporta globalmente
 window.getPerformanceClassByPercentage = getPerformanceClassByPercentage;
-
-/**
- * Retorna a classe de performance para variação de preço (CPI)
- * Regras invertidas: queda é positiva, alta é negativa
- *
- * @param {number} diff - Diferença percentual (positivo = alta, negativo = queda)
- * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
- */
-function getPerformanceClassForPriceVariation(diff) {
-  // Para variação de preço: negativo (queda) é bom, positivo (alta) é ruim
-  if (diff <= -10) {
-    return "excellent"; // Queda significativa
-  } else if (diff < 0) {
-    return "good"; // Queda leve
-  } else if (diff === 0) {
-    return "average"; // Estável
-  }
-  return "low"; // Alta de preço
-}
-
-//Exporta globalmente
-window.getPerformanceClassForPriceVariation =
-  getPerformanceClassForPriceVariation;
-
-/**
- * Retorna a classe de performance para ranking de top locais
- * Regras: 1º lugar = excellent, 2º lugar = good, 3º lugar = average, demais = low
- *
- * @param {number} position - Posição no ranking (1, 2, 3, etc.)
- * @returns {string} - Classe de performance: 'excellent', 'good', 'average', 'low'
- */
-function getPerformanceClassForTopLocation(position) {
-  if (position === 1) {
-    return "excellent";
-  } else if (position === 2) {
-    return "good";
-  } else if (position === 3) {
-    return "average";
-  }
-  return "low";
-}
-
-//Exporta globalmente
-window.getPerformanceClassForTopLocation = getPerformanceClassForTopLocation;
 
 /* ==========================================================================
    UTILITÁRIO: Parse de Data Local

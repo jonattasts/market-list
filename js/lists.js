@@ -4,25 +4,6 @@
 
 import { firebaseAuth } from "./firebase.js";
 
-/* ==========================================================================
-   SANITIZAÇÃO — DOMPARSER NATIVO
-   ========================================================================== */
-
-/**
- * Sanitiza uma string removendo tags HTML e scripts maliciosos.
- * Usa DOMParser nativo do browser para extrair apenas o texto em claro,
- * eliminando qualquer tentativa de injeção de HTML/XSS via dados do Firestore.
- *
- * @param {string} rawInput - Texto potencialmente inseguro vindo do banco de dados
- * @returns {string} Texto sanitizado sem tags HTML
- */
-function sanitizeHtmlInput(rawInput) {
-  if (!rawInput) return "";
-  const documentParser = new DOMParser();
-  const parsedDocument = documentParser.parseFromString(rawInput, "text/html");
-  return parsedDocument.body.textContent || "";
-}
-
 // Flag de guard para evitar múltiplas chamadas simultâneas de exclusão de lista.
 // Impede que um duplo clique no botão acione dois deleteDoc para o mesmo documento.
 let isDeletingList = false;
@@ -538,10 +519,10 @@ function renderListsForCurrentPage() {
       cardElement.ontouchend = window.handleTouchEnd;
     }
 
-    // Sanitiza dados do Firestore antes de injetar no DOM
-    const safeListName = sanitizeHtmlInput(list.listName);
-    const safeLocation = sanitizeHtmlInput(list.location || "");
-    const safeOwnerName = sanitizeHtmlInput(list.ownerDisplayName || "");
+    // Sanitiza dados do Firestore usando a função global do dashboard.js antes de injetar no DOM
+    const safeListName = window.sanitizeHtmlInput(list.listName);
+    const safeLocation = window.sanitizeHtmlInput(list.location || "");
+    const safeOwnerName = window.sanitizeHtmlInput(list.ownerDisplayName || "");
 
     // Badge de compartilhamento exibido em listas da aba "Compartilhadas"
     // Exibe o displayName do dono (salvo no campo ownerDisplayName) em vez do uid
