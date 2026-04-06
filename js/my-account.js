@@ -10,9 +10,11 @@ import {
   collection,
   doc,
   getDocs,
+  updateDoc,
   deleteDoc,
   query,
   where,
+  serverTimestamp,
   signOut,
 } from "./firebase.js";
 
@@ -77,12 +79,59 @@ async function deleteUserCollectionData(collectionName, userUid) {
 }
 
 /**
+ * Remove o UID do usuário excluído de todas as listas compartilhadas
+ * das quais ele era colaborador (campo sharedWith e sharedUids).
+ *
+ * Essa operação garante que o dono da lista veja a remoção refletida
+ * em tempo real via onSnapshot sem precisar de nenhuma ação manual.
+ *
+ * @param {string} userUid - UID do usuário cuja conta está sendo encerrada
+ */
+async function removeUserFromAllSharedLists(userUid) {
+  // Busca todas as listas onde o UID do usuário está no array auxiliar sharedUids
+  const sharedListsQuery = query(
+    collection(firestore, "lists"),
+    where("sharedUids", "array-contains", userUid),
+  );
+
+  const sharedListsSnapshot = await getDocs(sharedListsQuery);
+
+  if (sharedListsSnapshot.empty) return;
+
+  // Para cada lista compartilhada, remove apenas a entrada do usuário excluído
+  const removalPromises = sharedListsSnapshot.docs.map(async (listDocument) => {
+    const listData = listDocument.data();
+
+    // Filtra o usuário deletado do array sharedWith
+    const updatedSharedWithArray = (listData.sharedWith || []).filter(
+      (sharedUser) => sharedUser.uid !== userUid,
+    );
+
+    // Mantém o campo auxiliar sharedUids sincronizado com o array sharedWith atualizado
+    const updatedSharedUidsArray = updatedSharedWithArray.map(
+      (sharedUser) => sharedUser.uid,
+    );
+
+    // Persiste a remoção no Firestore — o onSnapshot do dono receberá a mudança em tempo real
+    return updateDoc(doc(firestore, "lists", listDocument.id), {
+      sharedWith: updatedSharedWithArray,
+      sharedUids: updatedSharedUidsArray,
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  await Promise.all(removalPromises);
+}
+
+/**
  * Executa a exclusão completa da conta do usuário:
- * 1. Exclui todas as listas do usuário no Firestore
- * 2. Exclui o documento do usuário em users/{uid}
- * 3. Cancela os listeners ativos do Firestore
- * 4. Exclui a conta no Firebase Auth
- * 5. Limpa o localStorage e redireciona para o onboarding
+ * 1. Cancela todos os listeners ativos do Firestore
+ * 2. Remove o usuário de todas as listas compartilhadas
+ * 3. Exclui todas as listas próprias do usuário no Firestore
+ * 4. Exclui o documento do usuário em users/{uid}
+ * 5. Ativa o guard de deleção para bloquear o onAuthStateChanged
+ * 6. Exclui a conta no Firebase Auth
+ * 7. Limpa o localStorage e navega para o onboarding
  */
 async function executeAccountDeletion() {
   const confirmButton = document.getElementById("my-account-confirm-delete-button");
@@ -103,24 +152,31 @@ async function executeAccountDeletion() {
 
     const userUid = currentUser.uid;
 
-    // Cancela listeners ativos antes de qualquer operação destrutiva
-    if (typeof window.unsubscribeSharedListsListener === "function") {
-      window.unsubscribeSharedListsListener();
-      window.unsubscribeSharedListsListener = null;
+    // Cancela TODOS os listeners ativos do Firestore antes de qualquer operação destrutiva.
+    if (window.cancelActiveFirestoreListeners) {
+      window.cancelActiveFirestoreListeners();
     }
 
     if (window.deactivateDetailsRealtimeListener) {
       window.deactivateDetailsRealtimeListener();
     }
 
-    // Exclui todas as listas do usuário no Firestore
+    // Remove o usuário de todas as listas onde ele é colaborador.
+    // Isso propaga a mudança em tempo real para os donos das listas via onSnapshot,
+    // refletindo a remoção do colaborador sem exibir toast para o dono.
+    await removeUserFromAllSharedLists(userUid);
+
+    // Exclui todas as listas próprias do usuário no Firestore
     await deleteUserCollectionData("lists", userUid);
 
     // Exclui o documento do perfil do usuário
     const userDocumentReference = doc(firestore, "users", userUid);
     await deleteDoc(userDocumentReference);
 
-    // Exclui a conta no Firebase Auth
+    // Ativa o guard ANTES de deletar a conta no Firebase Auth.
+    window.isAccountDeletionInProgress = true;
+
+    // Exclui a conta no Firebase Auth — dispara onAuthStateChanged com user = null
     await currentUser.delete();
 
     // Limpa dados locais e reseta o estado global
@@ -137,8 +193,11 @@ async function executeAccountDeletion() {
 
     closeDeleteAccountConfirmDialog();
 
-    // Navega para o onboarding após a exclusão completa
+    // Navega para o onboarding após a exclusão completa com overlay de transição
     setTimeout(() => {
+      // Desativa o guard após a navegação ser iniciada para restaurar o comportamento normal
+      window.isAccountDeletionInProgress = false;
+
       window.showScreen("onboarding-screen");
       setTimeout(() => {
         window.showToast("Conta encerrada com sucesso.", "success");
@@ -146,6 +205,9 @@ async function executeAccountDeletion() {
     }, 300);
   } catch (deletionError) {
     console.error("Erro ao encerrar conta:", deletionError);
+
+    // Desativa o guard em caso de erro para não bloquear o fluxo de autenticação
+    window.isAccountDeletionInProgress = false;
 
     // Reativa os botões em caso de erro para permitir nova tentativa
     if (confirmButton) confirmButton.disabled = false;

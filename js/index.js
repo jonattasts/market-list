@@ -70,6 +70,9 @@ let isHandlingAuthenticatedUser = false;
 // evitando que um duplo clique no botão de logout dispare signOut duas vezes
 let isLoggingOut = false;
 
+// Flag que sinaliza que o fluxo de exclusão de conta está em andamento.
+window.isAccountDeletionInProgress = false;
+
 let unsubscribeOwnedListsListener = null;
 
 /* ==========================================================================
@@ -1135,11 +1138,14 @@ async function runSetupAnimation() {
    ========================================================================== */
 
 /**
- * Cancela todos os listeners ativos do Firestore antes do signOut.
+ * Cancela todos os listeners ativos do Firestore antes do signOut ou da deleção de conta.
  * Evita o erro "Missing or insufficient permissions" que ocorre quando
  * o onSnapshot tenta ler dados com credenciais já invalidadas.
+ *
+ * Exposta via window para que o my-account.js possa chamá-la durante o fluxo
+ * de exclusão de conta.
  */
-function cancelActiveFirestoreListeners() {
+window.cancelActiveFirestoreListeners = function cancelActiveFirestoreListeners() {
   // Cancela o listener das listas próprias do usuário (initFirebaseListener)
   if (typeof unsubscribeOwnedListsListener === "function") {
     unsubscribeOwnedListsListener();
@@ -1151,7 +1157,7 @@ function cancelActiveFirestoreListeners() {
     window.unsubscribeSharedListsListener();
     window.unsubscribeSharedListsListener = null;
   }
-}
+};
 
 /**
  * Exibe o overlay de transição do logout para cobrir a tela
@@ -1223,7 +1229,6 @@ window.handleLogout = async function () {
     }
 
     cancelActiveFirestoreListeners();
-
     // Realiza o logout no Firebase Auth — invalida a sessão no servidor
     // sem alterar ou remover nenhum dado do Firestore do usuário
     await signOut(firebaseAuth);
@@ -1785,8 +1790,8 @@ async function initApp() {
       }
     } else {
       // Sem sessão ativa — exibe onboarding
-      // Só redireciona ao onboarding se não há um fluxo de autenticação em andamento
-      if (!isHandlingAuthenticatedUser) {
+      // Bloqueia a navegação automática se a deleção de conta estiver em andamento
+      if (!isHandlingAuthenticatedUser && !window.isAccountDeletionInProgress) {
         window.showScreen("onboarding-screen");
       }
     }
