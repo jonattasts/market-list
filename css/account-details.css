@@ -1,0 +1,202 @@
+/* ==========================================================================
+   TELA: DADOS DE CADASTRO
+   ========================================================================== */
+
+/* --- Container principal da tela --- */
+#account-details-screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-main);
+  overflow: hidden;
+}
+
+/* --- Área de conteúdo com scroll --- */
+.account-details-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px max(24px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- Cartão do formulário --- */
+.account-details-form-card {
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- Campo de leitura (email — somente visualização) --- */
+.account-details-readonly-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-details-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.account-details-readonly-value {
+  font-size: 15px;
+  color: var(--text-primary);
+  padding: 13px 14px;
+  background-color: var(--bg-main);
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  word-break: break-all;
+  /* Indica visualmente que o campo não é editável */
+  opacity: 0.75;
+}
+
+/* --- Campo editável (nome) --- */
+.account-details-editable-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   INPUT COM BOTÃO DE LÁPIS INTEGRADO INTERNAMENTE
+   ========================================================================== */
+
+/* Wrapper que funciona como o "input" visualmente */
+.account-details-name-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-main);
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+  overflow: hidden;
+}
+
+/* Quando em modo de edição, o wrapper herda a borda do primário */
+.account-details-name-input-wrapper.editing {
+  border-color: var(--primary);
+  background-color: var(--bg-card);
+}
+
+/* Input do nome — sem borda própria pois o wrapper a fornece */
+#account-details-name-input {
+  flex: 1;
+  font-size: 15px;
+  color: var(--text-primary);
+  /* Padding direito maior para não sobrepor o texto ao ícone do lápis */
+  padding: 13px 48px 13px 14px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  /* Remove estilo nativo de input desabilitado */
+  -webkit-text-fill-color: var(--text-primary);
+  opacity: 1;
+}
+
+#account-details-name-input:disabled {
+  cursor: default;
+}
+
+/* --- Botão de lápis posicionado internamente à direita do input --- */
+.account-details-edit-name-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  /* Largura suficiente para toque confortável sem ocupar espaço do texto */
+  width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.account-details-edit-name-button:active {
+  background-color: rgba(76, 51, 230, 0.06);
+}
+
+/* Estado ativo: campo em edição — lápis vira "x" para cancelar */
+.account-details-edit-name-button.active {
+  border-left-color: var(--primary);
+  background-color: rgba(76, 51, 230, 0.06);
+}
+
+.account-details-edit-name-button ion-icon {
+  font-size: 20px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+  /* Impede que o ion-icon capture o clique acidentalmente */
+  pointer-events: none;
+}
+
+.account-details-edit-name-button.active ion-icon {
+  color: var(--primary);
+}
+
+/* --- Botão de salvar nome — oculto por padrão, exibido ao entrar em edição --- */
+#account-details-save-name-button {
+  width: 100%;
+  padding: 14px 0;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-light) 100%
+  );
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s ease;
+  font-family: inherit;
+}
+
+#account-details-save-name-button:active {
+  opacity: 0.85;
+}
+
+#account-details-save-name-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Exibe o botão salvar quando a linha de edição está ativa */
+.account-details-editable-row.editing #account-details-save-name-button {
+  display: flex;
+}
+
+#account-details-save-name-button ion-icon {
+  font-size: 18px;
+}
+
+/* --- Separador horizontal entre campos dentro do cartão --- */
+.account-details-field-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 0 -20px;
+}

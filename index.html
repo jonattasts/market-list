@@ -36,6 +36,10 @@
     <!-- CSS do módulo de autenticação (modal email/senha + botões Google) -->
     <link rel="stylesheet" href="css/auth.css" />
 
+    <!-- CSS da Tela Minha Conta e Dados de Cadastro -->
+    <link rel="stylesheet" href="css/my-account.css" />
+    <link rel="stylesheet" href="css/account-details.css" />
+
     <!-- CSS Base do Dashboard -->
     <link rel="stylesheet" href="css/dashboard.css">
 
@@ -75,7 +79,8 @@
       <!-- branco que ocorre entre o signOut e a exibição do onboarding.  -->
       <!-- Controlado via JS pelo handleLogout em index.js               -->
       <!-- ============================================================= -->
-      <div id="logout-transition-overlay" class="logout-transition-overlay"></div>
+      <div id="logout-transition-overlay"
+        class="logout-transition-overlay"></div>
 
       <!-- ============================================================= -->
       <!-- ===================== TOAST ===================== -->
@@ -307,11 +312,11 @@
 
             <h1>Market List</h1>
 
-            <!-- Botão de logout —  encerra a sessão sem apagar dados no banco -->
+            <!-- Botão de navegação para a tela Minha Conta -->
             <div class="header-action"
-              onclick="handleLogout()"
-              aria-label="Sair da conta">
-              <ion-icon name="log-out-outline"></ion-icon>
+              onclick="showScreen('my-account-screen')"
+              aria-label="Minha conta">
+              <ion-icon name="person-circle-outline"></ion-icon>
             </div>
 
           </header>
@@ -367,6 +372,221 @@
 
           </div>
         </div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- ===================== MY ACCOUNT SCREEN ==================== -->
+      <!-- ============================================================= -->
+      <div id="my-account-screen" class="screen-hidden">
+
+        <!-- Header Secundário -->
+        <header class="small">
+          <!-- Botão Voltar para a Home -->
+          <div class="header-action" onclick="showScreen('home-screen')">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <h1 class="header-title">Minha Conta</h1>
+
+          <!-- Botão de alternância de tema — sincronizado automaticamente pelo theme.js -->
+          <div class="header-action theme-toggle-button"
+            onclick="toggleTheme()" aria-label="Alternar tema">
+            <ion-icon name="moon-outline"
+              class="theme-icon-light"></ion-icon>
+            <ion-icon name="sunny-outline"
+              class="theme-icon-dark screen-hidden"></ion-icon>
+          </div>
+        </header>
+
+        <!-- Conteúdo com scroll -->
+        <div class="my-account-content-wrapper">
+
+          <!-- Card único com todos os itens separados por linha suave.
+               O item destrutivo (encerrar conta) usa border-top espessa
+               para criar o espaçamento visual em relação aos demais. -->
+          <div class="my-account-group-card">
+
+            <!-- Item: Dados de Cadastro -->
+            <div class="my-account-list-item my-account-item-primary"
+              onclick="showScreen('account-details-screen')"
+              role="button"
+              aria-label="Acessar dados de cadastro">
+              <div class="my-account-item-icon-wrapper">
+                <ion-icon name="person-outline"></ion-icon>
+              </div>
+              <div class="my-account-item-text-group">
+                <p class="my-account-item-label">Dados de Cadastro</p>
+                <p class="my-account-item-subtitle">Visualize e edite seu nome
+                  de exibição</p>
+              </div>
+              <ion-icon name="chevron-forward-outline"
+                class="my-account-chevron"></ion-icon>
+            </div>
+
+            <!-- Item: Sair — encerra a sessão sem apagar dados no banco -->
+            <div class="my-account-list-item my-account-item-warning"
+              onclick="handleLogout()"
+              role="button"
+              aria-label="Sair da conta">
+              <div class="my-account-item-icon-wrapper">
+                <ion-icon name="log-out-outline"></ion-icon>
+              </div>
+              <div class="my-account-item-text-group">
+                <p class="my-account-item-label">Sair</p>
+                <p class="my-account-item-subtitle">Encerrar sessão e voltar ao
+                  início</p>
+              </div>
+              <ion-icon name="chevron-forward-outline"
+                class="my-account-chevron"></ion-icon>
+            </div>
+
+            <!-- Item: Encerrar minha conta — separado dos demais pela banda
+                 espessa definida em .my-account-item-danger no CSS -->
+            <div class="my-account-list-item my-account-item-danger"
+              onclick="openDeleteAccountConfirmDialog()"
+              role="button"
+              aria-label="Encerrar minha conta">
+              <div class="my-account-item-icon-wrapper">
+                <ion-icon name="trash-outline"></ion-icon>
+              </div>
+              <div class="my-account-item-text-group">
+                <p class="my-account-item-label">Encerrar minha conta</p>
+                <p class="my-account-item-subtitle">Exclui permanentemente sua
+                  conta e todos os seus dados</p>
+              </div>
+              <ion-icon name="chevron-forward-outline"
+                class="my-account-chevron"></ion-icon>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- =========== ALERT DE CONFIRMAÇÃO — ENCERRAR CONTA =========== -->
+        <!-- ============================================================= -->
+        <div id="my-account-confirm-overlay"
+          class="my-account-confirm-overlay"
+          style="display: none;">
+
+          <div class="my-account-confirm-dialog" role="alertdialog"
+            aria-labelledby="my-account-confirm-title"
+            aria-describedby="my-account-confirm-message">
+
+            <!-- Ícone de aviso -->
+            <div class="my-account-confirm-dialog-icon">
+              <ion-icon name="warning-outline"></ion-icon>
+            </div>
+
+            <!-- Título do alert -->
+            <h3 id="my-account-confirm-title"
+              class="my-account-confirm-dialog-title">
+              Encerrar conta?
+            </h3>
+
+            <!-- Mensagem descritiva -->
+            <p id="my-account-confirm-message"
+              class="my-account-confirm-dialog-message">
+              Essa ação é <strong>irreversível</strong>. Todos os seus dados,
+              incluindo listas e histórico, serão excluídos permanentemente.
+            </p>
+
+            <!-- Botões de ação -->
+            <div class="my-account-confirm-dialog-actions">
+              <button id="my-account-cancel-delete-button"
+                class="button-cancel-action">
+                Cancelar
+              </button>
+              <button id="my-account-confirm-delete-button"
+                class="button-confirm-delete-action">
+                Encerrar
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- =================== ACCOUNT DETAILS SCREEN ================== -->
+      <!-- ============================================================= -->
+      <div id="account-details-screen" class="screen-hidden">
+
+        <!-- Header Secundário -->
+        <header class="small">
+          <!-- Botão Voltar para Minha Conta -->
+          <div class="header-action" onclick="showScreen('my-account-screen')">
+            <ion-icon name="arrow-back-outline" class="icon-back"></ion-icon>
+          </div>
+
+          <h1 class="header-title">Dados de Cadastro</h1>
+
+          <!-- Espaço reservado para manter o título centralizado -->
+          <div class="header-action" style="visibility: hidden;">
+            <ion-icon name="person-outline"></ion-icon>
+          </div>
+        </header>
+
+        <!-- Conteúdo com scroll -->
+        <div class="account-details-content-wrapper">
+
+          <!-- Cartão do formulário -->
+          <div class="account-details-form-card">
+
+            <!-- Campo somente leitura: E-mail -->
+            <div class="account-details-readonly-field">
+              <span class="account-details-field-label">E-mail</span>
+              <div id="account-details-email-value"
+                class="account-details-readonly-value">—</div>
+            </div>
+
+            <div class="account-details-field-divider"></div>
+
+            <!-- Campo editável: Nome de exibição -->
+            <div id="account-details-editable-row"
+              class="account-details-editable-row">
+
+              <span class="account-details-field-label">Nome de exibição</span>
+
+              <!-- Wrapper que une visualmente o input e o botão de lápis
+                   numa única caixa — o botão fica dentro da borda à direita -->
+              <div id="account-details-name-input-wrapper"
+                class="account-details-name-input-wrapper">
+
+                <input
+                  type="text"
+                  id="account-details-name-input"
+                  placeholder="Seu nome"
+                  disabled
+                  autocomplete="name" />
+
+                <!-- Botão de lápis posicionado internamente à direita do input.
+                     Quando ativo, exibe ícone de fechar para cancelar a edição -->
+                <button
+                  id="account-details-edit-button"
+                  class="account-details-edit-name-button"
+                  onclick="toggleNameEditMode()"
+                  aria-label="Editar nome">
+                  <ion-icon name="pencil-outline"></ion-icon>
+                </button>
+
+              </div>
+
+              <!-- Botão de salvar — exibido apenas quando o campo está em edição -->
+              <button
+                id="account-details-save-name-button"
+                onclick="saveUserDisplayName()">
+                <ion-icon name="checkmark-outline"></ion-icon>
+                Salvar
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
       <!-- ============================================================= -->
@@ -1132,6 +1352,10 @@
     <script type="module" src="js/share-window.js"></script>
 
     <script type="module" src="js/details.js"></script>
+
+    <!-- Scripts das telas Minha Conta e Dados de Cadastro -->
+    <script type="module" src="js/my-account.js"></script>
+    <script type="module" src="js/account-details.js"></script>
 
     <!-- Script base do Dashboard -->
     <script type="module" src="js/dashboard.js"></script>

@@ -241,6 +241,14 @@ function clearUserDataFromStorage() {
   localStorage.removeItem("marketUserName");
 }
 
+// Expõe clearUserDataFromStorage para uso pelo módulo my-account.js
+// durante o fluxo de exclusão de conta
+window.clearUserDataFromStorage = clearUserDataFromStorage;
+
+// Expõe saveEncryptedUserDataToStorage para uso pelo módulo account-details.js
+// durante a atualização do nome no localStorage criptografado
+window.saveEncryptedUserDataToStorage = saveEncryptedUserDataToStorage;
+
 /* ==========================================================================
    SISTEMA DE VALIDAÇÃO DE DEPENDÊNCIAS - INTEGRADO AO SKELETON EXISTENTE
    ========================================================================== */
@@ -1379,6 +1387,9 @@ function executeScreenNavigation(
     "new-category-screen",
     "new-item-screen",
     "dashboard-screen",
+    // Telas de conta do usuário
+    "my-account-screen",
+    "account-details-screen",
   ];
 
   if (screenIdentifier !== "market-list-screen-details") {
@@ -1423,6 +1434,16 @@ function executeScreenNavigation(
 
   if (screenIdentifier === "dashboard-screen") {
     applyDashboardSkeletonBeforeNavigation();
+  }
+
+  // Inicializa a tela Minha Conta registrando eventos dos botões do alert de confirmação
+  if (screenIdentifier === "my-account-screen") {
+    if (window.initializeMyAccountScreen) window.initializeMyAccountScreen();
+  }
+
+  // Inicializa a tela de Dados de Cadastro preenchendo nome e email do usuário
+  if (screenIdentifier === "account-details-screen") {
+    if (window.initializeAccountDetailsScreen) window.initializeAccountDetailsScreen();
   }
 
   const dashboardRequiresValidation =
@@ -1470,6 +1491,9 @@ window.showScreen = async function (screenIdentifier) {
     "new-category-screen",
     "new-item-screen",
     "onboarding-screen",
+    // Telas de conta do usuário
+    "my-account-screen",
+    "account-details-screen",
   ].find((screenId) => {
     const element = document.getElementById(screenId);
     return element && !element.classList.contains("screen-hidden");

@@ -1,0 +1,293 @@
+/* ==========================================================================
+   TELA: MINHA CONTA
+   ========================================================================== */
+
+/* --- Container principal da tela --- */
+#my-account-screen {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-main);
+  overflow: hidden;
+}
+
+/* --- Área de conteúdo com scroll --- */
+.my-account-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px max(24px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Card único que envolve todos os itens da lista --- */
+.my-account-group-card {
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* --- Item da lista — layout horizontal com ícone, textos e seta --- */
+.my-account-list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 16px 15px 20px;
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+  text-decoration: none;
+  background-color: var(--bg-card);
+}
+
+.my-account-list-item:active {
+  background-color: var(--bg-main);
+}
+
+/* Separador entre itens adjacentes */
+.my-account-list-item + .my-account-list-item {
+  border-top: 1px solid var(--border-color);
+}
+
+.my-account-list-item.my-account-item-warning {
+  border-top: 6px solid var(--bg-main) !important;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.my-account-list-item.my-account-item-danger {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+/* ==========================================================================
+   ÍCONE COLORIDO À ESQUERDA
+   ========================================================================== */
+
+.my-account-item-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-account-item-icon-wrapper ion-icon {
+  font-size: 19px;
+}
+
+/* Variação padrão — azul/primário (Dados de Cadastro) */
+.my-account-list-item.my-account-item-primary .my-account-item-icon-wrapper {
+  background-color: rgba(76, 51, 230, 0.12);
+}
+
+.my-account-list-item.my-account-item-primary
+  .my-account-item-icon-wrapper
+  ion-icon {
+  color: var(--primary);
+}
+
+/* Variação laranja — logout (Sair) */
+.my-account-list-item.my-account-item-warning .my-account-item-icon-wrapper {
+  background-color: rgba(255, 149, 0, 0.12);
+}
+
+.my-account-list-item.my-account-item-warning
+  .my-account-item-icon-wrapper
+  ion-icon {
+  color: #ff9500;
+}
+
+/* Variação vermelha — (Encerrar conta) */
+.my-account-list-item.my-account-item-danger .my-account-item-icon-wrapper {
+  background-color: rgba(220, 53, 69, 0.12);
+}
+
+.my-account-list-item.my-account-item-danger
+  .my-account-item-icon-wrapper
+  ion-icon {
+  color: var(--danger, #dc3545);
+}
+
+/* Cor do label — (Encerrar conta) */
+.my-account-list-item.my-account-item-danger .my-account-item-label {
+  color: var(--danger, #dc3545);
+}
+
+/* Cor do label — logout (Sair) */
+.my-account-list-item.my-account-item-warning .my-account-item-label {
+  color: #ff9500;
+}
+
+/* ==========================================================================
+   TEXTOS DO ITEM
+   ========================================================================== */
+
+/* Grupo de textos — ocupa todo o espaço entre ícone e seta */
+.my-account-item-text-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Título do item — usa var(--text-primary) para garantir leitura em ambos os temas */
+.my-account-item-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Subtítulo do item — usa var(--text-secondary) para contraste suave em ambos os temas */
+.my-account-item-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* --- Seta de navegação à direita ---
+   Usa var(--text-secondary) com opacidade para não sumir no tema escuro */
+.my-account-chevron {
+  font-size: 17px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* ==========================================================================
+   OVERLAY E ALERT DE CONFIRMAÇÃO — ENCERRAR CONTA
+   ========================================================================== */
+
+/* --- Overlay escuro que bloqueia a tela --- */
+.my-account-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.my-account-confirm-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* --- Caixa do alert centralizado --- */
+.my-account-confirm-dialog {
+  background-color: var(--bg-card);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  transform: scale(0.92) translateY(8px);
+  transition: transform 0.25s ease;
+}
+
+.my-account-confirm-overlay.active .my-account-confirm-dialog {
+  transform: scale(1) translateY(0);
+}
+
+/* --- Ícone de aviso no topo do alert --- */
+.my-account-confirm-dialog-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: rgba(220, 53, 69, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.my-account-confirm-dialog-icon ion-icon {
+  font-size: 28px;
+  color: var(--danger, #dc3545);
+}
+
+/* --- Título do alert --- */
+.my-account-confirm-dialog-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+/* --- Mensagem descritiva do alert --- */
+.my-account-confirm-dialog-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* --- Linha de botões de ação --- */
+.my-account-confirm-dialog-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Botão cancelar */
+.my-account-confirm-dialog-actions .button-cancel-action {
+  flex: 1;
+  padding: 13px 0;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  background-color: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.my-account-confirm-dialog-actions .button-cancel-action:active {
+  background-color: var(--bg-main);
+}
+
+/* Botão confirmar exclusão */
+.my-account-confirm-dialog-actions .button-confirm-delete-action {
+  flex: 1;
+  padding: 13px 0;
+  border-radius: 12px;
+  border: none;
+  background-color: var(--danger, #dc3545);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.my-account-confirm-dialog-actions .button-confirm-delete-action:active {
+  opacity: 0.85;
+}
+
+/* Estado de carregamento do botão de confirmar exclusão */
+.my-account-confirm-dialog-actions .button-confirm-delete-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
