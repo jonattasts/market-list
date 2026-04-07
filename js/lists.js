@@ -54,14 +54,34 @@ window.confirmDeleteList = async function (listIndex) {
   }
 };
 
+/**
+ * Abre o formulário de cópia de lista.
+ *
+ * Armazena o ID estável da lista em window.currentListId (em vez do índice
+ * posicional) para evitar que uma reordenação do onSnapshot entre o clique
+ * e a confirmação aponte para a lista errada.
+ * O índice posicional é resolvido via resolveCurrentListIndex() no momento
+ * em que a cópia é confirmada, garantindo sempre a referência correta.
+ *
+ * @param {Event} event - Evento de clique (necessário para stopPropagation)
+ * @param {number} listIndex - Índice posicional da lista no marketListData
+ */
 window.copyList = function (event, listIndex) {
   event.stopPropagation();
   window.isEditingListMode = false;
   window.isCopyingListMode = true;
-  window.currentListIndex = listIndex;
-  window.previousScreen = "market-lists-screen";
 
   const originalList = window.marketListData[listIndex];
+
+  // Armazena o ID estável da lista para que resolveCurrentListIndex()
+  // encontre a posição correta mesmo após reordenações do onSnapshot
+  window.currentListId = originalList.id;
+
+  // Atualiza o índice posicional para compatibilidade com módulos externos
+  window.currentListIndex = listIndex;
+
+  window.previousScreen = "market-lists-screen";
+
   document.getElementById("form-title").innerText = "Copiar Lista";
   document.getElementById("button-save-list").innerText = "Confirmar Cópia";
   document.getElementById("new-list-name").value = originalList.listName;
