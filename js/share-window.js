@@ -669,6 +669,74 @@ window.setActiveDetailsListIdentifier = function (listIdentifier) {
 };
 
 /* ==========================================================================
+   NAVEGAÇÃO FORÇADA PARA TELA DE LISTAS — REMOÇÃO DE LISTA COMPARTILHADA
+   ========================================================================== */
+
+/**
+ * Navega o usuário compartilhado para a tela de listas quando a lista que
+ * ele está visualizando nos detalhes é removida do snapshot de listas
+ * compartilhadas (deleção pelo dono ou remoção do compartilhamento).
+ *
+ * Reutiliza o mesmo padrão de navegação direta do handleSharedAccessRevoked
+ * em details.js para garantir consistência visual entre os dois fluxos.
+ *
+ * @param {string} removedListIdentifier - ID da lista que deixou de estar disponível
+ */
+function navigateAwayFromDeletedSharedList(removedListIdentifier) {
+  // Cancela o listener pontual de detalhes para evitar re-disparos sobre
+  // um documento que pode não existir mais no Firestore
+  if (window.deactivateDetailsRealtimeListener) {
+    window.deactivateDetailsRealtimeListener();
+  }
+
+  // Remove a lista do cache local do usuário compartilhado
+  window.marketListData = window.marketListData.filter(
+    (existingList) => existingList.id !== removedListIdentifier,
+  );
+
+  // Navega diretamente para a tela de listas sem passar pelo ciclo de validação
+  // do showScreen, replicando o comportamento do handleSharedAccessRevoked
+  const allScreenIdentifiers = [
+    "onboarding-screen",
+    "home-screen",
+    "market-lists-screen",
+    "market-list-screen-details",
+    "new-list-screen",
+    "new-category-screen",
+    "new-item-screen",
+    "dashboard-screen",
+  ];
+
+  allScreenIdentifiers.forEach((screenId) => {
+    const screenElement = document.getElementById(screenId);
+    if (screenElement) {
+      screenElement.classList.remove("screen-fade-out");
+      screenElement.classList.toggle(
+        "screen-hidden",
+        screenId !== "market-lists-screen",
+      );
+      screenElement.style.display =
+        screenId === "market-lists-screen" ? "flex" : "none";
+    }
+  });
+
+  if (window.searchInput) {
+    window.searchInput.value = "";
+  }
+
+  if (window.renderMarketLists) {
+    window.renderMarketLists();
+  }
+
+  // Exibe o toast após a renderização para garantir que o usuário veja
+  // a tela de listas já atualizada ao receber a notificação
+  window.showToast(
+    "Esta lista não está mais disponível para você.",
+    "danger",
+  );
+}
+
+/* ==========================================================================
    LISTENER PARA LISTAS COMPARTILHADAS COM O USUÁRIO ATUAL
    ========================================================================== */
 
@@ -738,6 +806,21 @@ window.initSharedListsListener = async function (currentUserUid) {
               // Ignora remoção de listas próprias — elas são gerenciadas
               // exclusivamente pelo initFirebaseListener no index.js
               if (isOwnedByCurrentUser) return;
+
+              const detailsScreenElement = document.getElementById(
+                "market-list-screen-details",
+              );
+              const isOnDetailsScreenOfRemovedList =
+                detailsScreenElement &&
+                !detailsScreenElement.classList.contains("screen-hidden") &&
+                activeDetailsListIdentifier === previousListId;
+
+              if (isOnDetailsScreenOfRemovedList) {
+                // Aciona navegação forçada: cancela listener pontual, limpa cache
+                // e redireciona para a tela de listas com toast informativo
+                navigateAwayFromDeletedSharedList(previousListId);
+                return;
+              }
 
               // Remove a lista do cache local imediatamente ao detectar a remoção,
               // garantindo que ela desapareça da aba de listas compartilhadas sem
