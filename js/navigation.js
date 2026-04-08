@@ -185,6 +185,10 @@ document.addEventListener("click", function (event) {
  * dos botões de aba para garantir que o botão da aba padrão apareça
  * marcado como active desde o primeiro frame — evitando o flash da última
  * aba visitada antes de initDashboardAnalisys atualizar os botões.
+ *
+ * Também reseta o scrollLeft do container de abas para o início,
+ * garantindo que a aba padrão ativa esteja sempre visível ao abrir o dashboard,
+ * independentemente de qual aba estava visível na última visita.
  */
 function applyDashboardSkeletonBeforeNavigation() {
   // A aba padrão ao abrir o dashboard é sempre "purchase-efficiency"
@@ -210,6 +214,15 @@ function applyDashboardSkeletonBeforeNavigation() {
       tabButton.classList.remove("active");
     }
   });
+
+  // Reseta o scroll horizontal do container de abas para o início,
+  // evitando que o scroll fique posicionado no fim da lista ao reabrir o dashboard
+  const dashboardTabsContainer = document.querySelector(
+    ".dashboard-tabs-container",
+  );
+  if (dashboardTabsContainer) {
+    dashboardTabsContainer.scrollLeft = 0;
+  }
 
   if (window.showTabSkeleton) {
     window.showTabSkeleton(defaultTabName);
@@ -303,6 +316,15 @@ function executeScreenNavigation(
 
   if (screenIdentifier === "market-list-screen-details") {
     if (window.clearItemSearch) window.clearItemSearch();
+
+    // Reseta o scroll vertical do conteúdo da tela de detalhes para o início,
+    // evitando que a lista de itens apareça rolada ao abrir uma lista
+    const detailsContentWrapper = document.querySelector(
+      ".details-content-wrapper",
+    );
+    if (detailsContentWrapper) {
+      detailsContentWrapper.scrollTop = 0;
+    }
   }
 
   if (screenIdentifier === "dashboard-screen") {

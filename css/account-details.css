@@ -142,7 +142,7 @@
 }
 
 .account-details-edit-name-button ion-icon {
-  font-size: 20px;
+  font-size: 25px;
   color: var(--text-secondary);
   transition: color 0.2s ease;
   /* Impede que o ion-icon capture o clique acidentalmente */
