@@ -101,6 +101,9 @@ function calculateEffectiveItemValueForMetrics(item) {
  * Exibe o tooltip formatado em BRL ao clicar em uma categoria.
  * Centralizado neste módulo pois o gráfico pertence à Aba 1 (Eficiência de Compra).
  *
+ * Apenas categorias com total > 0 (que possuem itens marcados com valor)
+ * são incluídas no gráfico, evitando fatias vazias e legendas desnecessárias.
+ *
  * @param {Object} categoryTotals - Objeto com totais por categoria
  */
 function renderShareWalletChart(categoryTotals) {
@@ -109,8 +112,13 @@ function renderShareWalletChart(categoryTotals) {
 
   if (window.chartShareWallet) window.chartShareWallet.destroy();
 
-  const labels = Object.keys(categoryTotals);
-  const data = Object.values(categoryTotals);
+  // Filtra apenas categorias que possuem itens marcados com valor monetário válido
+  const filteredCategoryEntries = Object.entries(categoryTotals).filter(
+    ([categoryName, categoryTotal]) => categoryTotal > 0,
+  );
+
+  const labels = filteredCategoryEntries.map(([categoryName]) => categoryName);
+  const data = filteredCategoryEntries.map(([, categoryTotal]) => categoryTotal);
 
   if (labels.length === 0) return;
 
@@ -217,7 +225,7 @@ function processPurchaseEfficiencyData(filteredLists, allLists) {
   document.getElementById("metric-ticket-medio").innerText =
     window.formatCurrencyBRL(averageTicket);
 
-  // Métrica 1.C: Gasto por Categoria (Gráfico Pizza)
+  // Métrica 1.C: Gasto por Categoria (Gráfico Pizza) — apenas categorias com itens marcados
   renderShareWalletChart(categoryTotals);
 
   // Métrica 3.B: Taxa de Conversão dos Últimos 3 Meses
