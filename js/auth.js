@@ -39,11 +39,139 @@ window.getLegacyUserName = function () {
 };
 
 /* ==========================================================================
+   CONTROLE DE ESTADO DO MODAL DE EMAIL/SENHA
+   Sinaliza se uma autenticação via email/senha está em andamento,
+   bloqueando o fechamento do modal e a troca de abas até que o processo conclua.
+   ========================================================================== */
+
+/**
+ * Flag que indica se uma autenticação por email/senha está em progresso
+ */
+let isEmailAuthenticationInProgress = false;
+
+/**
+ * Ativa o estado de bloqueio do modal de email/senha durante autenticação.
+ * - Desabilita o botão de fechar o modal visualmente
+ * - Desabilita os botões de alternância de aba para impedir troca durante o processo
+ * - Define o flag isEmailAuthenticationInProgress como true
+ */
+function lockEmailAuthModal() {
+  isEmailAuthenticationInProgress = true;
+
+  const closeButton = document.querySelector(
+    "#auth-email-modal-overlay .auth-modal-close-button",
+  );
+  if (closeButton) {
+    closeButton.disabled = true;
+    closeButton.style.opacity = "0.4";
+    closeButton.style.cursor = "not-allowed";
+  }
+
+  const signupTabButton = document.getElementById("auth-tab-signup");
+  const loginTabButton = document.getElementById("auth-tab-login");
+
+  if (signupTabButton) {
+    signupTabButton.disabled = true;
+    signupTabButton.style.opacity = "0.4";
+    signupTabButton.style.cursor = "not-allowed";
+  }
+
+  if (loginTabButton) {
+    loginTabButton.disabled = true;
+    loginTabButton.style.opacity = "0.4";
+    loginTabButton.style.cursor = "not-allowed";
+  }
+}
+
+/**
+ * Desativa o estado de bloqueio do modal de email/senha.
+ * - Reabilita o botão de fechar o modal
+ * - Reabilita os botões de alternância de aba
+ * - Define o flag isEmailAuthenticationInProgress como false
+ */
+function unlockEmailAuthModal() {
+  isEmailAuthenticationInProgress = false;
+
+  const closeButton = document.querySelector(
+    "#auth-email-modal-overlay .auth-modal-close-button",
+  );
+  if (closeButton) {
+    closeButton.disabled = false;
+    closeButton.style.opacity = "";
+    closeButton.style.cursor = "";
+  }
+
+  const signupTabButton = document.getElementById("auth-tab-signup");
+  const loginTabButton = document.getElementById("auth-tab-login");
+
+  if (signupTabButton) {
+    signupTabButton.disabled = false;
+    signupTabButton.style.opacity = "";
+    signupTabButton.style.cursor = "";
+  }
+
+  if (loginTabButton) {
+    loginTabButton.disabled = false;
+    loginTabButton.style.opacity = "";
+    loginTabButton.style.cursor = "";
+  }
+}
+
+/* ==========================================================================
    GOOGLE SIGN-IN — POPUP
    ========================================================================== */
 
 /**
+ * Ativa o estado de loading no botão Google Sign-In.
+ * - Adiciona a classe is-loading (exibe spinner via CSS e oculta texto/ícone)
+ * - Define disabled=true como camada extra de bloqueio além do pointer-events
+ * - Desabilita o botão de continuar com e-mail para evitar conflito de fluxos
+ *
+ * @param {HTMLElement} googleSignInButton - Referência ao elemento do botão
+ */
+function activateGoogleButtonLoadingState(googleSignInButton) {
+  googleSignInButton.classList.add("is-loading");
+  googleSignInButton.disabled = true;
+
+  const emailSignInButton = document.getElementById("button-email-signin");
+  if (emailSignInButton) {
+    emailSignInButton.disabled = true;
+    emailSignInButton.classList.add("auth-button-disabled");
+  }
+}
+
+/**
+ * Desativa o estado de loading no botão Google Sign-In.
+ * - Remove a classe is-loading (restaura texto/ícone e oculta spinner)
+ * - Remove disabled para reabilitar o botão para novos cliques
+ * - Reabilita o botão de continuar com e-mail
+ *
+ * @param {HTMLElement} googleSignInButton - Referência ao elemento do botão
+ */
+function deactivateGoogleButtonLoadingState(googleSignInButton) {
+  googleSignInButton.classList.remove("is-loading");
+  googleSignInButton.disabled = false;
+
+  // Reabilita o botão de email após o fluxo do Google concluir
+  const emailSignInButton = document.getElementById("button-email-signin");
+  if (emailSignInButton) {
+    emailSignInButton.disabled = false;
+    emailSignInButton.classList.remove("auth-button-disabled");
+  }
+}
+
+/**
  * Inicia o fluxo de autenticação com Google via popup.
+ *
+ * O botão permanece desabilitado e exibe um spinner animado durante todo o
+ * processo — incluindo o intervalo entre o fechamento do popup pelo usuário
+ * e o disparo do erro auth/popup-closed-by-user pelo Firebase (5 a 15 s).
+ * O estado de loading só é removido após a Promise do signInWithPopup
+ * resolver ou rejeitar, garantindo feedback visual consistente.
+ *
+ * Códigos de erro tratados silenciosamente (sem toast de erro):
+ *   - auth/popup-closed-by-user    → usuário fechou o popup intencionalmente
+ *   - auth/cancelled-popup-request → novo clique cancelou o popup anterior
  *
  * O erro "Cross-Origin-Opener-Policy would block the window.closed call"
  * é um aviso informativo do Chrome — NÃO impede a autenticação de funcionar.
@@ -74,7 +202,7 @@ window.handleGoogleSignIn = async function () {
   const googleSignInButton = document.getElementById("button-google-signin");
 
   if (googleSignInButton) {
-    googleSignInButton.classList.add("is-loading");
+    activateGoogleButtonLoadingState(googleSignInButton);
   }
 
   try {
@@ -82,17 +210,19 @@ window.handleGoogleSignIn = async function () {
     await signInWithPopup(firebaseAuth, googleProvider);
     // Autenticação bem-sucedida — onAuthStateChanged cuida do resto
   } catch (googleSignInError) {
+    if (googleSignInButton) {
+      deactivateGoogleButtonLoadingState(googleSignInButton);
+    }
+
     // Ignora cancelamento explícito pelo usuário (fechou o popup)
     if (
       googleSignInError.code === "auth/popup-closed-by-user" ||
       googleSignInError.code === "auth/cancelled-popup-request"
     ) {
-      if (googleSignInButton) googleSignInButton.classList.remove("is-loading");
       return;
     }
 
     console.error("Erro no Google Sign-In:", googleSignInError);
-    if (googleSignInButton) googleSignInButton.classList.remove("is-loading");
     window.showToast("Erro ao entrar com Google. Tente novamente.", "danger");
   }
 };
@@ -118,8 +248,12 @@ window.openAuthEmailModal = function () {
 
 /**
  * Fecha o modal de autenticação por e-mail/senha e limpa os campos.
+ *
+ * O fechamento é bloqueado enquanto uma autenticação email/senha estiver em progresso.
  */
 window.closeAuthEmailModal = function () {
+  if (isEmailAuthenticationInProgress) return;
+
   const modalOverlay = document.getElementById("auth-email-modal-overlay");
   if (!modalOverlay) return;
 
@@ -149,9 +283,13 @@ window.closeAuthEmailModal = function () {
 /**
  * Alterna entre as abas de Cadastro e Login dentro do modal de e-mail/senha.
  *
+ * A troca de aba é bloqueada enquanto uma autenticação email/senha estiver em progresso.
+ *
  * @param {string} tabName - "signup" para cadastro ou "login" para entrar
  */
 window.switchAuthModalTab = function (tabName) {
+  if (isEmailAuthenticationInProgress) return;
+
   const signupForm = document.getElementById("auth-signup-form");
   const loginForm = document.getElementById("auth-login-form");
   const signupTabButton = document.getElementById("auth-tab-signup");
@@ -185,7 +323,8 @@ window.switchAuthModalTab = function (tabName) {
  *   1. Define o flag pendingEmailSignupDisplayName com o nome do usuário
  *   2. Chama createUserWithEmailAndPassword (pode disparar onAuthStateChanged)
  *   3. Chama updateProfile em paralelo (sincroniza o Auth Profile também)
- *   4. Fecha o modal — onAuthStateChanged cuida do restante do fluxo
+ *   4. Desbloqueia e fecha o modal
+ *
  */
 window.handleEmailSignup = async function () {
   const displayNameInput = document.getElementById("auth-display-name-input");
@@ -217,6 +356,8 @@ window.handleEmailSignup = async function () {
 
   if (submitButton) submitButton.classList.add("is-loading");
 
+  lockEmailAuthModal();
+
   try {
     // Define o flag antes de createUserWithEmailAndPassword para garantir que
     // o handleAuthenticatedUser no index.js já encontre o nome correto quando
@@ -244,13 +385,15 @@ window.handleEmailSignup = async function () {
       },
     );
 
-    // Fecha o modal — onAuthStateChanged cuida do restante do fluxo
+    unlockEmailAuthModal();
     window.closeAuthEmailModal();
   } catch (signupError) {
     // Limpa o flag em caso de falha para não contaminar tentativas futuras
     window.pendingEmailSignupDisplayName = null;
 
     if (submitButton) submitButton.classList.remove("is-loading");
+
+    unlockEmailAuthModal();
 
     console.error("Erro no cadastro:", signupError);
 
@@ -278,8 +421,8 @@ window.handleEmailSignup = async function () {
 /**
  * Processa o login de usuário existente com e-mail e senha.
  * Exibe um spinner no botão Entrar durante o processo de autenticação.
- * Remove o spinner explicitamente em caso de erro; em caso de sucesso,
- * o closeAuthEmailModal garante a limpeza ao fechar o modal.
+ *
+ * Durante o processo, o modal fica bloqueado para fechamento e troca de abas via lockEmailAuthModal.
  */
 window.handleEmailLogin = async function () {
   const emailInput = document.getElementById("auth-login-email-input");
@@ -298,16 +441,19 @@ window.handleEmailLogin = async function () {
 
   if (submitButton) submitButton.classList.add("is-loading");
 
+  lockEmailAuthModal();
+
   try {
     // Realiza o login — onAuthStateChanged cuida do restante
     await signInWithEmailAndPassword(firebaseAuth, email, password);
 
-    setTimeout(() => {
-      window.closeAuthEmailModal();
-    }, 750);
+    unlockEmailAuthModal();
+    window.closeAuthEmailModal();
   } catch (loginError) {
     // Remove o spinner explicitamente em caso de erro para restaurar o botão
     if (submitButton) submitButton.classList.remove("is-loading");
+
+    unlockEmailAuthModal();
 
     console.error("Erro no login:", loginError);
 

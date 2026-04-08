@@ -103,6 +103,19 @@
   transform: scale(0.95);
 }
 
+.auth-modal-close-button:disabled {
+  pointer-events: none;
+}
+
+.auth-modal-close-button:disabled:hover {
+  background: var(--bg-card);
+  transform: none;
+}
+
+.auth-modal-close-button:disabled ion-icon {
+  color: var(--text-secondary);
+}
+
 /* ==========================================================================
    MODAL TABS (CADASTRO / LOGIN)
    ========================================================================== */
@@ -257,6 +270,9 @@
     border-color 0.2s,
     transform 0.15s;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  /* Necessário para posicionar o pseudo-elemento do spinner corretamente */
+  position: relative;
+  overflow: hidden;
 }
 
 .auth-google-button:active {
@@ -264,9 +280,44 @@
   background: var(--bg-secondary);
 }
 
+/* ==========================================================================
+   ESTADO DE LOADING — BOTÃO GOOGLE
+   Exibe spinner centralizado via ::after, oculta texto e ícone SVG.
+   O botão é bloqueado via pointer-events: none (CSS) + disabled (JS).
+   ========================================================================== */
+
 .auth-google-button.is-loading {
-  opacity: 0.7;
   pointer-events: none;
+  color: transparent;
+  transition:
+    color 0.15s ease,
+    background 0.2s,
+    border-color 0.2s;
+}
+
+/* Oculta o ícone SVG do Google durante o loading para não sobrepor o spinner */
+.auth-google-button.is-loading .auth-google-icon {
+  visibility: hidden;
+}
+
+/* Spinner centralizado via pseudo-elemento — não interfere no fluxo do DOM */
+.auth-google-button.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  /* Anel base em border-color + arco em primary — funciona em tema claro e escuro */
+  border: 2.5px solid var(--border-color);
+  border-top-color: var(--primary);
+  animation: google-button-spinner-rotation 0.75s linear infinite;
+}
+
+/* Keyframe de rotação do spinner */
+@keyframes google-button-spinner-rotation {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Ícone SVG do Google */
@@ -304,6 +355,19 @@
 
 .auth-email-button ion-icon {
   font-size: 20px;
+}
+
+/* ==========================================================================
+   ESTADO DESABILITADO — BOTÃO EMAIL/SENHA NO ONBOARDING
+   ========================================================================== */
+
+.auth-email-button.auth-button-disabled,
+.auth-email-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+  transform: none;
 }
 
 /* ==========================================================================
