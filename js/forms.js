@@ -286,6 +286,11 @@ window.openNewItemForm = async function () {
     totalValueInput.value = "";
   }
 
+  const healthProfileSelect = document.getElementById("item-health-profile-select");
+  if (healthProfileSelect) {
+    healthProfileSelect.value = "";
+  }
+
   window.itemCategorySelect.innerHTML = "";
 
   // Resolve o índice pelo ID estável antes de acessar categorias
@@ -334,6 +339,11 @@ window.enterEditMode = function (categoryIndex, itemIndex) {
   const totalValueInput = document.getElementById("item-total-value-input");
   if (totalValueInput) {
     totalValueInput.value = item.totalValue || "";
+  }
+
+  const healthProfileSelect = document.getElementById("item-health-profile-select");
+  if (healthProfileSelect) {
+    healthProfileSelect.value = item.healthProfile || "";
   }
 
   window.itemCategorySelect.innerHTML = "";
@@ -423,6 +433,14 @@ window.handleSaveItem = async function () {
     return;
   }
 
+  const healthProfileSelectElement = document.getElementById("item-health-profile-select");
+  const selectedHealthProfile = healthProfileSelectElement ? healthProfileSelectElement.value : "";
+
+  if (!selectedHealthProfile) {
+    window.showToast("Selecione o Perfil de Saúde do item", "danger");
+    return;
+  }
+
   // Ativa o estado de loading no botão para bloquear cliques duplicados
   if (saveItemButton) saveItemButton.classList.add("is-loading");
 
@@ -460,6 +478,7 @@ window.handleSaveItem = async function () {
       item.quantity = quantity;
       item.totalValue = itemTotalValue;
       item.checked = isChecked;
+      item.healthProfile = selectedHealthProfile;
       window.marketListData[resolvedIndex].categories[
         categoryIndex
       ].items.push(item);
@@ -473,6 +492,7 @@ window.handleSaveItem = async function () {
       item.quantity = quantity;
       item.totalValue = itemTotalValue;
       item.checked = isChecked;
+      item.healthProfile = selectedHealthProfile;
     }
     window.showToast("Item atualizado!", "success");
   } else {
@@ -485,6 +505,7 @@ window.handleSaveItem = async function () {
       quantity,
       totalValue: itemTotalValue,
       checked: isChecked,
+      healthProfile: selectedHealthProfile,
     });
     window.showToast("Item adicionado!", "success");
   }

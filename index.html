@@ -48,6 +48,7 @@
     <link rel="stylesheet" href="css/behavior-habits.css">
     <link rel="stylesheet" href="css/purchase-efficiency.css">
     <link rel="stylesheet" href="css/health-insights.css">
+    <link rel="stylesheet" href="css/health-insights-uncategorized.css">
   </head>
 
   <body>
@@ -860,6 +861,21 @@
                 class="category-select-input"></select>
             </div>
 
+            <!-- Perfil de Saúde — obrigatório para alimentar os Insights de Saúde -->
+            <div class="input-field mt-20">
+              <label>Perfil de Saúde<span class="required-mark">*</span></label>
+              <select id="item-health-profile-select"
+                class="category-select-input">
+                <option value disabled selected>Selecione...</option>
+                <option value="natural">🥦 Natural</option>
+                <option value="industrializado">🏭 Industrializado</option>
+                <option value="outro">📦 Outro</option>
+              </select>
+              <span class="input-hint">
+                💡 Usado para calcular o seu perfil de saúde no Dashboard
+              </span>
+            </div>
+
             <!-- Toggle: Já foi pego -->
             <div class="input-field mt-20">
               <div class="toggle-container" onclick="toggleItemPickedStatus()">
@@ -1249,7 +1265,7 @@
                 <h2 class="section-title">Insights de Saúde</h2>
 
                 <!-- Gráfico: Perfil de Compra -->
-                <div class="dashboard-chart-card">
+                <div id="dashboard-chart-perfil-saude" class="dashboard-chart-card">
                   <h3 class="dashboard-card-title">Perfil de Compra (Ratio)</h3>
                   <canvas id="chart-perfil-saude"></canvas>
                 </div>
