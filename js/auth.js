@@ -10,7 +10,6 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
-  fetchSignInMethodsForEmail,
 } from "./firebase.js";
 
 /* ==========================================================================
@@ -587,32 +586,20 @@ function hidePasswordRecoverySuccessState() {
 }
 
 /**
- * Verifica via Firebase Auth se o e-mail informado possui métodos de login
- * cadastrados, confirmando se a conta existe antes de tentar o envio do link.
- *
- * Retorna true se o e-mail estiver associado a pelo menos um método de login,
- * false caso contrário (conta inexistente ou sem provedores vinculados).
- *
- * @param {string} emailAddress - E-mail a ser verificado no banco do Firebase Auth
- * @returns {Promise<boolean>} True se o e-mail estiver cadastrado
- */
-async function checkIfEmailIsRegistered(emailAddress) {
-  const registeredSignInMethods = await fetchSignInMethodsForEmail(
-    firebaseAuth,
-    emailAddress,
-  );
-  return registeredSignInMethods.length > 0;
-}
-
-/**
  * Processa o envio do e-mail de redefinição de senha via Firebase Auth.
  *
- * Fluxo:
- *   1. Valida o campo de e-mail preenchido pelo usuário
- *   2. Verifica se o e-mail está cadastrado no Firebase Auth via fetchSignInMethodsForEmail
- *   3. Se não cadastrado: exibe toast de erro e mantém o formulário ativo
- *   4. Se cadastrado: chama sendPasswordResetEmail e exibe confirmação de envio
- *   5. Em caso de erro técnico: exibe toast de erro e mantém o formulário ativo
+ * A verificação prévia via fetchSignInMethodsForEmail foi removida pois essa
+ * API foi descontinuada pelo Firebase e retorna array vazio em projetos com
+ * "Email Enumeration Protection" habilitada (padrão em projetos novos),
+ * causando falso negativo para qualquer e-mail informado.
+ *
+ * Novo fluxo:
+ *   1. Valida o formato do e-mail preenchido pelo usuário
+ *   2. Chama sendPasswordResetEmail diretamente
+ *   3. Exibe confirmação genérica de envio (por segurança, não confirma
+ *      se o e-mail existe — comportamento padrão do Firebase com Email
+ *      Enumeration Protection ativa)
+ *   4. Em caso de erro técnico: exibe toast de erro e mantém o formulário ativo
  */
 window.handlePasswordRecovery = async function () {
   const recoveryEmailInput = document.getElementById(
@@ -638,19 +625,6 @@ window.handlePasswordRecovery = async function () {
   }
 
   try {
-    // Verifica se o e-mail está cadastrado antes de tentar o envio do link
-    const isEmailRegistered = await checkIfEmailIsRegistered(emailAddress);
-
-    if (!isEmailRegistered) {
-      // E-mail não cadastrado — informa o usuário e interrompe o fluxo
-      window.showToast(
-        "Este e-mail não está cadastrado. Verifique ou crie uma conta.",
-        "danger",
-      );
-      return;
-    }
-
-    // Envia o e-mail de redefinição de senha via Firebase Auth
     await sendPasswordResetEmail(firebaseAuth, emailAddress);
 
     // Exibe o estado de sucesso dentro do modal com o e-mail de destino
