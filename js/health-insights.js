@@ -5,8 +5,8 @@
 /**
  * Carrega e renderiza o módulo de Insights de Saúde.
  * Inclui:
- * - Ratio Industrializados vs Saudáveis (Gráfico — exclui "Outros")
- * - Cards de itens por categoria de saúde com paginação (inclui "Outros")
+ * - Ratio Industrializados vs Saudáveis (Gráfico — exclui "Não se aplica")
+ * - Cards de itens por categoria de saúde com paginação (inclui "Não se aplica")
  * - Sazonalidade de Consumo
  */
 window.loadHealthInsightsModule = function () {
@@ -62,9 +62,9 @@ function processHealthInsightsData(filteredLists) {
    de cada card de categoria de saúde.
    ========================================================================== */
 const HEALTH_CATEGORY_PAGINATION_KEYS = {
-  saudavel: "healthCategorySaudavel",
-  industrializado: "healthCategoryIndustrializado",
-  outro: "healthCategoryOutro",
+  saudavel: "healthCategoryHealthy",
+  industrializado: "healthCategoryProcessed",
+  naoSeAplica: "healthCategoryOthers",
 };
 
 /**
@@ -100,11 +100,11 @@ const HEALTH_CATEGORY_CARD_CONFIG = {
     colorClass: "health-category-card--processed",
     paginationKey: HEALTH_CATEGORY_PAGINATION_KEYS.industrializado,
   },
-  outro: {
+  naoSeAplica: {
     icon: "grid-outline",
     label: "Outros",
     colorClass: "health-category-card--others",
-    paginationKey: HEALTH_CATEGORY_PAGINATION_KEYS.outro,
+    paginationKey: HEALTH_CATEGORY_PAGINATION_KEYS.naoSeAplica,
   },
 };
 
@@ -114,11 +114,11 @@ const HEALTH_CATEGORY_CARD_CONFIG = {
 
 /**
  * Calcula o ratio de gastos entre itens Saudáveis e Industrializados para o gráfico.
- * Itens classificados como "Outros" são acumulados apenas para os cards de categoria
+ * Itens classificados como "Não se aplica" são acumulados apenas para os cards de categoria
  * e não são incluídos no gráfico de pizza.
  *
  * Lê diretamente o campo `healthProfile` salvo em cada item
- * ("saudavel", "industrializado", "outro")
+ * ("saudavel", "industrializado", "nao-se-aplica")
  *
  * Itens sem `healthProfile` definido são ignorados no gráfico.
  * Itens sem preço ou valor total cadastrado são ignorados no cálculo monetário.
@@ -131,11 +131,11 @@ function calculateHealthRatio(filteredLists) {
   let processedTotal = 0;
 
   // Agrupa os nomes dos itens comprados por categoria de saúde para exibição nos cards
-  // A categoria "outro" é incluída nos cards mas não no gráfico
+  // A categoria "Não se aplica" é incluída nos cards mas não no gráfico
   const itemNamesByHealthCategory = {
     saudavel: new Set(),
     industrializado: new Set(),
-    outro: new Set(),
+    naoSeAplica: new Set(),
   };
 
   const listsForCategoryCards = getListsWithinOneMonthWindow(filteredLists);
@@ -147,8 +147,7 @@ function calculateHealthRatio(filteredLists) {
         // Considera apenas itens efetivamente comprados e com perfil de saúde definido
         if (!item.checked || !item.healthProfile) return;
 
-        // Itens classificados como "outro" não entram no gráfico, apenas nos cards
-        if (item.healthProfile === "outro") return;
+        if (item.healthProfile === "nao-se-aplica") return;
 
         // Exige valor monetário válido para o acúmulo no gráfico
         if (!item.price && !item.totalValue) return;
@@ -172,11 +171,10 @@ function calculateHealthRatio(filteredLists) {
   });
 
   // Coleta itens comprados (checked) com healthProfile da janela de 1 mês para os cards
-  // Inclui "outro" nos cards mesmo que não apareça no gráfico
   listsForCategoryCards.forEach((list) => {
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
-        // Coleta apenas itens marcados como comprados e com perfil definido
+        // Coleta itens marcados como comprados e com perfil definido
         if (!item.checked || !item.healthProfile) return;
 
         const displayName = window.sanitizeHtmlInput
@@ -188,7 +186,7 @@ function calculateHealthRatio(filteredLists) {
         } else if (item.healthProfile === "industrializado") {
           itemNamesByHealthCategory.industrializado.add(displayName);
         } else {
-          itemNamesByHealthCategory.outro.add(displayName);
+          itemNamesByHealthCategory.naoSeAplica.add(displayName);
         }
       });
     });
@@ -198,7 +196,6 @@ function calculateHealthRatio(filteredLists) {
   renderHealthRatioChart(healthyTotal, processedTotal);
 
   // Renderiza os cards de itens por categoria de saúde após o gráfico
-  // Os cards incluem todas as categorias (Saudável, Industrializado e Outros)
   renderHealthCategoryCards(
     itemNamesByHealthCategory,
     listsForCategoryCards.length === 0,
@@ -251,7 +248,8 @@ function getListsWithinOneMonthWindow(filteredLists) {
 
 /**
  * Renderiza o gráfico de pizza do Perfil de Saúde considerando apenas
- * Saudáveis vs Industrializados. Itens classificados como "Outros" aparecem apenas nos cards de categoria abaixo.
+ * Saudáveis vs Industrializados. Itens classificados como "Não se aplica" aparecem apenas nos cards de categoria.
+ * Os labels do gráfico exibem a porcentagem de cada categoria (ex: "Saudáveis (68%)").
  *
  * @param {number} healthyTotal - Total gasto em itens saudáveis (healthProfile === "saudavel")
  * @param {number} processedTotal - Total gasto em itens industrializados
@@ -276,10 +274,30 @@ function renderHealthRatioChart(healthyTotal, processedTotal) {
     ? "rgba(255,255,255,0.7)"
     : "rgba(20, 24, 27, 0.7)";
 
+  // Calcula o total combinado para obter a porcentagem de cada categoria
+  const combinedTotal = healthyTotal + processedTotal;
+
+  // Gera o percentual formatado de cada categoria
+  // Exibe "0%" quando o total for zero para evitar NaN no label
+  const healthyPercentage =
+    combinedTotal > 0
+      ? Math.round((healthyTotal / combinedTotal) * 100)
+      : 0;
+  const processedPercentage =
+    combinedTotal > 0
+      ? Math.round((processedTotal / combinedTotal) * 100)
+      : 0;
+
+  // Labels dinâmicos com porcentagem exibida ao lado do nome da categoria
+  const chartLabels = [
+    `Saudáveis (${healthyPercentage}%)`,
+    `Industrializados (${processedPercentage}%)`,
+  ];
+
   window.chartHealthProfile = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Saudáveis", "Industrializados"],
+      labels: chartLabels,
       datasets: [
         {
           data: [healthyTotal, processedTotal],
@@ -326,10 +344,10 @@ function renderHealthRatioChart(healthyTotal, processedTotal) {
  * - Lista paginada dos itens encontrados
  * - Mensagem vazia caso não haja itens no período analisado
  *
- * Os cards incluem todas as categorias (Saudável, Industrializado e Outros),
+ * Os cards incluem todas as categorias (Saudável, Industrializado e Não se aplica),
  * diferente do gráfico que exibe apenas Saudável e Industrializado.
  *
- * @param {Object} itemNamesByHealthCategory - Sets de nomes de itens por categoria { saudavel, industrializado, outro }
+ * @param {Object} itemNamesByHealthCategory - Sets de nomes de itens por categoria { saudavel, industrializado, naoSeAplica }
  * @param {boolean} hasNoListsInWindow - true quando nenhuma lista foi encontrada na janela temporal
  */
 function renderHealthCategoryCards(
@@ -360,9 +378,10 @@ function renderHealthCategoryCards(
   cardsContainerElement.appendChild(sectionTitleElement);
 
   // Renderiza um card para cada categoria
-  ["saudavel", "industrializado", "outro"].forEach((categoryKey) => {
-    const categoryConfig = HEALTH_CATEGORY_CARD_CONFIG[categoryKey];
-    const itemNamesSet = itemNamesByHealthCategory[categoryKey];
+  ["saudavel", "industrializado", "nao-se-aplica"].forEach((categoryKey) => {
+    const configKey = categoryKey === "nao-se-aplica" ? "naoSeAplica" : categoryKey;
+    const categoryConfig = HEALTH_CATEGORY_CARD_CONFIG[configKey];
+    const itemNamesSet = itemNamesByHealthCategory[configKey];
     const itemNamesArray = Array.from(itemNamesSet).sort();
 
     const cardElement = document.createElement("div");
@@ -697,7 +716,7 @@ function renderHealthInsightsUncategorizedState() {
       <p class="health-insights-uncategorized-description">
         Para ver seu perfil de saúde, edite seus itens e selecione se cada
         um é <strong>Saudável</strong>, <strong>Industrializado</strong> ou
-        <strong>Outro</strong>.
+        <strong>Não se aplica</strong>.
       </p>
       <div class="health-insights-uncategorized-steps">
         <div class="health-insights-uncategorized-step">
