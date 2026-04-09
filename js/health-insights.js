@@ -5,8 +5,8 @@
 /**
  * Carrega e renderiza o módulo de Insights de Saúde.
  * Inclui:
- * - Ratio Industrializados vs Naturais (Gráfico)
- * - Cards de itens por categoria de saúde com paginação
+ * - Ratio Industrializados vs Saudáveis (Gráfico — exclui "Outros")
+ * - Cards de itens por categoria de saúde com paginação (inclui "Outros")
  * - Sazonalidade de Consumo
  */
 window.loadHealthInsightsModule = function () {
@@ -86,11 +86,14 @@ function ensureHealthCategoryPaginationKeys() {
 /**
  * Configuração visual de cada categoria de saúde para os cards.
  * Define ícone, rótulo, cor de destaque e chave de paginação.
+ *
+ * Nota: a chave "natural" é o valor persistido no campo healthProfile do Firestore
+ * e não deve ser alterada — apenas o rótulo de exibição foi renomeado para "Saudáveis".
  */
 const HEALTH_CATEGORY_CARD_CONFIG = {
   natural: {
     icon: "leaf-outline",
-    label: "Naturais",
+    label: "Saudáveis",
     colorClass: "health-category-card--healthy",
     paginationKey: HEALTH_CATEGORY_PAGINATION_KEYS.natural,
   },
@@ -109,11 +112,13 @@ const HEALTH_CATEGORY_CARD_CONFIG = {
 };
 
 /* ==========================================================================
-   MÉTRICA 4.A: RATIO NATURAIS vs INDUSTRIALIZADOS
+   MÉTRICA 4.A: RATIO SAUDÁVEIS vs INDUSTRIALIZADOS
    ========================================================================== */
 
 /**
- * Calcula o ratio de gastos entre itens Naturais, Industrializados e Outros.
+ * Calcula o ratio de gastos entre itens Saudáveis e Industrializados para o gráfico.
+ * Itens classificados como "Outros" são acumulados apenas para os cards de categoria
+ * e não são incluídos no gráfico de pizza.
  *
  * Lê diretamente o campo `healthProfile` salvo em cada item
  * ("natural", "industrializado", "outro"), eliminando a necessidade do
@@ -125,11 +130,12 @@ const HEALTH_CATEGORY_CARD_CONFIG = {
  * @param {Array} filteredLists - Listas filtradas pelo filtro ativo do dashboard
  */
 function calculateHealthRatio(filteredLists) {
-  let naturalTotal = 0;
-  let industrializadoTotal = 0;
-  let outroTotal = 0;
+  // Acumula valor monetário apenas para Saudável e Industrializado (usados no gráfico)
+  let healthyTotal = 0;
+  let processedTotal = 0;
 
   // Agrupa os nomes dos itens comprados por categoria de saúde para exibição nos cards
+  // A categoria "outro" é incluída nos cards mas não no gráfico
   const itemNamesByHealthCategory = {
     natural: new Set(),
     industrializado: new Set(),
@@ -145,6 +151,9 @@ function calculateHealthRatio(filteredLists) {
         // Considera apenas itens efetivamente comprados e com perfil de saúde definido
         if (!item.checked || !item.healthProfile) return;
 
+        // Itens classificados como "outro" não entram no gráfico, apenas nos cards
+        if (item.healthProfile === "outro") return;
+
         // Exige valor monetário válido para o acúmulo no gráfico
         if (!item.price && !item.totalValue) return;
 
@@ -159,15 +168,15 @@ function calculateHealthRatio(filteredLists) {
         const quantity = item.quantity || 1;
         const totalItemValue = parsedPrice * quantity;
 
-        if (item.healthProfile === "natural") naturalTotal += totalItemValue;
+        if (item.healthProfile === "natural") healthyTotal += totalItemValue;
         else if (item.healthProfile === "industrializado")
-          industrializadoTotal += totalItemValue;
-        else outroTotal += totalItemValue;
+          processedTotal += totalItemValue;
       });
     });
   });
 
   // Coleta itens comprados (checked) com healthProfile da janela de 1 mês para os cards
+  // Inclui "outro" nos cards mesmo que não apareça no gráfico
   listsForCategoryCards.forEach((list) => {
     (list.categories || []).forEach((category) => {
       category.items.forEach((item) => {
@@ -189,9 +198,11 @@ function calculateHealthRatio(filteredLists) {
     });
   });
 
-  renderHealthRatioChart(naturalTotal, industrializadoTotal, outroTotal);
+  // Passa apenas os totais de Saudável e Industrializado para o gráfico
+  renderHealthRatioChart(healthyTotal, processedTotal);
 
   // Renderiza os cards de itens por categoria de saúde após o gráfico
+  // Os cards incluem todas as categorias (Saudável, Industrializado e Outros)
   renderHealthCategoryCards(
     itemNamesByHealthCategory,
     listsForCategoryCards.length === 0,
@@ -243,13 +254,13 @@ function getListsWithinOneMonthWindow(filteredLists) {
    ========================================================================== */
 
 /**
- * Renderiza o gráfico de pizza do Perfil de Saúde (Naturais vs Industrializados vs Outros).
+ * Renderiza o gráfico de pizza do Perfil de Saúde considerando apenas
+ * Saudáveis vs Industrializados. Itens classificados como "Outros" aparecem apenas nos cards de categoria abaixo.
  *
- * @param {number} natural - Total gasto em itens naturais
- * @param {number} industrializado - Total gasto em itens industrializados
- * @param {number} outro - Total gasto em itens classificados como outros
+ * @param {number} healthyTotal - Total gasto em itens saudáveis (healthProfile === "natural")
+ * @param {number} processedTotal - Total gasto em itens industrializados
  */
-function renderHealthRatioChart(natural, industrializado, outro) {
+function renderHealthRatioChart(healthyTotal, processedTotal) {
   const ctx = document.getElementById("chart-perfil-saude");
   if (!ctx) return;
 
@@ -269,20 +280,14 @@ function renderHealthRatioChart(natural, industrializado, outro) {
     ? "rgba(255,255,255,0.7)"
     : "rgba(20, 24, 27, 0.7)";
 
-  /* CORRIGIDO: Cor de "Outros" alterada de rgba(20, 24, 27, 0.3) — invisível no dark —
-     para uma cor neutra visível nos dois temas (cinza médio com boa opacidade) */
-  const othersSliceColor = isDark
-    ? "rgba(180, 180, 195, 0.5)"
-    : "rgba(120, 120, 140, 0.4)";
-
   window.chartHealthProfile = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Naturais", "Industrializados", "Outros"],
+      labels: ["Saudáveis", "Industrializados"],
       datasets: [
         {
-          data: [natural, industrializado, outro],
-          backgroundColor: ["#249689", "#ff4757", othersSliceColor],
+          data: [healthyTotal, processedTotal],
+          backgroundColor: ["#249689", "#ff4757"],
           borderWidth: 0,
         },
       ],
@@ -325,6 +330,9 @@ function renderHealthRatioChart(natural, industrializado, outro) {
  * - Lista paginada dos itens encontrados
  * - Mensagem vazia caso não haja itens no período analisado
  *
+ * Os cards incluem todas as categorias (Saudável, Industrializado e Outros),
+ * diferente do gráfico que exibe apenas Saudável e Industrializado.
+ *
  * @param {Object} itemNamesByHealthCategory - Sets de nomes de itens por categoria { natural, industrializado, outro }
  * @param {boolean} hasNoListsInWindow - true quando nenhuma lista foi encontrada na janela temporal
  */
@@ -355,7 +363,7 @@ function renderHealthCategoryCards(
   sectionTitleElement.textContent = sectionTitle;
   cardsContainerElement.appendChild(sectionTitleElement);
 
-  // Renderiza um card para cada categoria de saúde
+  // Renderiza um card para cada categoria
   ["natural", "industrializado", "outro"].forEach((categoryKey) => {
     const categoryConfig = HEALTH_CATEGORY_CARD_CONFIG[categoryKey];
     const itemNamesSet = itemNamesByHealthCategory[categoryKey];
@@ -692,7 +700,7 @@ function renderHealthInsightsUncategorizedState() {
       </h3>
       <p class="health-insights-uncategorized-description">
         Para ver seu perfil de saúde, edite seus itens e selecione se cada
-        um é <strong>Natural</strong>, <strong>Industrializado</strong> ou
+        um é <strong>Saudável</strong>, <strong>Industrializado</strong> ou
         <strong>Outro</strong>.
       </p>
       <div class="health-insights-uncategorized-steps">

@@ -106,7 +106,8 @@ window.activateDetailsRealtimeListener = async function (listIdentifier) {
           detailsScreenElement &&
           !detailsScreenElement.classList.contains("screen-hidden")
         ) {
-          window.renderListDetails();
+
+          window.renderListDetails({ preserveScrollPosition: true });
         }
       },
       (listenerError) => {
@@ -236,7 +237,8 @@ window.openListDetails = function (index) {
   }
 
   window.showScreen("market-list-screen-details");
-  window.renderListDetails();
+
+  window.renderListDetails({ preserveScrollPosition: false });
 
   const currentList = window.marketListData[index];
   const isSharedList =
@@ -318,12 +320,30 @@ function calculateEffectiveItemTotalValue(item) {
   return 0;
 }
 
-window.renderListDetails = function () {
+/**
+ * Renderiza os detalhes da lista de compras atual.
+ *
+ * Aceita um objeto de opções para controlar o comportamento do scroll:
+ * - preserveScrollPosition: true → mantém a posição do scroll após re-renderização
+ *   (usado em toggles de item, busca, atualizações do Firestore em tempo real)
+ * - preserveScrollPosition: false (padrão) → reseta o scroll para o topo
+ *   (usado apenas ao abrir uma lista pela primeira vez via openListDetails)
+ *
+ * @param {{ preserveScrollPosition?: boolean }} [renderOptions={}] - Opções de renderização
+ */
+window.renderListDetails = function (renderOptions = {}) {
+  const shouldPreserveScrollPosition = renderOptions.preserveScrollPosition === true;
+
   // Resolve o índice pelo ID estável antes de renderizar,
   // garantindo que o onSnapshot não cause perda de referência da lista aberta
   const resolvedIndex = window.resolveCurrentListIndex
     ? window.resolveCurrentListIndex()
     : window.currentListIndex;
+
+  const detailsContentWrapper = document.querySelector(".details-content-wrapper");
+  const previousScrollTop = shouldPreserveScrollPosition && detailsContentWrapper
+    ? detailsContentWrapper.scrollTop
+    : 0;
 
   window.listItemsContainer.innerHTML = "";
   const currentList = window.marketListData[resolvedIndex];
@@ -486,6 +506,15 @@ window.renderListDetails = function () {
   applyPermissionsToActionButtons(userPermissions);
 
   updateDashboard();
+
+  // Restaura a posição do scroll após a re-renderização do DOM.
+  // requestAnimationFrame garante que o browser já calculou o novo layout
+  // antes de reposicionar o scroll, evitando saltos visuais
+  if (shouldPreserveScrollPosition && detailsContentWrapper) {
+    requestAnimationFrame(() => {
+      detailsContentWrapper.scrollTop = previousScrollTop;
+    });
+  }
 };
 
 /**
@@ -588,8 +617,7 @@ window.toggleItemStatus = async function (catIdx, itemIdx) {
   // Libera o guard após a sincronização
   delete itemToggleInProgressMap[itemKey];
 
-  // Re-renderiza para atualizar o Dashboard e os estilos do card
-  window.renderListDetails();
+  window.renderListDetails({ preserveScrollPosition: true });
 };
 
 // Flag de guard para evitar múltiplas exclusões simultâneas de categoria
@@ -689,7 +717,7 @@ function updateItemSearchClearButtonVisibility() {
 window.handleItemSearchInput = function () {
   updateItemSearchClearButtonVisibility();
 
-  window.renderListDetails();
+  window.renderListDetails({ preserveScrollPosition: true });
 };
 
 /**
