@@ -62,7 +62,7 @@ function processHealthInsightsData(filteredLists) {
    de cada card de categoria de saúde.
    ========================================================================== */
 const HEALTH_CATEGORY_PAGINATION_KEYS = {
-  natural: "healthCategoryNatural",
+  saudavel: "healthCategorySaudavel",
   industrializado: "healthCategoryIndustrializado",
   outro: "healthCategoryOutro",
 };
@@ -86,16 +86,13 @@ function ensureHealthCategoryPaginationKeys() {
 /**
  * Configuração visual de cada categoria de saúde para os cards.
  * Define ícone, rótulo, cor de destaque e chave de paginação.
- *
- * Nota: a chave "natural" é o valor persistido no campo healthProfile do Firestore
- * e não deve ser alterada — apenas o rótulo de exibição foi renomeado para "Saudáveis".
  */
 const HEALTH_CATEGORY_CARD_CONFIG = {
-  natural: {
+  saudavel: {
     icon: "leaf-outline",
     label: "Saudáveis",
     colorClass: "health-category-card--healthy",
-    paginationKey: HEALTH_CATEGORY_PAGINATION_KEYS.natural,
+    paginationKey: HEALTH_CATEGORY_PAGINATION_KEYS.saudavel,
   },
   industrializado: {
     icon: "fast-food-outline",
@@ -121,8 +118,7 @@ const HEALTH_CATEGORY_CARD_CONFIG = {
  * e não são incluídos no gráfico de pizza.
  *
  * Lê diretamente o campo `healthProfile` salvo em cada item
- * ("natural", "industrializado", "outro"), eliminando a necessidade do
- * motor de classificação automática por texto.
+ * ("saudavel", "industrializado", "outro")
  *
  * Itens sem `healthProfile` definido são ignorados no gráfico.
  * Itens sem preço ou valor total cadastrado são ignorados no cálculo monetário.
@@ -137,7 +133,7 @@ function calculateHealthRatio(filteredLists) {
   // Agrupa os nomes dos itens comprados por categoria de saúde para exibição nos cards
   // A categoria "outro" é incluída nos cards mas não no gráfico
   const itemNamesByHealthCategory = {
-    natural: new Set(),
+    saudavel: new Set(),
     industrializado: new Set(),
     outro: new Set(),
   };
@@ -168,7 +164,7 @@ function calculateHealthRatio(filteredLists) {
         const quantity = item.quantity || 1;
         const totalItemValue = parsedPrice * quantity;
 
-        if (item.healthProfile === "natural") healthyTotal += totalItemValue;
+        if (item.healthProfile === "saudavel") healthyTotal += totalItemValue;
         else if (item.healthProfile === "industrializado")
           processedTotal += totalItemValue;
       });
@@ -187,8 +183,8 @@ function calculateHealthRatio(filteredLists) {
           ? window.sanitizeHtmlInput(item.name)
           : item.name;
 
-        if (item.healthProfile === "natural") {
-          itemNamesByHealthCategory.natural.add(displayName);
+        if (item.healthProfile === "saudavel") {
+          itemNamesByHealthCategory.saudavel.add(displayName);
         } else if (item.healthProfile === "industrializado") {
           itemNamesByHealthCategory.industrializado.add(displayName);
         } else {
@@ -257,7 +253,7 @@ function getListsWithinOneMonthWindow(filteredLists) {
  * Renderiza o gráfico de pizza do Perfil de Saúde considerando apenas
  * Saudáveis vs Industrializados. Itens classificados como "Outros" aparecem apenas nos cards de categoria abaixo.
  *
- * @param {number} healthyTotal - Total gasto em itens saudáveis (healthProfile === "natural")
+ * @param {number} healthyTotal - Total gasto em itens saudáveis (healthProfile === "saudavel")
  * @param {number} processedTotal - Total gasto em itens industrializados
  */
 function renderHealthRatioChart(healthyTotal, processedTotal) {
@@ -333,7 +329,7 @@ function renderHealthRatioChart(healthyTotal, processedTotal) {
  * Os cards incluem todas as categorias (Saudável, Industrializado e Outros),
  * diferente do gráfico que exibe apenas Saudável e Industrializado.
  *
- * @param {Object} itemNamesByHealthCategory - Sets de nomes de itens por categoria { natural, industrializado, outro }
+ * @param {Object} itemNamesByHealthCategory - Sets de nomes de itens por categoria { saudavel, industrializado, outro }
  * @param {boolean} hasNoListsInWindow - true quando nenhuma lista foi encontrada na janela temporal
  */
 function renderHealthCategoryCards(
@@ -364,7 +360,7 @@ function renderHealthCategoryCards(
   cardsContainerElement.appendChild(sectionTitleElement);
 
   // Renderiza um card para cada categoria
-  ["natural", "industrializado", "outro"].forEach((categoryKey) => {
+  ["saudavel", "industrializado", "outro"].forEach((categoryKey) => {
     const categoryConfig = HEALTH_CATEGORY_CARD_CONFIG[categoryKey];
     const itemNamesSet = itemNamesByHealthCategory[categoryKey];
     const itemNamesArray = Array.from(itemNamesSet).sort();
