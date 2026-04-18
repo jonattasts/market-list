@@ -1,0 +1,50 @@
+/* ==========================================================================
+   DROPDOWN DE SUGESTÕES
+   ========================================================================== */
+
+.suggestion-dropdown {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.suggestion-dropdown__item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--text-main, #14181b);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--border-color, #f0f0f0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-dropdown__item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-dropdown__item:hover,
+.suggestion-dropdown__item:active {
+  background-color: var(--primary-light, rgba(36, 150, 137, 0.08));
+  color: var(--primary, #249689);
+  font-weight: 600;
+}
+
+/* Tema escuro — ajusta o fundo e a borda */
+[data-theme="dark"] .suggestion-dropdown {
+  background-color: var(--card-bg, #1e2329);
+  border-color: var(--border-color, #2e3540);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .suggestion-dropdown__item {
+  border-bottom-color: var(--border-color, #2e3540);
+}

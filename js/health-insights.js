@@ -109,6 +109,144 @@ const HEALTH_CATEGORY_CARD_CONFIG = {
 };
 
 /* ==========================================================================
+   DEDUPLICAÇÃO DE NOMES DE ITENS NOS CARDS DE SAÚDE
+   Evita exibição de nomes duplicados ou muito similares (>= 90% de similaridade)
+   nos cards de categoria de saúde quando o usuário possui itens repetidos
+   em múltiplas listas dentro do mesmo período analisado.
+   ========================================================================== */
+
+/**
+ * Normaliza uma string para comparação semântica:
+ * remove acentos, converte para minúsculas e elimina espaços extras.
+ *
+ * @param {string} rawString - String original
+ * @returns {string} String normalizada para comparação
+ */
+function normalizeHealthItemName(rawString) {
+  if (!rawString) return "";
+  return rawString
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+/**
+ * Calcula a similaridade de Jaro entre duas strings normalizadas.
+ * Retorna valor entre 0 (totalmente diferentes) e 1 (idênticas).
+ *
+ * @param {string} firstString - Primeira string
+ * @param {string} secondString - Segunda string
+ * @returns {number} Similaridade Jaro entre 0 e 1
+ */
+function calculateSimilarityForHealth(firstString, secondString) {
+  if (firstString === secondString) return 1;
+  if (firstString.length === 0 || secondString.length === 0) return 0;
+
+  const matchWindow = Math.floor(Math.max(firstString.length, secondString.length) / 2) - 1;
+  if (matchWindow < 0) return 0;
+
+  const firstMatches = new Array(firstString.length).fill(false);
+  const secondMatches = new Array(secondString.length).fill(false);
+
+  let matchCount = 0;
+  let transpositionCount = 0;
+
+  for (let firstIndex = 0; firstIndex < firstString.length; firstIndex++) {
+    const startIndex = Math.max(0, firstIndex - matchWindow);
+    const endIndex = Math.min(secondString.length - 1, firstIndex + matchWindow);
+
+    for (let secondIndex = startIndex; secondIndex <= endIndex; secondIndex++) {
+      if (secondMatches[secondIndex] || firstString[firstIndex] !== secondString[secondIndex]) continue;
+      firstMatches[firstIndex] = true;
+      secondMatches[secondIndex] = true;
+      matchCount++;
+      break;
+    }
+  }
+
+  if (matchCount === 0) return 0;
+
+  let secondPointer = 0;
+  for (let firstIndex = 0; firstIndex < firstString.length; firstIndex++) {
+    if (!firstMatches[firstIndex]) continue;
+    while (!secondMatches[secondPointer]) secondPointer++;
+    if (firstString[firstIndex] !== secondString[secondPointer]) transpositionCount++;
+    secondPointer++;
+  }
+
+  return (
+    matchCount / firstString.length +
+    matchCount / secondString.length +
+    (matchCount - transpositionCount / 2) / matchCount
+  ) / 3;
+}
+
+/**
+ * Calcula a similaridade de Jaro-Winkler entre duas strings.
+ * Aplica bônus para prefixos comuns (até 4 caracteres),
+ * Exemplos de comportamento esperado:
+ *   "biscoito" ↔ "biscoitos" → >= 0.90 (duplicata)
+ *   "farinha de aveia" ↔ "farinha" → < 0.90 (diferentes)
+ *   "achocolatado" ↔ "chocolate" → < 0.90 (diferentes)
+ *   "arroz" ↔ "Arroz" → 1.0 após normalização (duplicata)
+ *
+ * @param {string} firstString - Primeira string normalizada
+ * @param {string} secondString - Segunda string normalizada
+ * @returns {number} Similaridade Jaro-Winkler entre 0 e 1
+ */
+function calculateJaroWinklerSimilarityForHealth(firstString, secondString) {
+  const jaroScore = calculateSimilarityForHealth(firstString, secondString);
+
+  let commonPrefixLength = 0;
+  const maxPrefixLength = Math.min(4, Math.min(firstString.length, secondString.length));
+  while (
+    commonPrefixLength < maxPrefixLength &&
+    firstString[commonPrefixLength] === secondString[commonPrefixLength]
+  ) {
+    commonPrefixLength++;
+  }
+
+  return jaroScore + commonPrefixLength * 0.1 * (1 - jaroScore);
+}
+
+/**
+ * Deduplica um conjunto de nomes de itens de saúde aplicando o limiar de
+ * similaridade de 90% (Jaro-Winkler). Quando dois nomes são similares,
+ * mantém o que aparece primeiro no conjunto original (ordem alfabética).
+ *
+ * @param {Set<string>} itemNamesSet - Conjunto de nomes de itens a deduplicar
+ * @returns {Array<string>} Array de nomes únicos após deduplicação
+ */
+function deduplicateHealthItemNames(itemNamesSet) {
+  // Converte o Set para array e ordena para garantir resultado determinístico
+  const sortedNames = Array.from(itemNamesSet).sort((nameA, nameB) =>
+    normalizeHealthItemName(nameA).localeCompare(normalizeHealthItemName(nameB))
+  );
+
+  const deduplicatedNames = [];
+
+  sortedNames.forEach((currentName) => {
+    const normalizedCurrent = normalizeHealthItemName(currentName);
+
+    const hasSimilarName = deduplicatedNames.some((existingName) => {
+      const normalizedExisting = normalizeHealthItemName(existingName);
+      const similarity = calculateJaroWinklerSimilarityForHealth(
+        normalizedCurrent,
+        normalizedExisting,
+      );
+      return similarity >= 0.9;
+    });
+
+    if (!hasSimilarName) {
+      deduplicatedNames.push(currentName);
+    }
+  });
+
+  return deduplicatedNames;
+}
+
+/* ==========================================================================
    MÉTRICA 4.A: RATIO SAUDÁVEIS vs INDUSTRIALIZADOS
    ========================================================================== */
 
@@ -341,7 +479,7 @@ function renderHealthRatioChart(healthyTotal, processedTotal) {
  *
  * Cada card exibe:
  * - Ícone e rótulo da categoria
- * - Lista paginada dos itens encontrados
+ * - Lista paginada dos itens encontrados (deduplicados por similaridade >= 90%)
  * - Mensagem vazia caso não haja itens no período analisado
  *
  * Os cards incluem todas as categorias (Saudável, Industrializado e Não se aplica),
@@ -382,7 +520,8 @@ function renderHealthCategoryCards(
     const configKey = categoryKey === "nao-se-aplica" ? "naoSeAplica" : categoryKey;
     const categoryConfig = HEALTH_CATEGORY_CARD_CONFIG[configKey];
     const itemNamesSet = itemNamesByHealthCategory[configKey];
-    const itemNamesArray = Array.from(itemNamesSet).sort();
+
+    const itemNamesArray = deduplicateHealthItemNames(itemNamesSet);
 
     const cardElement = document.createElement("div");
     cardElement.className = `health-category-card ${categoryConfig.colorClass}`;
@@ -415,7 +554,6 @@ function renderHealthCategoryCards(
         </p>
       `;
     } else {
-      // Renderiza lista paginada de itens da categoria
       renderHealthCategoryItemList(
         cardBodyElement,
         itemNamesArray,
@@ -461,7 +599,7 @@ function buildHealthCategorySectionTitle() {
  * Reutiliza a lógica de paginação do dashboard adaptada para chips de item.
  *
  * @param {HTMLElement} bodyElement - Elemento do corpo do card onde a lista será inserida
- * @param {Array<string>} itemNamesArray - Array de nomes de itens ordenados alfabeticamente
+ * @param {Array<string>} itemNamesArray - Array de nomes de itens deduplicados e ordenados
  * @param {string} paginationKey - Chave de paginação registrada no paginationState
  */
 function renderHealthCategoryItemList(

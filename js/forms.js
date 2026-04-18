@@ -190,7 +190,8 @@ window.handleSaveCategory = async function () {
   const saveCategoryButton = document.getElementById("button-save-category");
 
   // Guard contra duplo clique: impede nova submissão enquanto a operação está em andamento
-  if (saveCategoryButton && saveCategoryButton.classList.contains("is-loading")) return;
+  if (saveCategoryButton && saveCategoryButton.classList.contains("is-loading"))
+    return;
 
   const input = document.getElementById("new-category-name");
   const name = window.capitalize(input.value);
@@ -286,7 +287,9 @@ window.openNewItemForm = async function () {
     totalValueInput.value = "";
   }
 
-  const healthProfileSelect = document.getElementById("item-health-profile-select");
+  const healthProfileSelect = document.getElementById(
+    "item-health-profile-select",
+  );
   if (healthProfileSelect) {
     healthProfileSelect.value = "";
   }
@@ -305,14 +308,12 @@ window.openNewItemForm = async function () {
     await window.saveAndSync();
   }
 
-  window.marketListData[resolvedIndex].categories.forEach(
-    (cat, idx) => {
-      const option = document.createElement("option");
-      option.value = idx;
-      option.text = cat.name;
-      window.itemCategorySelect.appendChild(option);
-    },
-  );
+  window.marketListData[resolvedIndex].categories.forEach((cat, idx) => {
+    const option = document.createElement("option");
+    option.value = idx;
+    option.text = cat.name;
+    window.itemCategorySelect.appendChild(option);
+  });
 
   window.showScreen("new-item-screen");
 };
@@ -341,22 +342,22 @@ window.enterEditMode = function (categoryIndex, itemIndex) {
     totalValueInput.value = item.totalValue || "";
   }
 
-  const healthProfileSelect = document.getElementById("item-health-profile-select");
+  const healthProfileSelect = document.getElementById(
+    "item-health-profile-select",
+  );
   if (healthProfileSelect) {
     healthProfileSelect.value = item.healthProfile || "";
   }
 
   window.itemCategorySelect.innerHTML = "";
 
-  window.marketListData[resolvedIndex].categories.forEach(
-    (cat, idx) => {
-      const option = document.createElement("option");
-      option.value = idx;
-      option.text = cat.name;
-      if (idx === categoryIndex) option.selected = true;
-      window.itemCategorySelect.appendChild(option);
-    },
-  );
+  window.marketListData[resolvedIndex].categories.forEach((cat, idx) => {
+    const option = document.createElement("option");
+    option.value = idx;
+    option.text = cat.name;
+    if (idx === categoryIndex) option.selected = true;
+    window.itemCategorySelect.appendChild(option);
+  });
 
   window.showScreen("new-item-screen");
 };
@@ -433,8 +434,12 @@ window.handleSaveItem = async function () {
     return;
   }
 
-  const healthProfileSelectElement = document.getElementById("item-health-profile-select");
-  const selectedHealthProfile = healthProfileSelectElement ? healthProfileSelectElement.value : "";
+  const healthProfileSelectElement = document.getElementById(
+    "item-health-profile-select",
+  );
+  const selectedHealthProfile = healthProfileSelectElement
+    ? healthProfileSelectElement.value
+    : "";
 
   if (!selectedHealthProfile) {
     window.showToast("Selecione o Perfil de Saúde do item", "danger");
@@ -479,13 +484,14 @@ window.handleSaveItem = async function () {
       item.totalValue = itemTotalValue;
       item.checked = isChecked;
       item.healthProfile = selectedHealthProfile;
-      window.marketListData[resolvedIndex].categories[
-        categoryIndex
-      ].items.push(item);
+      window.marketListData[resolvedIndex].categories[categoryIndex].items.push(
+        item,
+      );
     } else {
       const item =
-        window.marketListData[resolvedIndex].categories[categoryIndex]
-          .items[window.editingItemIndex];
+        window.marketListData[resolvedIndex].categories[categoryIndex].items[
+          window.editingItemIndex
+        ];
       item.name = name;
       item.desc = description;
       item.price = unitPrice;
@@ -496,9 +502,7 @@ window.handleSaveItem = async function () {
     }
     window.showToast("Item atualizado!", "success");
   } else {
-    window.marketListData[resolvedIndex].categories[
-      categoryIndex
-    ].items.push({
+    window.marketListData[resolvedIndex].categories[categoryIndex].items.push({
       name,
       desc: description,
       price: unitPrice,
@@ -518,3 +522,56 @@ window.handleSaveItem = async function () {
   window.showScreen("market-list-screen-details");
   window.renderListDetails();
 };
+
+/* ==========================================================================
+   INICIALIZAÇÃO DAS SUGESTÕES DE AUTOCOMPLETE NOS FORMULÁRIOS
+   Registra o sistema de sugestões nos campos de nome de item, descrição,
+   nome de lista e nome de categoria ao carregar o módulo.
+   As sugestões são baseadas nos dados em cache do próprio usuário.
+   ========================================================================== */
+
+/**
+ * Inicializa as sugestões de autocomplete nos campos dos formulários
+ * de item, categoria e lista. Chamado uma única vez após o DOM estar pronto.
+ */
+function initializeFormInputSuggestions() {
+  if (!window.initInputSuggestions || !window.SUGGESTION_SOURCE_TYPES) return;
+
+  const sourceTypes = window.SUGGESTION_SOURCE_TYPES;
+
+  // Campo: nome do item (new-item-screen)
+  const itemNameInputElement = document.getElementById("item-name-input");
+  if (itemNameInputElement) {
+    window.initInputSuggestions(itemNameInputElement, sourceTypes.ITEM_NAME);
+  }
+
+  // Campo: descrição do item (new-item-screen) — sugestões baseadas em nomes de itens
+  const itemDescInputElement = document.getElementById("item-desc-input");
+  if (itemDescInputElement) {
+    window.initInputSuggestions(itemDescInputElement, sourceTypes.ITEM_NAME);
+  }
+
+  // Campo: nome da lista (new-list-screen)
+  const listNameInputElement = document.getElementById("new-list-name");
+  if (listNameInputElement) {
+    window.initInputSuggestions(listNameInputElement, sourceTypes.LIST_NAME);
+  }
+
+  // Campo: local de compra (new-list-screen) — sugestões baseadas nos locais do histórico do usuário
+  const listLocationInputElement = document.getElementById("new-list-location");
+  if (listLocationInputElement) {
+    window.initInputSuggestions(listLocationInputElement, sourceTypes.LOCATION);
+  }
+
+  // Campo: nome da categoria (new-category-screen)
+  const categoryNameInputElement = document.getElementById("new-category-name");
+  if (categoryNameInputElement) {
+    window.initInputSuggestions(
+      categoryNameInputElement,
+      sourceTypes.CATEGORY_NAME,
+    );
+  }
+}
+
+// Aguarda o DOM estar pronto para registrar as sugestões nos inputs dos formulários
+document.addEventListener("DOMContentLoaded", initializeFormInputSuggestions);
